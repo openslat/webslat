@@ -1,0 +1,14 @@
+{% if project_list %}
+    <p>Projects:</p>
+    <ul>
+    {% for project in project_list %}
+        <li><a href="{% url 'slat:project' project.id %}">{{ project.title_text }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No projects are available.</p>
+{% endif %}
+
+<form action="{% url 'slat:project' %}" method="get">
+{% csrf_token %}
+<input type="submit" value="New Project" />

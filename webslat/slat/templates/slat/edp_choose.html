@@ -1,0 +1,27 @@
+<p>Engineering Demand</P>
+{{ form.errors }}
+
+
+<p><b>Project:</b> {{ project.title }}</p>
+
+<p>Floor #{{ edp.floor }}
+    {% if edp.type == 'A' %}
+        Acceleration
+    {% elif edp.type == 'D' %}
+        Drift
+    {% else %}
+        <i>Unknown Demand</i>
+    {% endif %}
+</p>
+
+<p>Choose how to define the engineering demand:</P>
+<form action="{% url 'slat:edp_choose' project.id edp.id %}" method="post">
+    {% csrf_token %}
+    {{ form.flavour }}
+    <input type="submit" name="submit" value="Submit" />
+    <br />
+</form>
+<form action="{% url 'slat:edp_choose' project.id edp.id %}" method="post">
+    {% csrf_token %}
+    <input type="submit" name="cancel" value="Cancel" />
+</form>

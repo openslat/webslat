@@ -1,0 +1,29 @@
+<p>User-defined Seismic Hazard</P>
+
+<p><b>Project:</b> {{ title }}</p>
+<form action="{% url 'slat:im_file' project_id %}" method="get">
+    {% csrf_token %}
+    <input type="submit" value="Import from a file" />
+</form>
+<hr/>
+<form action="{% url 'slat:im_interp_edit' project_id %}" method="post">
+    <p>Submit the form to confirm changes and add more empty cells.</p>
+    <input type="submit" value="Submit Changes
+and Continue Editing" />
+    <input type="submit" name="done" value="Submit Changes and
+return to Project" />
+    <input type="submit" name="cancel" value="Cancel
+&nbsp;" />
+    <br/>
+    {% csrf_token %}
+    {{ form }}
+    <br />
+    {{ points.management_form }}
+    <table border='1'><tr><td>IM</td><td>Rate</td><td>Delete?</td></tr>
+    {% for point in points %}
+      <tr><td>{{ point.id }}{{ point.im_value }}</td>
+	  <td>{{ point.rate }}</td>
+          <td>{{ point.DELETE }}</td></tr>
+    {% endfor %}
+      </table>
+</form>

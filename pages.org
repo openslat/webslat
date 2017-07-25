@@ -1,0 +1,1267 @@
+#+Title:     WebSLAT Page Hierarchy
+#+AUTHOR:    Michael Gauland
+#+EMAIL:     michael.gauland@canterbury.ac.nz
+#+DATE:      {{{time(%Y-%m-%d %H:%M)}}}
+#+OPTIONS:   H:6 num:t toc:nil \n:nil @:t ::t |:t ^:{} -:t f:t *:t <:t
+#+COMMENT: #+LATEX_HEADER: \usepackage{unicode-math}
+#+PROPERTY: header-args :eval always
+
+* Equation                                                         :noexport:
+  \clearpage
+  $\lambda(DV)=\int{\int{\sum{G(DV|DS)|\Delta{}G(DS|EDP)||dG(EDP|IM)||d\lambda(IM)|}}}$
+  \clearpage
+* Overview
+** Structure
+   #+NAME: fig-overview
+   #+BEGIN_SRC dot :file overview.pdf :cmdline -Kdot -Tpdf
+     digraph structs {
+       size="11.7x16.5" # A3
+       #size="8.27x11.7" # A4
+       node [shape=plaintext]
+
+     welcome_page [label=<
+         <TABLE BORDER="0"><TR><TD ALIGN="LEFT">/slat</TD></TR><TR><TD>
+	 <TABLE BORDER="1" CELLSPACING="4" CELLBORDER="0">
+	 <TR><TD><B>Welcome Page</B><BR ALIGN="CENTER"/>
+	 <I>In a cloud deployment, you would<BR/>
+	  need to log in before getting here</I>
+	 </TD></TR>
+	 <TR><TD>
+	 <TABLE BGCOLOR="YELLOW" BORDER="1" CELLSPACING="1" CELLBORDER="0">
+	 <TR><TD> <B>Welcome to OpenSLAT</B><BR ALIGN="LEFT"/></TD></TR>
+	 <TR><TD>Choose an existing project:<BR ALIGN="LEFT"/>
+   &nbsp;&nbsp;&nbsp;&nbsp;<U>Redbook example</U><BR ALIGN="LEFT"/>
+   &nbsp;&nbsp;&nbsp;&nbsp;<U>Project #1</U><BR ALIGN="LEFT"/>
+   &nbsp;&nbsp;&nbsp;&nbsp;<U>Project #2</U><BR ALIGN="LEFT"/>
+	 </TD></TR>
+	 <TR><TD>Or</TD></TR>
+	 <TR><TD><TABLE BORDER="0"><TR><TD BORDER="1" BGCOLOR="GRAY80">Create a new project</TD></TR></TABLE></TD></TR>
+	 </TABLE>
+	 </TD></TR></TABLE>
+	 </TD></TR></TABLE>
+     >];
+
+     redbook_project_page [label=<
+         <TABLE BORDER="0"><TR><TD ALIGN="LEFT">/slat/project/<I>id#</I></TD></TR><TR><TD>
+	 <TABLE BORDER="1" CELLSPACING="4" CELLBORDER="0">
+	 <TR><TD><B>Project Editor</B><BR ALIGN="CENTER"/>
+   <I>This is the main page for<BR ALIGN="LEFT" />the Redbook Project</I><BR ALIGN="LEFT"/>
+	 </TD></TR>
+	 <TR><TD>
+	 <TABLE BGCOLOR="YELLOW" BORDER="1" CELLSPACING="2" CELLBORDER="0">
+	 <TR><TD COLSPAN="2"> <B>Redbook Project</B><BR ALIGN="LEFT"/></TD></TR>
+	 <TR><TD>Title:</TD><TD BORDER="1" BGCOLOR="GRAY90">Redbook Project</TD></TR>
+	 <TR><TD>Description:</TD><TD BORDER="1" BGCOLOR="GRAY90">This project is based on<BR ALIGN="LEFT" />
+   the Redbook reference<BR ALIGN="LEFT"/>project<BR ALIGN="LEFT"/></TD></TR>
+	 <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><FONT POINT-SIZE="10">Submit Changes</FONT></TD></TR>
+	 <TR><TD></TD><TD BORDER="0"></TD></TR>
+	 <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><FONT POINT-SIZE="10">Seismic Hazard</FONT></TD></TR>
+	 <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><FONT POINT-SIZE="10">Engineering Demands</FONT></TD></TR>
+	 <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><FONT POINT-SIZE="10">Component Library</FONT></TD></TR>
+	 <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><FONT POINT-SIZE="10">Component Groups</FONT></TD></TR>
+	 <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><FONT POINT-SIZE="10">Calculations</FONT></TD></TR>
+	 <TR><TD COLSPAN="2"><U>Return to List of Projects</U></TD></TR>
+	 </TABLE>
+	 </TD></TR></TABLE>
+	 </TD></TR></TABLE>
+     >];
+
+     new_project_page [label=<
+         <TABLE BORDER="0"><TR><TD ALIGN="LEFT">/slat/project</TD></TR><TR><TD>
+	 <TABLE BORDER="1" CELLSPACING="4" CELLBORDER="0">
+	 <TR><TD><B>New Project</B><BR ALIGN="CENTER"/>
+	 </TD></TR>
+	 <TR><TD>
+	 <TABLE BGCOLOR="YELLOW" BORDER="1" CELLSPACING="2" CELLBORDER="0">
+	 <TR><TD COLSPAN="2"> <B>Create a Project</B><BR ALIGN="LEFT"/></TD></TR>
+	 <TR><TD>Title:</TD><TD BORDER="1" BGCOLOR="GRAY90"><I>Enter the project's title</I></TD></TR>
+	 <TR><TD>Description:</TD><TD BORDER="1" BGCOLOR="GRAY90"><I>Describe the project</I><BR ALIGN="LEFT" /><BR ALIGN="LEFT" /><BR ALIGN="LEFT" />
+	 </TD></TR>
+	 <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE><TR><TD BORDER="0"><FONT POINT-SIZE="10">Create</FONT></TD></TR></TABLE></TD></TR>
+	 <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><FONT POINT-SIZE="10">Cancel</FONT></TD></TR>
+	 </TABLE>
+	 </TD></TR></TABLE>
+	 </TD></TR></TABLE>
+     >];
+
+     save_project [shape=parallelogram
+         fillcolor=cornflowerblue
+	 style=filled
+	 label="Save the project\nto the database."];
+
+     welcome_page -> redbook_project_page [label=<<i>Existing Project</i>>];
+     welcome_page -> new_project_page [label="Create a\nNew Project"];
+     new_project_page -> welcome_page [label=Cancel];
+     new_project_page -> save_project [label=Create];
+     save_project -> redbook_project_page;
+     redbook_project_page -> save_project [label="Submit\nChanges"];
+
+     hazard [shape=box, label="Hazard\nEditor", fillcolor="cyan:darkslategray3"; style=filled]
+     redbook_project_page -> hazard [label=<<TABLE BORDER="0"><TR><TD BORDER="1">Seismic Hazard</TD></TR></TABLE>>]
+     hazard:ne -> redbook_project_page [taillabel=<<I>done</I>>]
+
+     edps [shape=box, label="EDP\nEditor", fillcolor="cyan:darkslategray3"; style=filled]
+     redbook_project_page -> edps [label=<<TABLE BORDER="0"><TR><TD BORDER="1">Demand<BR/>Parameters</TD></TR></TABLE>>]
+     edps:ne -> redbook_project_page [taillabel=<<I>done</I>>]
+
+     components [shape=box, label="Component\nLibrary", fillcolor="cyan:darkslategray3"; style=filled]
+     redbook_project_page -> components [label=<<TABLE BORDER="0"><TR><TD BORDER="1">Components</TD></TR></TABLE>>]
+     components:ne -> redbook_project_page [taillabel=<<I>done</I>>]
+
+     compgroups [shape=box, label="Component\nGroups", fillcolor="cyan:darkslategray3"; style=filled]
+     redbook_project_page -> compgroups [label=<<TABLE BORDER="0"><TR><TD BORDER="1">Component<BR/>Groups</TD></TR></TABLE>>]
+     compgroups:ne -> redbook_project_page [taillabel=<<I>done</I>>]
+
+     calculations [shape=box, label="Calculations", fillcolor="cyan:darkslategray3"; style=filled]
+     redbook_project_page -> calculations [label=<<TABLE BORDER="0"><TR><TD BORDER="1">Calculations</TD></TR></TABLE>>]
+     calculations:ne -> redbook_project_page [taillabel=<<I>done</I>>]
+     }
+
+   #+END_SRC
+
+   #+CAPTION: Pages for accessing and creating projects.
+   #+ATTR_LaTeX: :width \textwidth :placement [h!bt] :options :float t
+   #+RESULTS: fig-overview
+   [[file:overview.pdf]]
+
+  
+** Implementation
+*** =/slat=: Welcome Page
+    In a cloud deployment, the user would have to log in to reach this page, but
+    for local installations that is not necessary. The django framework has
+    extensive support for authentication and security, which we can use later.
+
+    This page will provide a welcome message, and present a list of projects the
+    user can open (in a cloud deployment, this will be restricted by user id),
+    and offer a button to create a new project.
+*** =/slat/project=: New Project Page
+    This page allows the user to create a new project. It presents fields for
+    the project title and description (other fields may be added later), and
+    buttons for 'Create' and 'Cancel'.
+
+    'Cancel' returns to the Welcome Page, without changing the database.
+
+    'Create' will add the project to the database, and open the project in the
+    Project Editor page.
+*** \texttt{/slat/project/}\textit{id#}: Project Editor
+    :PROPERTIES:
+    :ALT_TITLE: /slat/project/id#: Project Editor
+    :END:
+    This page is the top-level access to a project. It presents the title and
+    description, which the user may edit in-place. Changes to these fields are
+    saved by invoking the 'Submit Changes' button. This button will update the
+    database, and refresh the page.
+
+    The page includes buttons (or links) to access other pages of the project:
+      + =Seismic Hazard=: Choose and edit the hazard curve
+      + =Engineering Demands=: Enter and edit EDPs
+      + =Component Library=: Browse and edit the library of components,
+        including user-defined components.
+      + =Component Groups=: Enter and edit the structure's component groups.
+      + =Calculations=: Control calculations, and view or save results.
+* Seismic Hazard
+  This section describes the pages used to enter, view, and edit the seismic
+  hazard (IM). The user will see different pages depending on how the hazard is
+  specified, but can also choose to change the specification type.
+** Structure
+   #+NAME: fig-hazard
+   #+BEGIN_SRC dot :file hazard.pdf :cmdline -Kdot -Tpdf
+     digraph structs {
+	 size="11.7x16.5" # A3
+	 #size="8.27x11.7" # A4
+	 #size="4x6"
+	 node [shape=box]
+
+	 rankdir=TB;
+	 rank=source;
+
+	 {
+	     enter
+	 }
+	 subgraph cluster_main {
+	     rank=same
+	     rankdir=LR
+
+	     subgraph { start }
+	     subgraph { exists}
+	     subgraph { type_entry }
+	     subgraph { type }
+	     subgraph { nlh_top, interp_top, nzs_top }
+	     subgraph { nlh_page, interp_page, type_page, nzs_page }
+	     subgraph { nlh_restart, interp_restart, nzs_restart }
+	     subgraph { type_entry_2, type_entry_3, type_entry_4 }
+	     subgraph { nlh_ed_entry, interp_ed_entry, nzs_ed_entry }
+	     subgraph { nlh_editor, interp_edit, nzs_edit, hazard_import }
+	     subgraph { hazard_browse }
+	     subgraph { import }
+	     subgraph { interp_ed_entry2 }
+	     subgraph { interp_ed_entry3 }
+	     savenonlin, saveinterp, savenzs, type_cancel;
+	     nlh_1, interp_1, nzs_1;
+	     exit_1, exit_2, exit_3;
+	     nlh_ed_entry, nlh_ed_entry2, nzs_ed_entry2;
+	     {
+	     rank=max
+	     exit;
+	     }
+	 }
+	 {
+	     rank=next;
+	     back_to_project;
+	 }
+	 enter -> start
+	 start -> exists
+	 exit -> back_to_project
+	 nlh_page -> exit_1 [label="Return to\nProject"];
+	 interp_page -> exit_2 [label="Return to\nProject"];
+	 nzs_page -> exit_3 [label="Return to\nProject"];
+	 nlh_page -> type_entry_2 [taillabel=<<TABLE BORDER="0"><TR><TD BORDER="1">Change Hazard Type</TD></TR></TABLE>>]
+	 nzs_page -> type_entry_4 [label=<<TABLE BORDER="0"><TR><TD BORDER="1">Change Hazard Type</TD></TR></TABLE>>]
+	 interp_page -> type_entry_3 [taillabel=<<TABLE BORDER="0"><TR><TD BORDER="1">Change Hazard Type</TD></TR></TABLE>>]
+	 exists -> type [taillabel="Yes"]
+	 exists -> type_entry [taillabel="No"]
+	 type_entry -> type_page
+
+	 type -> nlh_top [label=<<I>Non-Linear Hyperbolic</I>>]
+	 type -> interp_top [label=<<I>User-defined Hazard Curve</I>>]
+	 type -> nzs_top [label=<<I>NZ Standard Curve</I>>]
+	 nlh_top -> nlh_page
+	 interp_top -> interp_page
+	 nzs_top -> nzs_page
+
+
+	 type_page -> nlh_ed_entry2 [label=<<I>Non-Linear Hyperbolic</I>>]
+	 nlh_ed_entry -> nlh_editor
+	 type_page -> interp_ed_entry3 [label=<<I>User-defined Hazard Curve</I>>]
+	 interp_ed_entry -> interp_edit
+	 type_page -> nzs_ed_entry2 [label=<<I>NZ Standard Curve</I>>]
+	 nzs_ed_entry -> nzs_edit
+
+
+	 nlh_page -> nlh_ed_entry [taillabel=<<TABLE BORDER="0"><TR><TD BORDER="1">Edit</TD></TR></TABLE>>]
+	 interp_page -> interp_ed_entry [taillabel=<<TABLE BORDER="0"><TR><TD BORDER="1">Edit</TD></TR></TABLE>>]
+	 nzs_page -> nzs_ed_entry [taillabel=<<TABLE BORDER="0"><TR><TD BORDER="1">Edit</TD></TR></TABLE>>]
+
+	 #type_page -> exit [taillabel=<<TABLE BORDER="0"><TR><TD BORDER="1">Cancel</TD></TR></TABLE>>];
+	 type_page -> type_cancel [taillabel=<<TABLE BORDER="0"><TR><TD BORDER="1">Cancel</TD></TR></TABLE>>];
+
+	 nlh_editor -> savenonlin [taillabel=<<TABLE BORDER="0"><TR><TD BORDER="1">Commit</TD></TR></TABLE>>];
+	 nlh_editor:se -> nlh_restart [taillabel=<<TABLE BORDER="0"><TR><TD BORDER="1">Cancel</TD></TR></TABLE>>];
+	 savenonlin -> nlh_1
+	 interp_edit:se -> interp_restart [taillabel=<<TABLE BORDER="0"><TR><TD BORDER="1">Cancel</TD></TR></TABLE>>];
+	 interp_edit -> saveinterp [taillabel=<<TABLE BORDER="0"><TR><TD BORDER="1">Commit</TD></TR></TABLE>>];
+	 saveinterp -> interp_1
+	 interp_edit -> hazard_import [taillabel=<<TABLE BORDER="0"><TR><TD BORDER="1">Import</TD></TR></TABLE>>]
+	 nzs_edit -> savenzs [taillabel=<<TABLE BORDER="0"><TR><TD BORDER="1">Commit</TD></TR></TABLE>>];
+	 nzs_edit -> nzs_restart [taillabel=<<TABLE BORDER="0"><TR><TD BORDER="1">Cancel</TD></TR></TABLE>>];
+	 savenzs -> nzs_1
+
+	 hazard_import -> import [taillabel=<<TABLE BORDER="0"><TR><TD BORDER="1">Import</TD></TR></TABLE>>]
+	 import -> saveinterp [taillabel=Success]
+	 import -> hazard_import:sw [taillabel=Error]
+	 hazard_import -> interp_ed_entry2 [taillabel=<<TABLE BORDER="0"><TR><TD BORDER="1">Cancel</TD></TR></TABLE>>]
+	 hazard_import -> hazard_browse [taillabel=<<TABLE BORDER="0"><TR><TD BORDER="1">Browse</TD></TR></TABLE>>]
+	 hazard_browse -> hazard_import
+
+	 enter [
+	     shape=none;
+	     label=<<table border='0'><tr><td border='1'>Seismic Hazard</td></tr></table>>
+	     ]
+
+	 back_to_project [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style=filled
+	     label=<<I>Back to<BR ALIGN="CENTER"/>Project</I>>
+	     color=black
+	     penwidth=3
+	     ]
+
+	 start [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style="filled"
+	     label=<<I>Start<BR />slat/project/<I>id#</I>/hazard</I>>
+	     color=blue
+	     penwidth=3
+	     ]
+	     
+	 nlh_restart [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style="filled, dashed"
+	     label=<<I>Start</I>>
+	     color=blue
+	     penwidth=3
+	     ]
+
+	 interp_restart [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style="filled, dashed"
+	     label=<<I>Start</I>>
+	     color=blue
+	     penwidth=3
+	     ]
+
+	 nzs_restart [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style="filled, dashed"
+	     label=<<I>Start</I>>
+	     color=blue
+	     penwidth=3
+	     ]
+
+	 exit [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style=filled
+	     label=<<I>Done</I>>
+	     color=red
+	     penwidth=3
+	     ]
+
+	 exit_1 [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style="filled, dashed"
+	     label=<<I>Done</I>>
+	     color=red
+	     penwidth=3
+	     ]
+
+	 exit_2 [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style="filled, dashed"
+	     label=<<I>Done</I>>
+	     color=red
+	     penwidth=3
+	     ]
+
+	 exit_3 [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style="filled, dashed"
+	     label=<<I>Done</I>>
+	     color=red
+	     penwidth=3
+	     ]
+
+	 nlh_top [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style=filled
+	     label=<<I>NLH<BR ALIGN="CENTER"/>Viewer</I>>
+	     color=aquamarine2
+	     penwidth=3
+	     ]
+
+	 interp_top [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style=filled
+	     label=<<I>User-defined Hazard Curve<BR ALIGN="CENTER"/>Viewer</I>>
+	     color=goldenrod1
+	     penwidth=3
+	     ]
+
+	 nzs_top [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style=filled
+	     label=<<I>NZ Standard Curve<BR ALIGN="CENTER"/>Viewer</I>>
+	     color=goldenrod1
+	     penwidth=3
+	     ]
+
+	 nlh_1 [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style="filled, dashed"
+	     label=<<I>NLH<BR ALIGN="CENTER"/>Viewer</I>>
+	     color=aquamarine2
+	     penwidth=3
+	     ]
+
+	 nzs_1 [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style="filled, dashed"
+	     label=<<I>NZ Standard<BR ALIGN="CENTER"/>Viewer</I>>
+	     color=aquamarine2
+	     penwidth=3
+	     ]
+
+	 interp_1 [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style="filled, dashed"
+	     label=<<I>Interpolated<BR ALIGN="CENTER"/>Viewer</I>>
+	     color=goldenrod1
+	     penwidth=3
+	     ]
+
+	 nlh_ed_entry [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style=filled
+	     label=<<I>NLH<BR ALIGN="CENTER"/>Editor</I>>
+	     color=aquamarine4
+	     penwidth=3
+	     ]
+
+	 nlh_ed_entry2 [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style="filled, dashed"
+	     label=<<I>NLH<BR ALIGN="CENTER"/>Editor</I>>
+	     color=aquamarine4
+	     penwidth=3
+	     ]
+
+	 interp_ed_entry [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style=filled
+	     label=<<I>Interpolated<BR ALIGN="CENTER"/>Editor</I>>
+	     color=goldenrod3
+	     penwidth=3
+	     ]
+
+	 interp_ed_entry2 [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style="filled, dashed"
+	     label=<<I>Interpolated<BR ALIGN="CENTER"/>Editor</I>>
+	     color=goldenrod3
+	     penwidth=3
+	     ]
+
+	 interp_ed_entry3 [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style="filled, dashed"
+	     label=<<I>Interpolated<BR ALIGN="CENTER"/>Editor</I>>
+	     color=goldenrod3
+	     penwidth=3
+	     ]
+	     
+	 nzs_ed_entry [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style="filled"
+	     label=<<I>NZ Standard<BR ALIGN="CENTER"/>Editor</I>>
+	     color=goldenrod3
+	     penwidth=3
+	     ]
+
+	 nzs_ed_entry2 [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style="filled, dashed"
+	     label=<<I>NZ Standard<BR ALIGN="CENTER"/>Editor</I>>
+	     color=goldenrod3
+	     penwidth=3
+	     ]
+
+	 hazard_browse [
+	     shape=tab
+	     label="File\nBrowser"
+	     ]
+
+	 nlh_page [
+	     shape=plaintext
+	     label=<
+	     <TABLE BORDER="0"><TR><TD ALIGN="LEFT"><I>http://...slat/project/<I>id#</I>/hazard/nlh</I></TD></TR><TR><TD>
+	     <TABLE BORDER="1" CELLSPACING="4" CELLBORDER="0">
+	     <TR><TD><B>Seismic Hazard: Non-Linear Hyperbolic</B><BR ALIGN="CENTER"/>
+	     <I>Possibly include a plot, or an option to plot</I>
+	     </TD></TR>
+	     <TR><TD>
+	     <TABLE BGCOLOR="YELLOW" BORDER="1" CELLSPACING="2" CELLBORDER="0">
+	     <TR><TD COLSPAN="2"> <B>Seismic Hazard</B><BR ALIGN="LEFT"/></TD></TR>
+	     <TR><TD>Type:</TD><TD BORDER="1">Non-Linear Hyperbolic</TD></TR>
+	     <TR><TD>Parameters:</TD><TD><TABLE BORDER="0"><TR><TD>v<SUB>asy</SUB></TD><TD>1221</TD></TR>
+	     <TR><TD>IM<SUB>asy</SUB></TD><TD>29.8</TD></TR>
+	     <TR><TD>alpha<SUB>asy</SUB></TD><TD>62.2</TD></TR></TABLE>
+	     </TD></TR>
+	     <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE><TR><TD BORDER="0"><FONT POINT-SIZE="10">Edit</FONT></TD></TR></TABLE></TD></TR>
+	     <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE><TR><TD BORDER="0"><FONT POINT-SIZE="10">Change Hazard Type</FONT></TD></TR></TABLE></TD></TR>
+	     <TR><TD></TD><TD><U>Return to Project</U></TD></TR>
+	     </TABLE>
+	     </TD></TR></TABLE>
+	     </TD></TR></TABLE>>
+	     ]
+
+	 interp_page [
+	     shape=plaintext
+	     label=<
+	     <TABLE BORDER="0"><TR><TD ALIGN="LEFT">slat/project/<I>id#</I>/hazard/interp</TD></TR><TR><TD>
+	     <TABLE BORDER="1" CELLSPACING="4" CELLBORDER="0">
+	     <TR><TD><B>Seismic Hazard: User-defined Hazard Curve</B><BR ALIGN="CENTER"/>
+	     <I>Possibly include a plot, or an option to plot</I>
+	     </TD></TR>
+	     <TR><TD>
+	     <TABLE BGCOLOR="YELLOW" BORDER="1" CELLSPACING="2" CELLBORDER="0">
+	     <TR><TD COLSPAN="2"> <B>Seismic Hazard</B><BR ALIGN="LEFT"/></TD></TR>
+	     <TR><TD>Type:</TD><TD BORDER="1">User-defined Hazard Curve</TD></TR>
+	     <TR><TD>Method:</TD><TD BORDER="1">Log-log <I>or</I> Linear</TD></TR>
+	     <TR><TD>Points:</TD><TD><TABLE BORDER="0"><TR><TD><B>IM</B></TD><TD><B>Rate</B></TD></TR>
+	     <TR><TD>0.01</TD><TD>0.376775</TD></TR>
+	     <TR><TD>0.02</TD><TD>0.155158</TD></TR>
+	     <TR><TD>0.04</TD><TD>0.054048</TD></TR>
+	     <TR><TD>...</TD><TD>...</TD></TR></TABLE>
+	     </TD></TR>
+	     <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE><TR><TD BORDER="0"><FONT POINT-SIZE="10">Edit</FONT></TD></TR></TABLE></TD></TR>
+	     <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE><TR><TD BORDER="0"><FONT POINT-SIZE="10">Change Hazard Type</FONT></TD></TR></TABLE></TD></TR>
+	     <TR><TD></TD><TD><U>Return to Project</U></TD></TR>
+	     </TABLE>
+	     </TD></TR></TABLE>
+	     </TD></TR></TABLE>
+	     >]
+
+	 nzs_page [
+	     shape=plaintext
+	     label=<
+	     <TABLE BORDER="0"><TR><TD ALIGN="LEFT">slat/project/<I>id#</I>/hazard/nzs</TD></TR><TR><TD>
+	     <TABLE BORDER="1" CELLSPACING="4" CELLBORDER="0">
+	     <TR><TD><B>Seismic Hazard: NZ Standard Curve</B><BR ALIGN="CENTER"/>
+	     <I>Possibly include a plot, or an option to plot</I></TD></TR>
+	     <TR><TD>
+	     <TABLE BGCOLOR="YELLOW" BORDER="1" CELLSPACING="2" CELLBORDER="0">
+	     <TR><TD COLSPAN="2"> <B>Seismic Hazard</B><BR ALIGN="LEFT"/></TD></TR>
+	     <TR><TD>Type:</TD><TD BORDER="1">NZ Standard Curve</TD></TR>
+	     <TR><TD>Parameters:</TD><TD><TABLE BORDER="0"><TR><TD>Location</TD><TD>Christchurch</TD></TR>
+	     <TR><TD>Soil Class</TD><TD>C</TD></TR>
+	     <TR><TD>Period</TD><TD>1.5</TD></TR></TABLE></TD></TR>
+	     <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE><TR><TD BORDER="0"><FONT POINT-SIZE="10">Edit</FONT></TD></TR></TABLE></TD></TR>
+	     <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE><TR><TD BORDER="0"><FONT POINT-SIZE="10">Change Hazard Type</FONT></TD></TR></TABLE></TD></TR>
+	     <TR><TD></TD><TD><U>Return to Project</U></TD></TR></TABLE></TD></TR>
+	     </TABLE>
+	     </TD></TR></TABLE>>
+	     ]
+	     
+	 nzs_edit [
+	     shape=plaintext
+	     label=<
+	     <TABLE BORDER="0"><TR><TD ALIGN="LEFT">slat/project/<I>id#</I>/hazard/nzs/edit</TD></TR><TR><TD>
+	     <TABLE BORDER="1" CELLSPACING="4" CELLBORDER="0">
+	     <TR><TD><B>Seismic Hazard: NZ Standard Curve</B><BR ALIGN="CENTER"/>
+	     <I>Possibly include a plot, or an option to plot</I></TD></TR>
+	     <TR><TD>
+	     <TABLE BGCOLOR="YELLOW" BORDER="1" CELLSPACING="2" CELLBORDER="0">
+	     <TR><TD COLSPAN="2"> <B>Seismic Hazard</B><BR ALIGN="LEFT"/></TD></TR>
+	     <TR><TD>Type:</TD><TD BORDER="1">NZ Standard Curve</TD></TR>
+	     <TR><TD>Parameters:</TD><TD><TABLE BORDER="0"><TR><TD>Location</TD><TD BORDER="1" BGCOLOR="GRAY80">Christchurch</TD></TR>
+	     <TR><TD>Soil Class</TD><TD BORDER="1" BGCOLOR="GRAY80">C</TD></TR>
+	     <TR><TD>Period</TD><TD BORDER="1" BGCOLOR="GRAY80">1.5</TD></TR></TABLE></TD></TR>
+	     <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE><TR><TD BORDER="0"><FONT POINT-SIZE="10">Commit</FONT></TD></TR></TABLE></TD></TR>
+	     <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE><TR><TD BORDER="0"><FONT POINT-SIZE="10">Cancel</FONT></TD></TR></TABLE></TD></TR>
+	     </TABLE>
+	     </TD></TR></TABLE>
+	     </TD></TR></TABLE>>
+	     ]
+
+	 type_page [
+	     shape=plaintext
+	     label=<
+	     <TABLE BORDER="0" BGCOLOR="WHITE"><TR><TD ALIGN="LEFT">slat/project/<I>id#</I>/hazard/choose</TD></TR><TR><TD>
+	     <TABLE BORDER="1" CELLSPACING="4" CELLBORDER="0">
+	     <TR><TD><B>Hazard Type</B><BR ALIGN="CENTER"/>
+	     </TD></TR>
+	     <TR><TD>
+	     <TABLE BGCOLOR="YELLOW" BORDER="1" CELLSPACING="2" CELLBORDER="0">
+	     <TR><TD COLSPAN="2"> <B>Hazard Type</B><BR ALIGN="LEFT"/></TD></TR>
+	     <TR><TD><TABLE BORDER="0" CELLPADDING="0"><TR><TD>Choose the hazard type:</TD><TD><TABLE BORDER="0" BGCOLOR="GRAY80"><TR><TD BORDER="1">Non-Linear Hyperbolic</TD></TR>
+	     <TR><TD BORDER="1" BGCOLOR="GRAY80">User-defined Hazard Curve</TD></TR></TABLE></TD></TR>
+	     <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE><TR><TD><FONT POINT-SIZE="10">Commit</FONT></TD></TR></TABLE></TD></TR>
+	     <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><FONT POINT-SIZE="10">Cancel</FONT></TD></TR></TABLE></TD></TR></TABLE></TD></TR>
+	     </TABLE></TD></TR></TABLE>
+	     >]
+	     
+	 exists [
+	     shape=diamond
+	     label="Does the\nhazard\nexist?"
+	     ]
+
+	 type [
+	     shape=diamond
+	     label="What is\nthe hazard\ntype?"
+	     ]
+
+	 nlh_editor [
+	     shape=plaintext
+	     label=<
+	     <TABLE BORDER="0"><TR><TD ALIGN="LEFT">slat/project/<I>id#</I>/hazard/nlh/edit</TD></TR><TR><TD>
+	     <TABLE BORDER="1" CELLSPACING="4" CELLBORDER="0">
+	     <TR><TD><B>Non-Linear Hyperbolic Editor</B><BR ALIGN="CENTER"/>
+	     </TD></TR>
+	     <TR><TD>
+	     <TABLE BGCOLOR="YELLOW" BORDER="1" CELLSPACING="2" CELLBORDER="0">
+	     <TR><TD COLSPAN="2"> <B>Non-Linear Hyperbolic Hazard</B><BR ALIGN="LEFT"/></TD></TR>
+	     <TR><TD>Parameters:</TD>
+	     <TD><TABLE BORDER="0"><TR><TD>v<SUB>asy</SUB></TD><TD BORDER="1" BGCOLOR="GRAY80">1221</TD></TR>
+	     <TR><TD>IM<SUB>asy</SUB></TD><TD BORDER="1" BGCOLOR="GRAY80">29.8</TD></TR>
+	     <TR><TD>alpha<SUB>asy</SUB></TD><TD BORDER="1" BGCOLOR="GRAY80">62.2</TD></TR></TABLE>
+	     </TD></TR>
+	     <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE><TR><TD BORDER="0"><FONT POINT-SIZE="10">Commit</FONT></TD></TR></TABLE></TD></TR>
+	     <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE><TR><TD BORDER="0"><FONT POINT-SIZE="10">Cancel</FONT></TD></TR></TABLE></TD></TR>
+	     </TABLE>
+	     </TD></TR></TABLE>
+	     </TD></TR></TABLE>>
+	     ]
+
+	 interp_edit [
+	     shape=plaintext
+	     label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">slat/project/<I>id#</I>/hazard/interp/edit</TD></TR><TR><TD>
+	     <TABLE BORDER="1" CELLSPACING="4" CELLBORDER="0">
+	     <TR><TD><B>Hazard Point Editor</B><BR ALIGN="CENTER"/>
+	     <FONT POINT-SIZE="8"><I>There will be extra cells at the end of the list;<BR ALIGN="LEFT"/>
+	     more can be added by commiting the form (for now;<BR ALIGN="LEFT"/>
+	     should be a button to to this).<BR ALIGN="LEFT"/>
+	     <BR ALIGN="LEFT" />
+	     For now, points can be deleted by setting them<BR ALIGN="LEFT"/>
+	     to 0,0, but there should be a button for this.<BR ALIGN="LEFT"/>
+	     for this as well.<BR ALIGN="LEFT"/></I></FONT>
+	     </TD></TR>
+	     <TR><TD>
+	     <TABLE BGCOLOR="YELLOW" BORDER="1" CELLSPACING="2" CELLBORDER="0">
+	     <TR><TD>Method:</TD><TD BORDER="1">Log-log <I>or</I> Linear</TD></TR>
+	     <TR><TD>Points:</TD><TD><TABLE BORDER="0">
+	     <TR><TD><B>IM</B></TD><TD><B>Rate</B></TD></TR>
+	     <TR><TD BORDER="1" BGCOLOR="GRAY80">0.01</TD><TD BORDER="1" BGCOLOR="GRAY80">0.376775</TD></TR>
+	     <TR><TD BORDER="1" BGCOLOR="GRAY80">0.02</TD><TD BORDER="1" BGCOLOR="GRAY80">0.155158</TD></TR>
+	     <TR><TD BORDER="1" BGCOLOR="GRAY80">0.04</TD><TD BORDER="1" BGCOLOR="GRAY80">0.054048</TD></TR>
+	     <TR><TD>...</TD><TD>...</TD></TR></TABLE>
+	     </TD></TR>
+	     <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE><TR><TD BORDER="0"><FONT POINT-SIZE="10">Import</FONT></TD></TR></TABLE></TD></TR>
+	     <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE><TR><TD BORDER="0"><FONT POINT-SIZE="10">Commit</FONT></TD></TR></TABLE></TD></TR>
+	     <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE><TR><TD BORDER="0"><FONT POINT-SIZE="10">Cancel</FONT></TD></TR></TABLE></TD></TR>
+	     </TABLE>
+	     </TD></TR></TABLE>
+	     </TD></TR></TABLE>>
+	     ]
+	     
+	 type_cancel [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style="filled, dashed"
+	     label=<<I>Done</I>>
+	     color=red
+	     penwidth=3
+	     ]
+
+	 type_entry [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style=filled
+	     label=<<I>Hazard<BR/>Type</I>>
+	     color=lightslateblue
+	     penwidth=3
+	     ]
+
+	 type_entry_2 [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style="filled, dashed"
+	     label=<<I>Hazard<BR/>Type</I>>
+	     color=lightslateblue
+	     penwidth=3
+	     ]
+
+	 type_entry_3 [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style="filled, dashed"
+	     label=<<I>Hazard<BR/>Type</I>>
+	     color=lightslateblue
+	     penwidth=3
+	     ]
+
+	 type_entry_4 [
+	     shape=ellipse
+	     fillcolor=antiquewhite
+	     style="filled, dashed"
+	     label=<<I>Hazard<BR/>Type</I>>
+	     color=lightslateblue
+	     penwidth=3
+	     ]
+
+	 savenonlin [
+	     shape=parallelogram
+	     label="Save to\nDatabase"
+	     ]
+
+	 saveinterp [
+	     shape=parallelogram
+	     label="Save to\nDatabase"
+	     ]
+
+	 savenzs [
+	     shape=parallelogram
+	     label="Save to\nDatabase"
+	     ]
+
+	 import [
+	     shape=parallelogram
+	     label="Import\nFile"
+	     ]
+
+	 hazard_import [
+	     shape=plaintext
+	     label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">slat/project/<I>id#</I>/hazard/interp/import</TD></TR><TR><TD>
+	     <TABLE BORDER="1" CELLSPACING="4" CELLBORDER="0">
+	     <TR><TD><B>Hazard Point Import</B><BR ALIGN="CENTER"/>
+	     <FONT POINT-SIZE="8"><I>Import points from a file, for interpolation<BR ALIGN="LEFT" />
+	     </I></FONT>
+	     </TD></TR>
+	     <TR><TD>
+	     <TABLE BGCOLOR="YELLOW" BORDER="1" CELLSPACING="2" CELLBORDER="0">
+	     <TR><TD>Method:</TD><TD BORDER="1">Log-log <I>or</I> Linear</TD></TR>
+	     <TR><TD>Format:</TD><TD BORDER="1" BGCOLOR="GRAY90"><I>CSV</I>or<I>Origial SLAT</I></TD></TR>
+	     <TR><TD>Path:</TD><TD BORDER="1" BGCOLOR="GRAY90"><I>path/to/imfunc.csv</I></TD></TR>
+	     <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE><TR><TD BORDER="0"><FONT POINT-SIZE="10">Browse</FONT></TD></TR></TABLE></TD></TR>
+	     <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE><TR><TD BORDER="0"><FONT POINT-SIZE="10">Import</FONT></TD></TR></TABLE></TD></TR>
+	     <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE><TR><TD BORDER="0"><FONT POINT-SIZE="10">Cancel</FONT></TD></TR></TABLE></TD></TR>
+	     </TABLE>
+	     </TD></TR></TABLE>
+	     </TD></TR></TABLE>>
+	     ]
+     }
+
+   #+END_SRC
+
+   #+CAPTION: Pages for entering, viewing, and editing seismic hazards.
+   #+ATTR_LaTeX: :width \textwidth :placement [h!bt] :options :float t
+   #+RESULTS: fig-hazard
+   [[file:hazard.pdf]]
+** Implementation
+*** \texttt{/slat/project/}\textit{id#}/hazard: Select Hazard Type
+    :PROPERTIES:
+    :ALT_TITLE: /slat/project/id#/hazard: Select Hazard Type
+    :END:
+    This page is presented when the user hasn't yet entered a seismic hazard, or
+    has asked to choose a different type. From this page, the user will be
+    directed to the 'edit' page for the selected type, but nothing will be saved
+    to the database until the hazard data has been entered.
+
+    When the user has asked to change the hazard type, if they select a type for
+    which data has already been entered, the database will be updated to use the
+    hazard immediately.
+*** \texttt{/slat/project/}\textit{id#}/hazard/nlh: View Non-Linear Hyperbolic
+    :PROPERTIES:
+    :ALT_TITLE: /slat/project/id#/hazard/nlh: View Non-Linear Hyperbolic
+    :END:
+    This page is presented when the hazard is specified as a non-linear
+    hyperbolic curve. It shows the parameters of the curve, and provides
+    buttons/links to edit the parameters, change the hazard type, or return to
+    the main project page.
+*** \texttt{/slat/project/}\textit{id#}/hazard/nlh/edit: Edit Non-Linear Hyperbolic
+    :PROPERTIES:
+    :ALT_TITLE: /slat/project/id#/hazard/nlh/edit: Edit Non-Linear Hyperbolic
+    :END:
+    This page allows the user to edit the parameters controlling a non-linear
+    hyperbolic seismic hazard. If the user commits the changes, they are written
+    to the database, and, if necessary, the project will be changed to use the curve.
+
+    If the user invokes the 'Cancel' button, they are returned to the beginning
+    of the hazard editing sequence--that is, if a hazard has not yet been
+    entered, they will be presented with the 'Select Hazard Type' page;
+    otherwise, they will be presented with the appropriate 'View...' page.
+*** \texttt{/slat/project/}\textit{id#}/hazard/interp: View Interpolated
+    :PROPERTIES:
+    :ALT_TITLE: /slat/project/id#/hazard/interp: View Interpolated
+    :END:
+    This page is presented when the hazard is specified by interpolating between
+    data points. It displays the interpolation method, and the supplied
+    points. The user is offered buttons or links to 'Edit' or 'Return to Project'.
+*** \texttt{/slat/project/}\textit{id#}/hazard/interp/edit: Edit Interpolated
+    :PROPERTIES:
+    :ALT_TITLE: /slat/project/id#/hazard/interp/edit: Edit Interpolated
+    :END:
+    This page allows the user to edit an interpolated hazard curve, by:
+    - Changing the interpolation method
+    - Editing the values of points
+    - Adding points
+    - Removing points
+    The user is also offered three buttons:
+    - 'Import' redirects the user to the 'Import Interpolation Points' page
+    - 'Commiit' saves the points and algorithm, and, if necessary, changes the
+      project to use this hazard.
+    - 'Cancel' returns the user to the beginning of the hazard editing process,
+      without changing the database.
+*** \texttt{/slat/project/}\textit{id#}/hazard/interp/import: Import Interpolation Points
+    :PROPERTIES:
+    :ALT_TITLE: /slat/project/id#/hazard/interp/import: Import Interpolation Points
+    :END:
+    This page allows the user to supply points for the hazard curve from a
+    file. They can choose the interpolation method and file format, and use the
+    file browser to select a file.
+
+    Invoking the 'Import' button will read the file, and extract the data
+    points. If that succeeds, the points will be saved to the database
+    (replacing any already-specified points), and, if necessary, the project
+    will be updated to use this hazard. If anything goes wrong while importing
+    the data, this page will be refreshed, displaying an error message.
+
+    The 'Cancel' button will return the user to the 'Edit Interpolated' page,
+    without changing the database.
+* EDP
+   #+NAME: fig-edp
+   #+BEGIN_SRC dot :file edp.pdf :cmdline -Kdot -Tpdf
+     digraph structs {
+       size="11.7x16.5" # A3
+       #size="8.27x11.7" # A4
+       #size="4x6"
+       node [shape=box]
+
+     rankdir=TB;
+     rank=source;
+     edp_enter [shape=none; label=<<table border='0'><tr><td border='1'>Engineering Demands</td></tr></table>>];
+     subgraph cluster_edp {
+         rank=same
+         rankdir=LR
+         //node[style=filled];
+         subgraph { start }
+         subgraph { table_exists }
+	 subgraph { view_table_oval }
+         subgraph { create_table }
+	 subgraph { back_to_project1, save_table }
+	 view_table
+	 subgraph { view_table_oval_1, edp_exists }
+	 subgraph { new_edp_oval, view_edp_oval }
+	 subgraph { new_edp, view_edp_choose }
+	 subgraph { view_table_oval_2, edit_edp_powercurve_oval_2, edit_edp_userdef_oval_2 } 
+	 subgraph { view_edp_userdef_oval, view_edp_powercurve_oval }
+	 subgraph { view_edp_userdef, view_edp_powercurve }
+	 subgraph { edit_edp_powercurve_oval, edit_edp_userdef_oval }
+	 subgraph {edit_edp_powercurve, edit_edp_userdef }
+	 subgraph { save_edp_powercurve, save_edp_userdef, userdef_import, start_oval_2 }
+	 subgraph { view_edp_powercurve_oval_2, view_edp_userdef_oval_2, import, browse}
+         {
+   	rank=max
+   	edp_exit;
+         }
+     }
+     {
+         rank=next;
+         back_to_project;
+      }
+      edp_enter -> start
+      start -> table_exists
+      table_exists:sw -> create_table [taillabel="No"]
+      table_exists:se -> view_table_oval [taillabel="Yes"]
+      view_table_oval -> view_table
+
+      view_table -> edp_exists [taillabel=<<I>edp</I>>]
+      edp_exists [shape=diamond, label="Has the\nEDP been\ndefined?"]
+      edp_exists:sw -> new_edp_oval [taillabel="No"]
+      edp_exists:se -> view_edp_oval [taillabel="Yes"]
+      view_edp_oval ->  view_edp_choose
+      edp_exit -> back_to_project;
+      create_table -> back_to_project1 [taillabel=<<TABLE BORDER="1" BGCOLOR="GRAY80"><TR><TD BORDER="0">Cancel</TD></TR></TABLE>>]
+      create_table -> save_table [taillabel=<<TABLE BORDER="1" BGCOLOR="GRAY80"><TR><TD BORDER="0">Commit</TD></TR></TABLE>>]
+      save_table -> view_table_oval_1
+     new_edp_oval -> new_edp
+     new_edp -> view_table_oval_2 [taillabel=<<TABLE BORDER="0"><TR><TD BORDER="1" BGCOLOR="GRAY80">Cancel</TD></TR></TABLE>>]
+     new_edp -> edit_edp_powercurve_oval_2 [taillabel=<<TABLE BORDER="0"><TR><TD BORDER="1" BGCOLOR="GRAY80">Commit</TD></TR><TR><TD BORDER="0"><I>Power Curve</I></TD></TR></TABLE>>]
+     new_edp -> edit_edp_userdef_oval_2 [taillabel=<<TABLE BORDER="0"><TR><TD BORDER="1" BGCOLOR="GRAY80">Commit</TD></TR><TR><TD BORDER="0"><I>User-defined</I></TD></TR></TABLE>>]
+
+     view_edp_choose -> view_edp_userdef_oval [taillabel=<<I>User-defined</I>>]
+     view_edp_userdef_oval -> view_edp_userdef
+     view_edp_choose -> view_edp_powercurve_oval [tailalbel=<<I>Power Curve</I>>]
+     view_edp_powercurve_oval -> view_edp_powercurve
+
+     view_edp_userdef -> edit_edp_userdef_oval [taillabel=<<TABLE BORDER="0"><TR><TD BORDER="1" BGCOLOR="GRAY80">Edit</TD></TR></TABLE>>]
+     view_edp_powercurve -> edit_edp_powercurve_oval [taillabel=<<TABLE BORDER="0"><TR><TD BORDER="1" BGCOLOR="GRAY80">Edit</TD></TR></TABLE>>]
+     edit_edp_powercurve_oval -> edit_edp_powercurve
+     edit_edp_userdef_oval -> edit_edp_userdef
+     edit_edp_powercurve -> save_edp_powercurve [taillabel=<<TABLE BORDER="1" BGCOLOR="GRAY80" CELLBORDER="0"><TR><TD>Commit</TD></TR></TABLE>>]
+     edit_edp_powercurve -> start_oval_2 [taillabel=<<TABLE BORDER="1" BGCOLOR="GRAY80" CELLBORDER="0"><TR><TD>Cancel</TD></TR></TABLE>>]
+     save_edp_powercurve -> view_edp_powercurve_oval_2
+
+     edit_edp_userdef -> start_oval_2 [taillabel=<<TABLE BORDER="1" BGCOLOR="GRAY80" CELLBORDER="0"><TR><TD>Cancel</TD></TR></TABLE>>]
+     edit_edp_userdef -> save_edp_userdef [taillabel=<<TABLE BORDER="1" BGCOLOR="GRAY80" CELLBORDER="0"><TR><TD>Commit</TD></TR></TABLE>>]
+     save_edp_userdef -> view_edp_userdef_oval_2
+     edit_edp_userdef -> userdef_import [taillabel=<<TABLE BORDER="1" BGCOLOR="GRAY80" CELLBORDER="0"><TR><TD>Import</TD></TR></TABLE>>]
+     userdef_import -> import [taillabel=<<TABLE BORDER="1" BGCOLOR="GRAY80" CELLBORDER="0"><TR><TD>Import</TD></TR></TABLE>>]
+     userdef_import:se -> browse [taillabel=<<TABLE BORDER="1" BGCOLOR="GRAY80" CELLBORDER="0"><TR><TD>Browse</TD></TR></TABLE>>]
+     browse -> userdef_import 
+     import -> userdef_import [taillabel=<<I>Error</I>>]
+     import -> save_edp_userdef [taillabel=<<I>Success</I>>]
+     
+
+
+
+      view_edp_oval [shape=ellipse
+   		fillcolor=antiquewhite
+   		style=filled
+   		label=<<I>View EDP</I>>
+   		color=red
+   		penwidth=3]
+      new_edp_oval [shape=ellipse
+   		fillcolor=antiquewhite
+   		style=filled
+   		label=<<I>Choose<BR ALIGN="CENTER" />Demand Type</I>>
+   		color=aquamarine2
+   		penwidth=3]
+      view_edp_choose [shape=diamond, label="EDP Type?"]
+
+      new_edp [shape=plaintext
+         label=<
+         <TABLE BORDER="0"><TR><TD ALIGN="LEFT">slat/project/<I>id#</I>/edp/type</TD></TR><TR><TD>
+         <TABLE BORDER="1" CELLSPACING="4" CELLBORDER="0">
+         <TR><TD><B>Choose Demand Type</B><BR ALIGN="CENTER"/>
+         </TD></TR>
+         <TR><TD>
+         <TABLE BGCOLOR="YELLOW" BORDER="1" CELLSPACING="2" CELLBORDER="0">
+             <TR><TD COLSPAN="2"><B>Choose how to specify the<BR ALIGN="CENTER"/><I>Ground
+	     Floor Acceleration</I>:</B><BR ALIGN="LEFT"/></TD></TR>
+             <TR><TD>Specify as:</TD>
+   	         <TD BORDER="1" BGCOLOR="GRAY80" ALIGN="CENTER">
+		 <TABLE BORDER="0"><TR><TD BORDER="1"><FONT POINT-SIZE="10">User-defined demand curve</FONT></TD></TR>
+		 <TR><TD BORDER="1"><FONT POINT-SIZE="10">Parametric Power Curve</FONT></TD></TR>
+		 </TABLE>
+   	      </TD></TR>
+             <TR><TD></TD>
+   	         <TD BORDER="1" BGCOLOR="GRAY80" ALIGN="CENTER">
+		 <TABLE BORDER="1"><TR><TD BORDER="0"><FONT POINT-SIZE="10">Commit</FONT></TD></TR></TABLE>
+   	      </TD></TR>
+             <TR><TD></TD>
+   	         <TD BORDER="1" BGCOLOR="GRAY80" ALIGN="CENTER"><FONT POINT-SIZE="10">Cancel</FONT>
+   	      </TD></TR>
+         </TABLE>
+         </TD></TR></TABLE>
+         </TD></TR></TABLE>
+     >];
+
+
+      table_exists [shape=diamond, label="Have\nEDPs been\ndefined?"]
+      edp_exit [shape=ellipse
+   		fillcolor=antiquewhite
+   		style=filled
+   		label=<<I>Done</I>>
+   		color=red
+   		penwidth=3]
+      back_to_project [shape=ellipse
+                       fillcolor=antiquewhite
+   		    style=filled
+   		    label=<<I>Back to<BR ALIGN="CENTER"/>Project</I>>
+   		    color=black
+   		    penwidth=3]
+      back_to_project1 [shape=ellipse
+                       fillcolor=antiquewhite
+   		    style=filled
+   		    label=<<I>Done</I>>
+   		    color=black
+   		    penwidth=3]
+
+      save_table [shape=parallelogram
+         fillcolor=cornflowerblue
+	 style=filled
+	 label="Create database\nentries for\ndemand params."
+	 ]
+
+      start [shape=ellipse
+             fillcolor=antiquewhite
+   	  style=filled
+   	  label=<<I>Start<BR />slat/project/<I>id#</I>/edp</I>>
+   	  color=blue
+   	  penwidth=3
+   	  ]
+      start_oval_2 [shape=ellipse
+             fillcolor=antiquewhite
+   	  style=filled
+   	  label=<<I>Start</I>>
+   	  color=blue
+   	  penwidth=3
+   	  ]
+
+      view_table_oval [shape=ellipse
+             fillcolor=antiquewhite
+   	  style=filled
+   	  label=<<I>View Table</I>>
+   	  color=goldenrod3
+   	  penwidth=3
+   	  ]
+      view_table_oval_1 [shape=ellipse
+             fillcolor=antiquewhite
+   	  style=filled
+   	  label=<<I>View Table</I>>
+   	  color=goldenrod3
+   	  penwidth=3
+   	  ]
+      view_table_oval_2 [shape=ellipse
+             fillcolor=antiquewhite
+   	  style=filled
+   	  label=<<I>View Table</I>>
+   	  color=goldenrod3
+   	  penwidth=3
+   	  ]
+      edit_edp_powercurve_oval [shape=ellipse
+             fillcolor=antiquewhite
+   	  style=filled
+   	  label=<<I>Edit Power Curve</I>>
+   	  color=aquamarine4
+   	  penwidth=3
+   	  ]
+      edit_edp_powercurve_oval_2 [shape=ellipse
+             fillcolor=antiquewhite
+   	  style=filled
+   	  label=<<I>Edit Power Curve</I>>
+   	  color=aquamarine4
+   	  penwidth=3
+   	  ]
+      edit_edp_userdef_oval [shape=ellipse
+             fillcolor=antiquewhite
+   	  style=filled
+   	  label=<<I>Edit User-Defined</I>>
+   	  color=lightslateblue
+   	  penwidth=3
+   	  ]
+      edit_edp_userdef_oval_2 [shape=ellipse
+             fillcolor=antiquewhite
+   	  style=filled
+   	  label=<<I>Edit User-Defined</I>>
+   	  color=lightslateblue
+   	  penwidth=3
+   	  ]
+	  
+      create_table [shape=plaintext
+         label=<
+         <TABLE BORDER="0"><TR><TD ALIGN="LEFT">slat/project/<I>id#</I>/edp/init</TD></TR><TR><TD>
+         <TABLE BORDER="1" CELLSPACING="4" CELLBORDER="0">
+         <TR><TD><B>Allocate EDPs</B><BR ALIGN="CENTER"/>
+         </TD></TR>
+         <TR><TD>
+         <TABLE BGCOLOR="YELLOW" BORDER="1" CELLSPACING="2" CELLBORDER="0">
+             <TR><TD COLSPAN="2"> <B>Engineering Demands</B><BR ALIGN="LEFT"/></TD></TR>
+             <TR><TD>Number of Floors:</TD>
+   	      <TD BORDER="1" BGCOLOR="GRAY90" ALIGN="RIGHT">6&nbsp;</TD>
+             </TR>
+             <TR><TD></TD>
+   	         <TD BORDER="1" BGCOLOR="GRAY80" ALIGN="CENTER">
+		 <TABLE BORDER="1"><TR><TD BORDER="0"><FONT POINT-SIZE="10">Commit</FONT></TD></TR></TABLE>
+   	      </TD></TR>
+             <TR><TD></TD>
+   	         <TD BORDER="1" BGCOLOR="GRAY80" ALIGN="CENTER"><FONT POINT-SIZE="10">Cancel</FONT>
+   	      </TD></TR>
+         </TABLE>
+         </TD></TR></TABLE>
+         </TD></TR></TABLE>
+     >];
+
+    view_table [shape=plaintext
+	label=<
+	 <TABLE BORDER="0"><TR><TD ALIGN="LEFT">slat/project/<I>id#</I>/edp</TD></TR><TR><TD>
+	 <TABLE BORDER="1" CELLSPACING="4" CELLBORDER="0">
+	 <TR><TD><B>Engineering Demand Parameters</B><BR ALIGN="CENTER"/>
+	 </TD></TR>
+	 <TR><TD>
+	 <TABLE BGCOLOR="YELLOW" BORDER="1" CELLSPACING="2" CELLBORDER="0">
+	 <TR><TD COLSPAN="2"><B>Engineering Demands</B><BR ALIGN="LEFT"/></TD></TR>
+	 <TR><TD COLSPAN="2"><I>Click on a parameter to view or edit it.</I></TD></TR>
+	 <TR><TD><U>Ground Floor Acceleration</U></TD><TD></TD></TR>
+	 <TR><TD><U>First Floor Acceleration</U></TD><TD><U>First Floor Drift</U></TD></TR>
+	 <TR><TD><U>Second Floor Acceleration</U></TD><TD><U>Second Floor Drift</U></TD></TR>
+	 <TR><TD><U>Third Floor Acceleration</U></TD><TD><U>Third Floor Drift</U></TD></TR>
+	 <TR><TD COLSPAN="2"><U>Return to Project</U></TD></TR>
+	 </TABLE>
+	 </TD></TR></TABLE>
+	 </TD></TR></TABLE>
+     >];
+
+     view_edp_userdef [shape=plaintext
+	label=<
+	 <TABLE BORDER="0"><TR><TD ALIGN="LEFT">slat/project/<I>id#</I>/edp/userdef</TD></TR><TR><TD>
+	 <TABLE BORDER="1" CELLSPACING="4" CELLBORDER="0">
+	 <TR><TD><B>Engineering Demand: User-defined Curve</B><BR ALIGN="CENTER"/>
+	 <I>Possibly include a plot, or an option to plot</I>
+	 </TD></TR>
+	 <TR><TD>
+	 <TABLE BGCOLOR="YELLOW" BORDER="1" CELLSPACING="2" CELLBORDER="0">
+	 <TR><TD COLSPAN="2"> <B>User-Defined Demand</B><BR ALIGN="LEFT"/></TD></TR>
+	 <TR><TD>Type:</TD><TD BORDER="1">User-Defined Demand Curve</TD></TR>
+	 <TR><TD>Interpolation:</TD><TD BORDER="1">Log-log <I>or</I> Linear</TD></TR>
+	 <TR><TD>Points:</TD><TD><TABLE BORDER="0"><TR><TD><B>IM</B></TD><TD><B>Median EDP</B></TD><TD><B>sd(log(EDP))</B></TD></TR>
+						       <TR><TD>0.01</TD><TD>0.015</TD><TD>0.191</TD></TR>
+						       <TR><TD>0.02</TD><TD>0.039</TD><TD>0.191</TD></TR>
+						       <TR><TD>0.04</TD><TD>0.063</TD><TD>0.191</TD></TR>
+						       <TR><TD>...</TD><TD>...</TD></TR></TABLE>
+	 </TD></TR>
+	 <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE><TR><TD BORDER="0"><FONT POINT-SIZE="10">Edit</FONT></TD></TR></TABLE></TD></TR>
+	 <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE><TR><TD BORDER="0"><FONT POINT-SIZE="10">Change EDP Type</FONT></TD></TR></TABLE></TD></TR>
+	 <TR><TD></TD><TD><U>Return to Project</U></TD></TR>
+	 </TABLE>
+	 </TD></TR></TABLE>
+	 </TD></TR></TABLE>
+     >];
+
+    view_edp_powercurve [shape=plaintext
+         label=<
+         <TABLE BORDER="0"><TR><TD ALIGN="LEFT"><I>http://...slat/project/<I>id#</I>/edp/power</I></TD></TR><TR><TD>
+         <TABLE BORDER="1" CELLSPACING="4" CELLBORDER="0">
+	 <TR><TD><B>Engineering Demand: Power Curve</B><BR ALIGN="CENTER"/>
+	 <I>Possibly include a plot, or an option to plot</I>
+	 </TD></TR>
+	 <TR><TD>
+	 <TABLE BGCOLOR="YELLOW" BORDER="1" CELLSPACING="2" CELLBORDER="0">
+	 <TR><TD COLSPAN="3"> <B>Engineering Demand</B><BR ALIGN="LEFT"/></TD></TR>
+	 <TR><TD><B>Parameter:</B></TD><TD><B>a</B></TD><TD><B>b</B></TD></TR>
+	 <TR><TD>median EDP:</TD><TD>0.1</TD><TD>1.5</TD></TR>
+	 <TR><TD>SD(log(EDP)):</TD><TD>0.0</TD><TD>0.5</TD></TR>
+	 <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE BORDER="0"><TR><TD><FONT POINT-SIZE="10">Edit</FONT></TD></TR></TABLE></TD></TR>
+	 <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE><TR><TD BORDER="0"><FONT POINT-SIZE="10">Change Demand Type</FONT></TD></TR></TABLE></TD></TR>
+	 <TR><TD></TD><TD><U>Return to Project</U></TD></TR>
+	 </TABLE></TD></TR>
+	 </TABLE></TD></TR>
+	 </TABLE>>
+     ];
+     
+     edit_edp_userdef [shape=plaintext, label=<
+	 <TABLE BORDER="0"><TR><TD ALIGN="LEFT">slat/project/<I>id#</I>/edp/userdef/edit</TD></TR><TR><TD>
+	 <TABLE BORDER="1" CELLSPACING="4" CELLBORDER="0">
+	 <TR><TD><B>User-defined Demand Editor</B><BR ALIGN="CENTER"/>
+   <FONT POINT-SIZE="8"><I>There will be extra cells at the end of the list;<BR ALIGN="LEFT"/>
+   more can be added by commiting the form (for now;<BR ALIGN="LEFT"/>
+   should be a button to to this).<BR ALIGN="LEFT"/>
+   <BR ALIGN="LEFT" />
+   For now, points can be deleted by setting them<BR ALIGN="LEFT"/>
+   to 0,0, but there should be a button for this.<BR ALIGN="LEFT"/>
+   for this as well.<BR ALIGN="LEFT"/></I></FONT>
+	 </TD></TR>
+	 <TR><TD>
+	 <TABLE BGCOLOR="YELLOW" BORDER="1" CELLSPACING="2" CELLBORDER="0">
+	 <TR><TD>Method:</TD><TD BORDER="1">Log-log <I>or</I> Linear</TD></TR>
+	 <TR><TD>Points:</TD><TD><TABLE BORDER="0" CELLBORDER="1">
+		 <TR><TD><B>IM</B></TD><TD><B>median EDP</B></TD><TD><B>sd(log(EDP))</B></TD></TR>
+		 <TR><TD BGCOLOR="GRAY80">0.01</TD><TD BGCOLOR="GRAY80">0.015</TD><TD BGCOLOR="GRAY80">0.191</TD></TR>
+		 <TR><TD BGCOLOR="GRAY80">0.02</TD><TD BGCOLOR="GRAY80">0.039</TD><TD BGCOLOR="GRAY80">0.191</TD></TR>
+		 <TR><TD BGCOLOR="GRAY80">0.04</TD><TD BGCOLOR="GRAY80">0.063</TD><TD BGCOLOR="GRAY80">0.191</TD></TR>
+		 <TR><TD>...</TD><TD>...</TD><TD>...</TD></TR></TABLE>
+	 </TD></TR>
+	 <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE><TR><TD BORDER="0"><FONT POINT-SIZE="10">Import</FONT></TD></TR></TABLE></TD></TR>
+	 <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE><TR><TD BORDER="0"><FONT POINT-SIZE="10">Commit</FONT></TD></TR></TABLE></TD></TR>
+	 <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE><TR><TD BORDER="0"><FONT POINT-SIZE="10">Cancel</FONT></TD></TR></TABLE></TD></TR>
+	 </TABLE>
+	 </TD></TR></TABLE>
+	 </TD></TR></TABLE>
+     >];
+     
+     edit_edp_powercurve [shape=plaintext
+         label=<
+	 <TABLE BORDER="0"><TR><TD ALIGN="LEFT">slat/project/<I>id#</I>/edp/power/edit</TD></TR><TR><TD>
+	 <TABLE BORDER="1" CELLSPACING="4" CELLBORDER="0">
+	 <TR><TD><B>Power-Curve Demand Editor</B><BR ALIGN="CENTER"/>
+	 </TD></TR>
+	 <TR><TD>
+	 <TABLE BGCOLOR="YELLOW" BORDER="1" CELLSPACING="2" CELLBORDER="0">
+	 <TR><TD COLSPAN="3"> <B>Power-Curve Demand</B><BR ALIGN="LEFT"/></TD></TR>
+	 <TR><TD><B>Parameter:</B></TD><TD><B>a</B></TD><TD><B>b</B></TD></TR>
+	 <TR><TD>median EDP:</TD><TD BORDER="1" BGCOLOR="GRAY80">0.1</TD><TD BORDER="1" BGCOLOR="GRAY80">1.5</TD></TR>
+	 <TR><TD>SD(log(EDP)):</TD><TD BORDER="1" BGCOLOR="GRAY80">0.0</TD><TD BORDER="1" BGCOLOR="GRAY80">0.5</TD></TR>
+	 <TR><TD></TD><TD COLSPAN="2"><TABLE  BORDER="1" BGCOLOR="GRAY80"><TR><TD><FONT POINT-SIZE="10">Commit</FONT></TD></TR></TABLE></TD></TR>
+	 <TR><TD></TD><TD COLSPAN="2"><TABLE BORDER="1" BGCOLOR="GRAY80"><TR><TD BORDER="0"><FONT POINT-SIZE="10">Cancel</FONT></TD></TR></TABLE></TD></TR>
+	 </TABLE>
+	 </TD></TR></TABLE>
+	 </TD></TR></TABLE>
+     >];
+
+      save_edp_powercurve [shape=parallelogram
+         fillcolor=cornflowerblue
+	 style=filled
+	 label="Save to\nDatabase"
+	 ]
+
+      save_edp_userdef [shape=parallelogram
+         fillcolor=cornflowerblue
+	 style=filled
+	 label="Save to\nDatabase"
+	 ]
+
+
+      view_edp_powercurve_oval [shape=ellipse
+   		fillcolor=antiquewhite
+   		style=filled
+   		label=<<I>View Power Curve</I>>
+   		color=red
+   		penwidth=3]
+      view_edp_powercurve_oval_2 [shape=ellipse
+   		fillcolor=antiquewhite
+   		style=filled
+   		label=<<I>View Power Curve</I>>
+   		color=red
+   		penwidth=3]
+      view_edp_userdef_oval [shape=ellipse
+   		fillcolor=antiquewhite
+   		style=filled
+   		label=<<I>View User-defined</I>>
+   		color=red
+   		penwidth=3]
+      view_edp_userdef_oval_2 [shape=ellipse
+   		fillcolor=antiquewhite
+   		style=filled
+   		label=<<I>View User-defined</I>>
+   		color=red
+   		penwidth=3]
+      userdef_import [shape=plaintext, label=<
+	   <TABLE BORDER="0"><TR><TD ALIGN="LEFT">slat/project/<I>id#</I>/edp/userdef/import</TD></TR><TR><TD>
+	   <TABLE BORDER="1" CELLSPACING="4" CELLBORDER="0">
+	   <TR><TD><B>User-defined Demand Import</B><BR ALIGN="CENTER"/><FONT POINT-SIZE="8"><I>Import points from a file, for interpolation. The file should<BR ALIGN="LEFT"/>have an IM value and a set of corresponding EDP values<BR ALIGN="LEFT" />on each line. The EDP distribution will be calculated<BR ALIGN="LEFT"/>automatically.<BR ALIGN="LEFT"/>
+     </I></FONT>
+	   </TD></TR>
+	   <TR><TD>
+	   <TABLE BGCOLOR="YELLOW" BORDER="1" CELLSPACING="2" CELLBORDER="0">
+	   <TR><TD>Method:</TD><TD BORDER="1">Log-log <I>or</I> Linear</TD></TR>
+	   <TR><TD>Format:</TD><TD BORDER="1" BGCOLOR="GRAY90"><I>CSV</I>or<I>Origial SLAT</I></TD></TR>
+	   <TR><TD>Path:</TD><TD BORDER="1" BGCOLOR="GRAY90"><I>path/to/edpfunc.csv</I></TD></TR>
+	   <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE BORDER="0"><TR><TD><FONT POINT-SIZE="10">Browse</FONT></TD></TR></TABLE></TD></TR>
+	   <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE BORDER="0"><TR><TD><FONT POINT-SIZE="10">Import</FONT></TD></TR></TABLE></TD></TR>
+	   <TR><TD></TD><TD BORDER="1" BGCOLOR="GRAY80"><TABLE><TR><TD BORDER="0"><FONT POINT-SIZE="10">Cancel</FONT></TD></TR></TABLE></TD></TR>
+	   </TABLE>
+	   </TD></TR></TABLE>
+	   </TD></TR></TABLE>
+       >];
+
+       import [shape=parallelogram
+         fillcolor=cornflowerblue
+	 style=filled
+	 label="Import\nFile"
+	 ]
+
+	 browse [shape=tab, label="File\nBrowser"]
+	}
+   #+END_SRC
+
+   #+CAPTION: Pages for entering, viewing, and editing engineering demands.
+   #+ATTR_LaTeX: :width \textwidth :placement [h!bt] :options :float t
+   #+RESULTS: fig-edp
+   [[file:edp.pdf]]
+* Component Library
+* Component Groups
+* Calculations
+* scratch                                                          :noexport:
+  #+BEGIN_SRC dot :file pages.pdf :cmdline -Kdot -Tpdf
+    digraph structs {
+      size="11.7x16.5" # A3
+      #size="8.27x11.7" # A4
+      node [shape=plaintext]
+
+    rankdir=LR;
+    rank=source;
+    a;
+    subgraph cluster1 {
+      b -> c;
+      c -> d;
+      }
+      e;
+      a->b;
+      d->e;
+      }
+  #+END_SRC
+
+  #+RESULTS:
+  [[file:pages.pdf]]
+

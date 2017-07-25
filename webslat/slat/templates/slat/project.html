@@ -1,0 +1,37 @@
+
+{% if form.instance.id %}
+<p><b>Project:</b> {{ form.instance.title_text }}</P>
+<form action="{% url 'slat:project' form.instance.id %}" method="post">
+{% else %}
+<p>Create a Project</P>
+<form action="{% url 'slat:project' %}" method="post">
+{% endif %} 
+    {% csrf_token %}
+    {{ form.as_p }}
+   {% if form.instance.id %}
+    <input type="submit" value="Submit Changes" />
+   {% else %}
+    <input type="submit" value="Create Project" />
+   {% endif %}    
+</form>
+
+{% if form.instance.id %}
+    <hr/>
+    <form action="{% url 'slat:hazard' form.instance.id %}" method="get">
+      {% csrf_token %}
+      <input type="submit" value="Site Hazard" />
+    </form>
+    {% if form.instance.IM %}
+        <form action="{% url 'slat:edp' form.instance.id %}" method="get">
+          {% csrf_token %}
+          <input type="submit" value="Engineering Demands" />
+        </form>
+     {% endif %}
+{% endif %}
+    
+{% if form.instance.id %}
+<a href="{% url 'slat:index' %}">Return to Project List</a>
+{% else %}
+<a href="{% url 'slat:index' %}">Cancel</a>
+{% endif %} 
+

@@ -1,0 +1,38 @@
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript">
+    google.load("visualization", "1", {packages:["corechart"]});
+</script>
+<p>User-Defined Engineering Demand Page</P>
+
+<p><b>Project:</b> {{ project.title }}</p>
+
+{% if charts %} 
+    {% for chart in charts %}
+        {{ chart.as_html }}
+    {% endfor %}
+{% endif %}
+
+<p><b>Interpolation Method:</b>{{ edp.interpolation_method }}</p>
+
+    <details>
+    <summary>Supplied Points</summary>
+    <table border='1'><tr><td>IM</td><td>Median(x)</td><td>SD(ln(x))</td></tr>
+    {% for point in points %}
+      <tr><td align='right'>{{ point.im | floatformat:3 }}</td>
+	  <td align='right'>{{ point.median_x | floatformat:3 }}</td>
+	  <td align='right'>{{ point.sd_ln_x | floatformat:3 }}</td></tr>
+    {% endfor %}
+    </table>
+    </details>
+<form action="{% url 'slat:edp_userdef_edit' project.id edp.id %}" method="get">
+    {% csrf_token %}
+    <input type="submit" value="Edit" />
+</form>
+<form action="{% url 'slat:edp_userdef_import' project.id edp.id %}" method="get">
+    {% csrf_token %}
+    <input type="submit" value="Import" />
+</form>
+<a href="{% url 'slat:edp_choose' project.id edp.id %}">Change Demand Type</a><br/>
+<a href="{% url 'slat:edp' project.id %}">Return to Demands</a><br />
+<a href="{% url 'slat:project' project.id %}">Return to Project</a><br />
+<a href="{% url 'slat:index' %}">Return to Project List</a>

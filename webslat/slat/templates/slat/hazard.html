@@ -1,0 +1,10 @@
+{{ form.errors }}
+
+    <p>Choose how to define the intensity measure:</P>
+    <form action="{% url 'slat:hazard' project_id %}" method="post">
+	{% csrf_token %}
+        {{ form.flavour }}
+	<input type="submit" name="submit" value="Submit" />
+	<br />
+	<input type="submit" name="cancel" value="Cancel" />
+    </form>

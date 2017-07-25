@@ -1,0 +1,20 @@
+<p>Import IM data from a file</P>
+
+<p><b>Project:</b> {{ title }}</p>
+
+<form enctype="multipart/form-data" action="{% url 'slat:im_file' project_id %}" method="post">
+    {% csrf_token %}
+    {{ interp_form }}<br/>
+    {{ form.as_p }}
+    <br />
+    {% if data|length %}
+      <table><tr><td>IM</td><td>lambda</td></tr>
+      {% for x, y in data %}
+	  <tr><td>{{ x }}</td><td>{{ y }}</td></tr>  
+      {% endfor %}
+      </table>
+    {% endif %}
+    <input type="submit" value="Submit" />
+</form>
+<a href="{% url 'slat:project' project_id %}">Return to Project</a><br />
+<a href="{% url 'slat:index' %}">Return to Project List</a>

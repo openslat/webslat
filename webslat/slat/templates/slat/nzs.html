@@ -1,0 +1,26 @@
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript">
+    google.load("visualization", "1", {packages:["corechart"]});
+</script>
+<p>NZ Standard Seismic Hazard</P>
+
+<p><b>Project:</b> {{ title }}</p>
+
+{% if chart %} 
+    {{ chart.as_html }}
+{% endif %}
+
+
+<table border="1"><tr><td><b>Parameter</b></td><td><b>Value</b></td></tr>
+  <tr><td>Location</td><td>{{ nzs.location }}</td></tr>
+  <tr><td>Soil Class</td><td>{{ nzs.soil_class }}</td></tr>
+  <tr><td>Period</td><td>{{ nzs.period }}</td></tr>
+</table>
+<form action="{% url 'slat:im_nzs_edit' project_id %}" method="get">
+    {% csrf_token %}
+    <input type="submit" name='edit' value="Edit" />
+</form>
+
+<a href="{% url 'slat:hazard_choose' project_id %}">Change Hazard Type</a><br/>
+<a href="{% url 'slat:project' project_id %}">Return to Project</a><br />
+<a href="{% url 'slat:index' %}">Return to Project List</a><br/>

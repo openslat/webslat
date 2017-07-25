@@ -1,0 +1,26 @@
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript">
+    google.load("visualization", "1", {packages:["corechart"]});
+</script>
+<p>Non-Linear Hyperbolic Seismic Hazard</P>
+
+<p><b>Project:</b> {{ title }}</p>
+
+{% if chart %} 
+    {{ chart.as_html }}
+{% endif %}
+
+
+<table border="1"><tr><td><b>Parameter</b></td><td><b>Value</b></td></tr>
+  <tr><td>V<sub>assy</sub></td><td align='right'>{{ nlh.v_assy_float | floatformat:3 }}</td></tr>
+  <tr><td>IM<sub>asy</sub></td><td align='right'>{{ nlh.im_asy_float | floatformat:3 }}</td></tr>
+  <tr><td>alpha</td><td align='right'>{{ nlh.alpha_float | floatformat:3 }}</td></tr>
+</table>
+<form action="{% url 'slat:nlh_edit' project_id %}" method="get">
+    {% csrf_token %}
+    <input type="submit" name='edit' value="Edit" />
+</form>
+
+<a href="{% url 'slat:hazard_choose' project_id %}">Change Hazard Type</a><br />
+<a href="{% url 'slat:project' project_id %}">Return to Project</a><br />
+<a href="{% url 'slat:index' %}">Return to Project List</a><br/>

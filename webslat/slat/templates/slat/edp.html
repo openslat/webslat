@@ -1,0 +1,22 @@
+<p>Engineering Demands</P>
+{{ form.errors }}
+
+<P><B>Project:</B> {{ project.title_text }}</P>
+{% for e in edps %}
+<p><a href="{% url 'slat:edp_view' project.id e.id %}">
+    {% if e.flavour is None %}<i>{% else %}<b>{% endif %}
+    Floor # {{ e.floor }}
+    {% if e.type == 'A' %}
+        Acceleration
+    {% elif e.type == 'D' %}
+        Drift
+    {% else %}
+        <i>Unknown Demand</i>
+    {% endif %}
+    {% if e.flavour is None %}</i>{% else %}</b>{% endif %}
+    </a></p>
+{% endfor %}
+
+</br>
+<a href="{% url 'slat:project' project.id %}">Return to Project</a><br /><br/>
+<a href="{% url 'slat:index' %}">Return to Project List</a>

@@ -1,0 +1,786 @@
+import pyslat
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import fsolve
+from django.http import Http404, HttpResponseRedirect
+from django.shortcuts import render, get_object_or_404
+from django.urls import reverse
+from django.forms import modelformset_factory, ValidationError, HiddenInput
+from .nzs import *
+from math import *
+from graphos.sources.model import SimpleDataSource
+from graphos.sources.model import ModelDataSource
+from graphos.renderers.gchart import LineChart
+
+from  .models import *
+from slat.constants import *
+
+def index(request):
+    project_list = Project.objects.all()
+    context = { 'project_list': project_list }
+    return render(request, 'slat/index.html', context)
+
+def project(request, project_id=None):
+    if request.method == 'POST':
+        if project_id:
+            project = Project.objects.get(pk=project_id)
+            old_rarity = project.rarity
+            form = ProjectForm(request.POST, Project.objects.get(pk=project_id))
+            form.instance.id = project_id
+        else:
+            form = ProjectForm(request.POST)
+
+        
+        if form.is_valid():
+            form.save()
+            if project_id and old_rarity != form.instance.rarity:
+                if project.IM:
+                    project.IM._make_model()
+                    if project.floors:
+                        for edp in EDP.objects.filter(project=project):
+                            edp._make_model()
+                            
+            return HttpResponseRedirect(reverse('slat:project', args=(form.instance.id,)))
+    else:
+        # If the project exists, use it to populate the form:
+        if project_id:
+            form = ProjectForm(instance=Project.objects.get(pk=project_id))
+        else:
+            form = ProjectForm()
+            
+    return render(request, 'slat/project.html', {'form': form})
+
+
+def hazard(request, project_id):
+    # If the project doesn't exist, generate a 404:
+    project = get_object_or_404(Project, pk=project_id)
+
+    # Otherwise:
+    #    - Does the project already have a hazard defined? If so, we'll
+    #      redirect to the 'view' page for that type of hazard
+    #    - If not, we'll redirect to the 'choose' page:
+    hazard = project.IM
+
+    if not hazard:
+            form = HazardForm()
+            return HttpResponseRedirect(reverse('slat:hazard_choose', args=(project_id)))
+    else:        
+        # Hazard exists:
+        flavour = hazard.flavour
+        if flavour.id == IM_TYPE_NLH:
+            form = NLHForm(instance=hazard.nlh)
+            return HttpResponseRedirect(reverse('slat:nlh', args=(project_id,)))
+        elif flavour.id == IM_TYPE_INTERP:
+            return HttpResponseRedirect(reverse('slat:im_interp', args=(project_id,)))
+        elif flavour.id == IM_TYPE_NZS:
+            return HttpResponseRedirect(reverse('slat:nzs', args=(project_id,)))
+        else:
+            raise ValueError("UNKNOWN HAZARD TYPE")
+        
+def hazard_choose(request, project_id):
+    project = get_object_or_404(Project, pk=project_id)
+    hazard = project.IM
+
+    if request.POST:
+        if request.POST.get('cancel'):
+            # If the form was CANCELled, return the user to the project page (if no hazard has been defined),
+            # or to the page for the current hazard (they got here because they cancelled a change to the 
+            # hazard type):
+            if hazard:
+                return HttpResponseRedirect(reverse('slat:hazard', args=(project_id)))
+            else:
+                return HttpResponseRedirect(reverse('slat:project', args=(project_id)))
+        elif not hazard:
+            # The form was submitted, but the project doesn't have a hazard yet. Go straight
+            # to the approporite 'edit' page to let the user enter data:
+            if request.POST.get('flavour'):
+                flavour = IM_Types.objects.get(pk=request.POST.get('flavour'))
+                if flavour.id == IM_TYPE_NLH:
+                    return HttpResponseRedirect(reverse('slat:nlh_edit', args=(project_id,)))
+                elif flavour.id == IM_TYPE_INTERP:
+                    return HttpResponseRedirect(reverse('slat:im_interp_edit', args=(project_id,)))
+                elif flavour.id == IM_TYPE_NZS:
+                    return HttpResponseRedirect(reverse('slat:im_nzs_edit', args=(project_id,)))
+                else:
+                    raise ValueError("UNKNOWN HAZARD TYPE")
+            else:
+                # Shouldn't get here!
+                raise ValueError("SHOULDN'T GET HERE")
+        else:        
+            # Hazard exists. If the chosen type already, exists, save the change and go to the
+            # 'view' page for the hazard. Otherwise, don't save the change, but go to the 'edit'
+            # page.
+            flavour = IM_Types.objects.get(pk=request.POST.get('flavour'))
+            if flavour.id == IM_TYPE_NLH:
+                if hazard.nlh:
+                    hazard.flavour = flavour
+                    hazard.save()
+                    hazard._make_model()
+                    return HttpResponseRedirect(reverse('slat:nlh', args=(project_id,)))
+                else:
+                    return HttpResponseRedirect(reverse('slat:nlh_edit', args=(project_id,)))
+            elif flavour.id == IM_TYPE_INTERP:
+                if hazard.interp_method:
+                    hazard.flavour = flavour
+                    hazard.save()
+                    hazard._make_model()
+                    return HttpResponseRedirect(reverse('slat:im_interp', args=(project_id,)))
+                else:
+                    return HttpResponseRedirect(reverse('slat:im_interp_edit', args=(project_id,)))
+            if flavour.id == IM_TYPE_NZS:
+                if hazard.nzs:
+                    hazard.flavour = flavour
+                    hazard.save()
+                    hazard._make_model()
+                    return HttpResponseRedirect(reverse('slat:nzs', args=(project_id,)))
+                else:
+                    return HttpResponseRedirect(reverse('slat:im_nzs_edit', args=(project_id,)))
+            else:
+                raise ValueError("UNKNOWN HAZARD TYPE")
+    else:
+        if hazard:
+            form = HazardForm(instance=hazard)
+        else:
+            form = HazardForm(initial={'flavour': IM_TYPE_NZS})
+        return render(request, 'slat/hazard_choose.html', {'form': form, 
+                                                           'project_id': project_id,
+                                                           'title': project.title_text })
+
+def _plot_hazard(h):
+    if h.model():
+        im_func = h.model()
+        xlimit = im_func.plot_max()
+
+        data =  [
+            ['IM', 'lambda'],
+        ]
+        for i in range(11):
+            x = i/10 * xlimit
+            y = im_func.getlambda(x)
+            data.append([x, y])
+            
+        data_source = SimpleDataSource(data=data)
+        chart = LineChart(data_source, options={'title': 'Intensity Measure Rate of Exceedance', 
+                                                'hAxis': {'logScale': True, 'title': 'Intensity Measure'},
+                                                'vAxis': {'logScale': True, 'format': 'scientific',
+                                                          'title': 'Rate of Exceedance'},
+                                                'pointSize': 5})
+        return chart
+    
+        
+def nlh(request, project_id):
+    project = get_object_or_404(Project, pk=project_id)
+    hazard = project.IM
+
+    if request.method == 'POST':
+        raise ValueError("SHOULDN'T GET HERE")
+    else:
+        if hazard and hazard.nlh:
+            return render(request, 'slat/nlh.html', {'nlh':hazard.nlh, 'title': project.title_text, 
+                                                     'project_id': project_id, 'chart': _plot_hazard(hazard)})
+        else:
+            raise ValueError("SHOULDN'T REACH THIS")
+            
+
+def nlh_edit(request, project_id):
+    project = get_object_or_404(Project, pk=project_id)
+    hazard = project.IM
+
+    if request.method == 'POST':
+        if request.POST.get('cancel'):
+            if hazard:
+                return HttpResponseRedirect(reverse('slat:hazard', args=(project_id)))
+            else:
+                return HttpResponseRedirect(reverse('slat:project', args=(project_id)))
+
+        project = get_object_or_404(Project, pk=project_id)
+        hazard = project.IM
+
+        if not hazard or not hazard.nlh:
+            form = NLHForm(request.POST)
+        else:
+            form = NLHForm(request.POST, instance=hazard.nlh)
+        form.save()
+        if not hazard:
+            hazard = IM()
+        hazard.nlh = form.instance
+        hazard.flavour = IM_Types.objects.get(pk=IM_TYPE_NLH)
+        hazard.save()
+        hazard._make_model()
+        project.IM = hazard
+        project.save()
+
+        return HttpResponseRedirect(reverse('slat:nlh', args=(project_id)))
+    else:
+        if hazard and hazard.nlh:
+            form = NLHForm(instance=hazard.nlh)
+        else:
+            form = NLHForm()
+
+    return render(request, 'slat/nlh_edit.html', {'form': form, 'project_id': project_id,
+                                                  'title': project.title_text})
+
+def im_interp(request, project_id):
+    project = get_object_or_404(Project, pk=project_id)
+    hazard = project.IM
+
+    if request.method == 'POST':
+        project = get_object_or_404(Project, pk=project_id)
+        hazard = project.IM
+
+        if not hazard or not hazard.interp_method:
+            form = Interpolation_Method_Form(request.POST)
+        else:
+            form = Interpolation_Method_Form(request.POST, initial={'method': hazard.interp_method.id})
+        form.save()
+
+        if not hazard:
+            hazard = IM()
+        if form.is_valid():
+            hazard.interp_method = Interpolation_Method.objects.get(pk=form.cleaned_data['method'])
+        hazard.flavour = IM_Types.objects.get(pk=IM_TYPE_INTERP)
+        hazard.save()
+        hazard._make_model()
+        project.IM = hazard
+        project.save()
+        
+        Point_Form_Set = modelformset_factory(IM_Point, can_delete=True, fields=('im_value', 'rate'), extra=3)
+        formset = Point_Form_Set(request.POST, queryset=IM_Point.objects.filter(hazard=hazard).order_by('im_value'))
+
+        instances = formset.save(commit=False)
+
+        for instance in instances:
+            instance.hazard = hazard
+            if instance.im_value==0 and instance.rate==0:
+                instance.delete()
+            else:
+                instance.save()
+
+        # Rebuild the form from the database; this removes any deleted entries
+        formset = Point_Form_Set(queryset=IM_Point.objects.filter(hazard=hazard).order_by('im_value'))
+        return render(request, 'slat/im_interp.html', {'form': form, 'points': formset,
+                                                       'project_id': project_id, 'title': project.title_text})
+            
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        points = IM_Point.objects.filter(hazard=hazard).order_by('im_value')
+        method = hazard.interp_method
+
+        if True:
+            if False:
+                data_source = ModelDataSource(IM_Point.objects.filter(hazard = hazard).order_by('im_value'), fields=['im_value', 'rate'])
+                chart = LineChart(data_source, options={'title': 'Intensity Measure Rate of Exceedance', 
+                                                        'hAxis': {'logScale': True}, 'vAxis': {'logScale': True}})
+                                                        
+                context = {'chart': chart}
+            else:
+                chart = _plot_hazard(hazard)
+
+            return render(request, 'slat/im_interp.html', {'method': method, 'points': points,
+                                                           'project_id': project_id, 'chart': chart,
+                                                           'title': project.title_text})
+    return render(request, 'slat/im_interp.html', {'method': method, 'points': points, 
+                                                   'project_id': project_id,
+                                                   'title': project.title_text})
+
+def im_interp_edit(request, project_id):
+    project = get_object_or_404(Project, pk=project_id)
+    hazard = project.IM
+
+    if request.method == 'POST':
+        project = get_object_or_404(Project, pk=project_id)
+        hazard = project.IM
+
+        if request.POST.get('cancel'):
+            if hazard:
+                return HttpResponseRedirect(reverse('slat:hazard', args=(project_id)))
+            else:
+                return HttpResponseRedirect(reverse('slat:project', args=(project_id)))
+
+        if not hazard or not hazard.interp_method:
+            form = Interpolation_Method_Form(request.POST)
+        else:
+            form = Interpolation_Method_Form(request.POST, initial={'method': hazard.interp_method.id})
+
+        if not hazard:
+            hazard = IM()
+        if form.is_valid():
+            hazard.interp_method = Interpolation_Method.objects.get(pk=form.cleaned_data['method'])
+        hazard.flavour = IM_Types.objects.get(pk=IM_TYPE_INTERP)
+        hazard.save()
+        hazard._make_model()
+        project.IM = hazard
+        project.save()
+
+        Point_Form_Set = modelformset_factory(IM_Point, can_delete=True, exclude=('id', 'hazard',), extra=3)
+        formset = Point_Form_Set(request.POST, queryset=IM_Point.objects.filter(hazard=hazard).order_by('im_value'))
+
+        if not formset.is_valid():
+            print(formset.errors)
+        instances = formset.save(commit=False)
+
+        for f in formset.deleted_forms:
+            f.instance.delete()
+            
+        for instance in instances:
+            if instance.id and instance.DELETE:
+                instance.delete()
+            else:
+                instance.hazard = hazard
+                instance.save()
+
+        if request.POST.get('done'):
+            return HttpResponseRedirect(reverse('slat:im_interp', args=(project_id)))
+        else:
+            # Rebuild the form from the database; this removes any deleted entries
+            formset = Point_Form_Set(queryset=IM_Point.objects.filter(hazard=hazard).order_by('im_value'))
+            return render(request, 'slat/im_interp_edit.html', {'form': form, 'points': formset, 
+                                                                'project_id': project_id,
+                                                                'title': project.title_text})
+            
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        Point_Form_Set = modelformset_factory(IM_Point, can_delete=True, exclude=('hazard',), widgets={'id': HiddenInput}, extra=3)
+        if hazard and hazard.interp_method:
+            form = Interpolation_Method_Form(initial={'method': hazard.interp_method.id})
+            formset = Point_Form_Set(queryset=IM_Point.objects.filter(hazard=hazard).order_by('im_value'))
+        else:
+            form = Interpolation_Method_Form(initial={'method': INTERP_LOGLOG})
+            formset = Point_Form_Set(queryset=IM_Point.objects.none())
+
+    return render(request, 'slat/im_interp_edit.html', {'form': form, 'points': formset,
+                                                        'project_id': project_id,
+                                                        'title': project.title_text})
+
+def im_file(request, project_id):
+    project = get_object_or_404(Project, pk=project_id)
+    hazard = project.IM
+
+    if request.method == 'POST':
+        interp_form = Interpolation_Method_Form(request.POST)
+        form = Input_File_Form(request.POST, request.FILES)
+
+        try:
+            # Now save the data. First make sure the database hierarchy is present:
+            if not hazard:
+                hazard = IM()
+            if interp_form.is_valid():
+                hazard.interp_method = Interpolation_Method.objects.get(pk=interp_form.cleaned_data['method'])
+            else:
+                hazard.interp_method = Interpolation(method=Interpolation_Method.objects.get(pk=INTERP_LOGLOG))
+                
+            if form.is_valid():
+                if form.cleaned_data['flavour'].id == INPUT_FORMAT_CSV:
+                    data = np.genfromtxt(request.FILES['path'].file, comments="#", delimiter=",", invalid_raise=True)
+                    for d in data:
+                        if type(d) == list or type(d) == np.ndarray:
+                            for e in d:
+                                if isnan(e):
+                                    raise ValueError("Error importing data")
+                        else:
+                            if isnan(d):
+                                raise ValueError("Error importing data")
+                elif form.cleaned_data['flavour'].id == INPUT_FORMAT_LEGACY:
+                    data = np.loadtxt(request.FILES['path'].file, skiprows=2)
+                else:
+                    raise ValueError("Unrecognised file format specified.")
+                    
+            if len(data[0]) != 2:
+                raise ValueError("Wrong number of columns")
+
+
+            hazard.flavour = IM_Types.objects.get(pk=IM_TYPE_INTERP)
+            hazard.save()
+            project.IM = hazard
+            project.save()
+            # Remove any existing points:
+            IM_Point.objects.filter(hazard = hazard).delete()
+            
+            # Insert new points:
+            for x, y in data:
+                IM_Point(hazard=hazard, im_value=x, rate=y).save()
+
+            hazard._make_model()
+            return HttpResponseRedirect(reverse('slat:im_interp', args=(project_id,)))
+        except ValueError as e:
+            data = None
+            form.add_error(None, 'There was an error importing the file.')
+
+        return render(request, 'slat/im_file.html', {'form': form,
+                                                     'interp_form': interp_form,
+                                                     'project_id': project_id,
+                                                     'title': project.title_text,
+                                                     'data': data})
+            
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        form = Input_File_Form()
+        if hazard and hazard.interp_method:
+            interp_form = Interpolation_Method_Form(initial={'method': hazard.interp_method.id})
+        else:
+            interp_form = Interpolation_Method_Form()
+        return render(request, 'slat/im_file.html', {'form': form, 
+                                                     'interp_form': interp_form,
+                                                     'project_id': project_id,
+                                                     'title': project.title_text})
+    
+
+def im_nzs(request, project_id):
+    project = get_object_or_404(Project, pk=project_id)
+    hazard = project.IM
+
+    if request.method == 'POST':
+        raise ValueError("SHOULDN'T POST THIS PAGE")
+    else:
+        if hazard and hazard.nzs:
+            if False:
+                nzs = hazard.nzs
+                data = [['IM', 'lambda']]
+                for r in R_defaults:
+                    y = 1/r
+                    x =  C(hazard.nzs.soil_class,
+                           hazard.nzs.period,
+                           r,
+                           hazard.nzs.location.z,
+                           hazard.nzs.location.min_distance)
+                    data.append([x, y])
+
+                    data_source = SimpleDataSource(data=data)
+                    chart = LineChart(data_source, options={'title': 'Intensity Measure Rate of Exceedance', 
+                                                            'hAxis': {'logScale': True}, 'vAxis': {'logScale': True}})
+            else:
+                chart = _plot_hazard(hazard)
+        
+            return render(request, 'slat/nzs.html', {'nzs':hazard.nzs, 'title': project.title_text, 
+                                                         'project_id': project_id, 'chart': chart})
+        else:
+            raise ValueError("SHOULDN'T REACH THIS")
+            
+
+def im_nzs_edit(request, project_id):
+    project = get_object_or_404(Project, pk=project_id)
+    hazard = project.IM
+
+    if request.method == 'POST':
+        if request.POST.get('cancel'):
+            if hazard:
+                return HttpResponseRedirect(reverse('slat:hazard', args=(project_id)))
+            else:
+                return HttpResponseRedirect(reverse('slat:project', args=(project_id)))
+
+        if request.POST.get('edit'):
+            return HttpResponseRedirect(reverse('slat:im_nzs_edit', args=(project_id)))
+        
+        project = get_object_or_404(Project, pk=project_id)
+        hazard = project.IM
+
+        if not hazard or not hazard.nzs:
+            form = NZSForm(request.POST)
+        else:
+            form = NZSForm(request.POST, instance=hazard.nzs)
+        form.save()
+        if not hazard:
+            hazard = IM()
+        hazard.nzs = form.instance
+        hazard.flavour = IM_Types.objects.get(pk=IM_TYPE_NZS)
+        hazard.save()
+        hazard._make_model()
+        project.IM = hazard
+        project.save()
+
+        return HttpResponseRedirect(reverse('slat:nzs', args=(project_id)))
+    
+    else:
+        if hazard and hazard.nzs:
+            form = NZSForm(instance=hazard.nzs)
+        else:
+            form = NZSForm()
+
+    return render(request, 'slat/nzs_edit.html', {'form': form, 'project_id': project_id,
+                                                     'title': project.title_text})
+    
+def _plot_demand(edp):
+    if edp.model():
+        edp_func = edp.model()
+        xlimit = edp.project.IM.model().plot_max()
+
+        data =  [['IM', 'Median', 'SD_ln']]
+        for i in range(11):
+            x = i/10 * xlimit
+            median = edp_func.Median(x)
+            sd_ln = edp_func.SD_ln(x)
+            data.append([x, median, sd_ln])
+            
+        data_source = SimpleDataSource(data=data)
+        chart1 = LineChart(data_source, options={'title': 'Engineering Demand | Intensity Measure', 
+                                                 'series': { 0: {'targetAxisIndex': 0},
+                                                             1: {'targetAxisIndex': 1}},
+                                                 'vAxes': { 0: {'title': 'Median(Demand))'},
+                                                            1: {'title': 'Standard Deviation(log(Demand))'}},
+                                                'pointSize': 5})
+        
+        data = [['Demand', 'Lambda']]
+        xlimit = edp_func.plot_max()
+
+        for i in range(11):
+            xval = i/10 * xlimit
+            rate = edp_func.getlambda(xval)
+            data.append([xval, rate])
+        print(data)
+        data_source = SimpleDataSource(data=data)
+        chart2 = LineChart(data_source, options={'title': 'Engineering Demand Rate of Exceedance', 
+                                                'hAxis': {'logScale': True, 'title': 'Demand'},
+                                                 'vAxis': {'logScale': True, 'title': 'Rate of Exceedance'},
+                                                'pointSize': 5})
+        return [chart1, chart2]
+    
+def edp(request, project_id):
+    # If the project doesn't exist, generate a 404:
+    project = get_object_or_404(Project, pk=project_id)
+
+    # Otherwise:
+    #    - Does the project already have EDPs defined? If so, we'll
+    #      redirect to the 'view' page for the EDPs
+    #    - If not, we'll redirect to the 'init' page:
+    if project.floors :
+        # EDP has been defined exists:
+        return render(request, 'slat/edp.html', {'project': project,
+                                                 'edps': EDP.objects.filter(project=project).order_by('floor', 'type')})
+    else:
+        return HttpResponseRedirect(reverse('slat:edp_init', args=(project_id)))
+    
+def edp_view(request, project_id, edp_id):
+    project = get_object_or_404(Project, pk=project_id)
+    edp = get_object_or_404(EDP, pk=edp_id)
+        
+    if request.method == 'POST':
+        raise ValueError("SHOULD NOT GET HERE")
+    else:
+        flavour = edp.flavour
+        if not flavour:
+            return HttpResponseRedirect(reverse('slat:edp_choose', args=(project_id, edp_id)))
+        elif flavour.id == EDP_FLAVOUR_POWERCURVE:
+            return HttpResponseRedirect(reverse('slat:edp_power', args=(project_id, edp_id)))
+        elif flavour.id == EDP_FLAVOUR_USERDEF:
+            return HttpResponseRedirect(reverse('slat:edp_userdef', args=(project_id, edp_id)))
+        else:
+            raise ValueError("edp_view not implemented")
+    
+def edp_init(request, project_id):
+    # If the project doesn't exist, generate a 404:
+    project = get_object_or_404(Project, pk=project_id)
+    if request.method == 'POST':
+        project.floors = int(request.POST.get('floors'))
+        project.save()
+        for f in range(int(project.floors) + 1):
+            EDP(project=project,
+                floor=f,
+                type=EDP.EDP_TYPE_ACCEL).save()
+            if f > 0:
+                EDP(project=project,
+                    floor=f,
+                    type=EDP.EDP_TYPE_DRIFT).save()
+        return HttpResponseRedirect(reverse('slat:edp', args=(project_id)))
+    else:
+        return render(request, 'slat/edp_init.html', {'project': project, 'form': FloorsForm()})
+    
+def edp_choose(request, project_id, edp_id):
+    project = get_object_or_404(Project, pk=project_id)
+    edp = get_object_or_404(EDP, pk=edp_id)
+    
+    if request.POST:
+        if request.POST.get('cancel'):
+            # If the form was CANCELled, return the user to the EDP page
+            return HttpResponseRedirect(reverse('slat:edp', args=(project_id)))
+        
+        flavour = EDP_Flavours.objects.get(pk=request.POST.get('flavour'))
+        if flavour.id == EDP_FLAVOUR_USERDEF:
+            return HttpResponseRedirect(reverse('slat:edp_userdef_edit', args=(project_id, edp_id)))
+        elif flavour.id == EDP_FLAVOUR_POWERCURVE:
+            return HttpResponseRedirect(reverse('slat:edp_power_edit', args=(project_id, edp_id)))
+        else:
+            raise ValueError("EDP_CHOOSE: Unrecognized choice '{}'".format(flavour))
+            
+    else:
+        form = EDPForm()
+        return render(request, 'slat/edp_choose.html', {'form': form, 
+                                                        'project': project,
+                                                        'edp': edp})
+    raise ValueError("EDP_CHOOSE not implemented")
+
+def edp_power(request, project_id, edp_id):
+    project = get_object_or_404(Project, pk=project_id)
+    edp = get_object_or_404(EDP, pk=edp_id)
+    charts = _plot_demand(edp)
+    return render(request, 'slat/edp_power.html', {'project': project, 'edp': edp, 'charts': charts})
+
+def edp_power_edit(request, project_id, edp_id):
+    project = get_object_or_404(Project, pk=project_id)
+    edp = get_object_or_404(EDP, pk=edp_id)
+    
+    if request.POST:
+        if request.POST.get('cancel'):
+            return HttpResponseRedirect(reverse('slat:edp', args=(project_id)))
+
+        if not edp.powercurve:
+            form = EDP_PowerCurve_Form(request.POST)
+        else:
+            form = EDP_PowerCurve_Form(request.POST, instance=edp.powercurve)
+        form.save()
+        edp.powercurve = form.instance
+        edp.flavour = EDP_Flavours.objects.get(pk=EDP_FLAVOUR_POWERCURVE);
+
+        edp.save()
+        edp._make_model()
+        
+        return HttpResponseRedirect(reverse('slat:edp_power', args=(project_id, edp_id)))
+    else:
+        if edp.powercurve:
+            form = EDP_PowerCurve_Form(instance=edp.powercurve)
+        else:
+            form = EDP_PowerCurve_Form()
+
+        return render(request, 'slat/edp_power_edit.html', {'form': form,
+                                                            'project': project,
+                                                            'edp': edp})
+
+def edp_userdef(request, project_id, edp_id):
+    project = get_object_or_404(Project, pk=project_id)
+    edp = get_object_or_404(EDP, pk=edp_id)
+    charts = _plot_demand(edp)
+    
+
+    return render(request, 'slat/edp_userdef.html',
+                  { 'project': project, 
+                    'edp': edp,
+                    'charts': charts,
+                    'points': EDP_Point.objects.filter(demand=edp).order_by('im')})
+
+def edp_userdef_edit(request, project_id, edp_id):
+    project = get_object_or_404(Project, pk=project_id)
+    edp = get_object_or_404(EDP, pk=edp_id)
+    
+    if request.method == 'POST':
+        if request.POST.get('cancel'):
+            return HttpResponseRedirect(reverse('slat:edp_view', args=(project.id, edp.id)))
+
+        edp.flavour =  EDP_Flavours.objects.get(pk=EDP_FLAVOUR_USERDEF);
+        edp.interpolation_method = Interpolation_Method.objects.get(pk=request.POST.get('method'))
+        edp.save()
+        edp._make_model()
+        
+        Point_Form_Set = modelformset_factory(EDP_Point, can_delete=True, exclude=('demand',), widgets={'id': HiddenInput}, extra=3)
+        formset = Point_Form_Set(request.POST, queryset=EDP_Point.objects.filter(demand=edp).order_by('im'))
+
+        if not formset.is_valid():
+            print(formset.errors)
+        instances = formset.save(commit=False)
+        
+        for form in formset.deleted_forms:
+            form.instance.delete()
+            
+        for instance in instances:
+            if instance.id and instance.DELETE:
+                instance.delete()
+            else:
+                instance.demand = edp
+                instance.save()
+
+        return HttpResponseRedirect(reverse('slat:edp_view', args=(project.id, edp.id)))
+            
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        Point_Form_Set = modelformset_factory(EDP_Point, can_delete=True, exclude=('demand',), widgets={'id': HiddenInput}, extra=3)
+        formset = Point_Form_Set(queryset=EDP_Point.objects.filter(demand=edp).order_by('im'))
+        if edp.interpolation_method:
+            form = Interpolation_Method_Form(initial={'method': edp.interpolation_method.id})
+        else:
+            form = Interpolation_Method_Form(initial={'method': INTERP_LINEAR})
+
+        return render(request, 'slat/edp_userdef_edit.html',
+                      {'form': form, 'points': formset,
+                       'project': project, 'edp': edp})
+
+def edp_userdef_import(request, project_id, edp_id):
+    project = get_object_or_404(Project, pk=project_id)
+    edp = get_object_or_404(EDP, pk=edp_id)
+
+    if request.method == 'POST':
+        interp_form = Interpolation_Method_Form(request.POST)
+        form = Input_File_Form(request.POST, request.FILES)
+
+        try:
+            if form.is_valid():
+                print("VALID")
+                print(form.cleaned_data['flavour'])
+                if form.cleaned_data['flavour'].id == INPUT_FORMAT_CSV:
+                    data = np.genfromtxt(request.FILES['path'].file, comments="#", delimiter=",", invalid_raise=True)
+                    for d in data:
+                        if type(d) == list or type(d) == np.ndarray:
+                            for e in d:
+                                if isnan(e):
+                                    raise ValueError("Error importing data")
+                        else:
+                            if isnan(d):
+                                raise ValueError("Error importing data")
+                elif form.cleaned_data['flavour'].id == INPUT_FORMAT_LEGACY:
+                    print("LEGACY")
+                    data = np.loadtxt(request.FILES['path'].file, skiprows=2)
+                else:
+                    raise ValueError("Unrecognised file format specified.")
+            # Validate the data:
+            points = []
+            for d in data:
+                if len(d) < 2:
+                    raise ValueError("Wrong number of columns")
+                im = d[0]
+                values = d[1:]
+                ln_values = []
+                for value in values:
+                    if value != 0:
+                        ln_values.append(log(value))
+                median_edp = exp(np.mean(ln_values))
+                sd_ln_edp = np.std(ln_values, ddof=1)
+                points.append({'im': im, 'mu': median_edp, 'sigma': sd_ln_edp})
+
+            edp.flavour = EDP_Flavours.objects.get(pk=EDP_FLAVOUR_USERDEF);
+            if interp_form.is_valid():
+                edp.interpolation_method = Interpolation_Method.objects.get(pk=interp_form.cleaned_data['method'])
+            else:
+                raise ValueError("INVALID INTERP FORM")
+            edp.save()
+            
+            # Remove any existing points:
+            EDP_Point.objects.filter(demand = edp).delete()
+            
+            # Insert new points:
+            for p in points:
+                EDP_Point(demand=edp, im=p['im'], median_x=p['mu'], sd_ln_x=p['sigma']).save()
+
+            edp._make_model()
+            return HttpResponseRedirect(reverse('slat:edp_userdef', args=(project_id, edp_id)))
+        except ValueError as e:
+            data = None
+            form.add_error(None, 'There was an error importing the file.')
+
+        #print(data)
+        return render(request, 'slat/edp_userdef_import.html', {'form': form, 
+                                                                'interp_form': interp_form,
+                                                                'project': project,
+                                                                'edp': edp,
+                                                                'data': data})
+            
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        if edp.interpolation_method:
+            interp_form = Interpolation_Method_Form(initial={'method': edp.interpolation_method.id})
+        else:
+            interp_form = Interpolation_Method_Form()
+        print(interp_form)
+        form = Input_File_Form()
+        return render(request, 'slat/edp_userdef_import.html', {'form': form, 
+                                                                'interp_form': interp_form,
+                                                                'project': project,
+                                                                'edp':edp})
+    raise ValueError("EDP_USERDEF_IMPORT not implemented")
+

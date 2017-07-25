@@ -1,0 +1,16 @@
+<p>Non-Linear Hyperbolic Seismic Hazard</P>
+
+<p><b>Project:</b> {{ title }}</p>
+
+<form action="{% url 'slat:nlh_edit' project_id %}" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <br />
+    <input type="submit" value="Submit" />
+</form>
+<form action="{% url 'slat:nlh_edit' project_id %}" method="post">
+    {% csrf_token %}
+    <input type="submit" name="cancel" value="Cancel" />
+</form>
+<a href="{% url 'slat:project' project_id %}">Return to Project</a><br />
+<a href="{% url 'slat:index' %}">Return to Project List</a>

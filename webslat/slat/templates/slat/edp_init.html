@@ -1,0 +1,19 @@
+<p>Initialise Engineering Demands</P>
+{{ form.errors }}
+
+<P><B>DEMAND CURVES</B></P>
+<P><B>Project: {{ project.title }}</B></P>
+
+<form action="{% url 'slat:edp_init' project.id %}" method="post" />
+  {% csrf_token %}
+  {{ form }}
+  <br />
+  <input type="submit" value="Submit" />
+
+  <input type="submit" formaction="{% url 'slat:index' %}" value="Cancel" />
+</form>
+
+
+
+
+

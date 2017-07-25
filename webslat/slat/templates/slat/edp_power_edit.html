@@ -1,0 +1,17 @@
+<p>Engineering Demand: Power Curve</P>
+
+<p><b>Project:</b> {{ project.title }}</p>
+
+<form action="{% url 'slat:edp_power_edit' project.id edp.id %}" method="post">
+    {% csrf_token %}
+    <table border="1">
+      <tr><td><b>Attribute</b></td><td><b>a</b></td><td><b>b</b></td></tr>
+      <tr><td>Median(x)</td><td>{{ form.median_x_a }}</td><td> {{ form.median_x_b }}</td></tr>
+      <tr><td>Sd_Ln(x)</td><td>{{ form.sd_ln_x_a }}</td><td> {{ form.sd_ln_x_b }}</td></tr>
+      </table>
+    <br />
+    <input type="submit" value="Submit" />
+    <input type="submit" name="cancel" value="Cancel" />
+</form>
+<a href="{% url 'slat:project' project.id %}">Return to Project</a><br />
+<a href="{% url 'slat:index' %}">Return to Project List</a>

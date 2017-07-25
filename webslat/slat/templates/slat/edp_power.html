@@ -1,0 +1,28 @@
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript">
+    google.load("visualization", "1", {packages:["corechart"]});
+</script>
+<p>Engineering Demand: Power Curve</P>
+
+<p><b>Project:</b> {{ project.title }}</p>
+
+{% if charts %} 
+    {% for chart in charts %}
+        {{ chart.as_html }}
+    {% endfor %}
+{% endif %}
+
+<table border="1">
+  <tr><td><b>Attribute</b></td><td><b>a</b></td><td><b>b</b></td></tr>
+  <tr><td>Median(x)</td><td>{{ edp.powercurve.median_x_a }}</td><td> {{ edp.powercurve.median_x_b }}</td></tr>
+  <tr><td>Sd_Ln(x)</td><td>{{ edp.powercurve.sd_ln_x_a }}</td><td> {{ edp.powercurve.sd_ln_x_b }}</td></tr>
+</table>
+<form action="{% url 'slat:edp_power_edit' project.id edp.id  %}" method="get">
+    {% csrf_token %}
+    <input type="submit" name='edit' value="Edit" />
+</form>
+
+<a href="{% url 'slat:edp_choose' project.id edp.id %}">Change Demand Type</a><br/>
+<a href="{% url 'slat:edp' project.id %}">Return to Demands</a><br />
+<a href="{% url 'slat:project' project.id %}">Return to Project</a><br />
+<a href="{% url 'slat:index' %}">Return to Project List</a>

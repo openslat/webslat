@@ -1,0 +1,13 @@
+<p>Seismic Hazard Page</P>
+
+<p><b>Project:</b> {{ title }}</p>
+
+<form action="{% url 'slat:im_nzs_edit' project_id %}" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <br />
+    <input type="submit" value="Submit" />
+    <input type="submit" name="cancel" value="Cancel" />
+</form>
+<a href="{% url 'slat:project' project_id %}">Return to Project</a><br />
+<a href="{% url 'slat:index' %}">Return to Project List</a>

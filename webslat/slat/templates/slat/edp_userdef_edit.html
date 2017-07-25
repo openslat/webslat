@@ -1,0 +1,28 @@
+<p>User-Defined Engineering Demand Page</P>
+
+<p><b>Project:</b> {{ project.title }}</p>
+
+<form action="{% url 'slat:edp_userdef_edit' project.id edp.id %}" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <br />
+    <p>To remove an existing point, change both values to 0.</p>
+    <p>Submit the form to add more empty cells.</p>
+    {{ points.management_form }}
+    <table border='1'><tr><td>IM</td><td>Mean(x)</td><td>SD(ln(x))</td><td>Delete?</td></tr>
+    {% for point in points %}
+      <tr><td>{{ point.id }}{{ point.im }}</td><td>{{ point.median_x }}</td>
+	<td>{{ point.sd_ln_x }}</td>
+        <td>{{ point.DELETE }}</td></tr>
+    {% endfor %}imp
+      </table>
+    <input type="submit" value="Submit" />
+</form>
+<form action="{% url 'slat:edp_userdef_edit' project.id edp.id %}" method="post">
+    {% csrf_token %}
+    <input type="submit" name="cancel" value="Cancel" />
+</form>
+<form action="{% url 'slat:edp_userdef_import' project.id edp.id %}" method="get">
+    {% csrf_token %}
+    <input type="submit" value="Import" />
+</form>
