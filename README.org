@@ -1,0 +1,408 @@
+#+Title:     Create a VM for WebSLAT Deployment
+#+AUTHOR:    Michael Gauland
+#+EMAIL:     michael.gauland@canterbury.ac.nz
+#+DATE:      {{{time(%Y-%m-%d %H:%M)}}}
+#+OPTIONS:   H:6 num:t toc:nil \n:nil @:t ::t |:t ^:{} -:t f:t *:t <:t
+#+LATEX_HEADER: \usepackage{unicode-math}
+#+LATEX_HEADER: \usepackage{pdflscape}
+#+LATEX_HEADER: \lstset{frame=shadowbox}
+#+LATEX_HEADER: \lstset{keywordstyle=\color{blue}\bfseries}
+#+LATEX_HEADER: \newfontfamily\listingsfont[Scale=.7]{DejaVu Sans Mono}
+#+LATEX_HEADER: \lstset{basicstyle=\listingsfont}
+#+LATEX_HEADER: \lstset{basicstyle=\small}
+#+LATEX_HEADER: \lstset{showspaces=true}
+#+LATEX_HEADER: \lstset{columns=fixed}
+#+LATEX_HEADER: \lstset{extendedchars=true}
+#+LATEX_HEADER: \lstset{frame=shadowbox}
+#+LATEX_HEADER: \definecolor{mygray}{gray}{0.8}
+#+LATEX_HEADER: \lstset{rulesepcolor=\color{mygray}}
+#+LATEX_HEADER: \lstdefinelanguage{bash}{basicstyle=\ttfamily\scriptsize,rulecolor=\color{green},rulesepcolor=\color{mygray},frameround=ffff,backgroundcolor=\color{cyan}}
+#+LATEX_HEADER: \lstdefinelanguage{dash}{basicstyle=\ttfamily\scriptsize,rulecolor=\color{green},rulesepcolor=\color{mygray},frameround=ffff,backgroundcolor=\color{yellow}}
+#+LATEX_HEADER: \lstdefinelanguage{sh}{basicstyle=\ttfamily\scriptsize,rulecolor=\color{green},rulesepcolor=\color{mygray},frameround=ffff,backgroundcolor=\color{orange}}
+#+LATEX_HEADER: \lstdefinelanguage{fundamental}{basicstyle=\ttfamily\scriptsize,rulesepcolor=\color{cyan},frameround=tttt,backgroundcolor=\color{white},breaklines=true}
+#+LATEX_HEADER: \def\lst@visiblespace{\lst@ttfamily{\char32}-}
+#+PROPERTY: header-args :eval never
+
+WebSLAT is a web-based interface to the [[http://github.com/mikelygee/SLAT][OpenSLAT]] project. The procedure below
+will create a VirtualBox image including the OpenSLAT libraries and WebSLAT
+served via Apache.
+
+1. Run ~virtualbox~.
+2. Click ~New~, then ~Expert Mode~ (if not already active).
+3. Fill out the form:
+   - Name :: WebSLAT
+   - Type :: Linux
+   - Version :: Debian (64-bit)
+   - Memory Size :: 1024 MB
+   - 'Create a virtual hard disk now'
+   Then click ~Create~
+4. Specify:
+   - File Location :: ~/home/mag109/VirtualBox VMs/WebSLAT/WebSLAT.vdi~
+   - File size :: ~8.00 GB~
+   - Hard disk file type :: ~VDI (VirtualBox Disk Image)~
+   - Storage on physical hard disk :: ~Dynamically allocated~
+   Then click ~Create~
+5. Enable port forwarding:
+   - host port 3022 to VM port 22    # For ssh
+   - host port 3080 to VM port 8000  # For server
+6. Power on the VM. Boot from =~/Downloads/debian-9.0.0-amd64-netinst.iso=. Run
+   the graphical installer.
+   - hostname :: WebSLAT
+   - domain :: webslat.org
+   - root password :: webslat-admin
+   - user name & password :: webslat-user
+   Install standard system utilities and SSH server, but no desktop environment.
+7. Set up a key for ssh logins:
+   #+BEGIN_SRC bash :results output :eval ask
+     # Create an ssh key, without a password, for 
+     # communicating with the VM:
+     if [[ ! -e ~/.ssh/vm ]]; then
+	 ssh-keygen -f ~/.ssh/vm -N ''
+     fi
+
+     # If we've used the key with an earlier VM,
+     # remove it:
+     ssh-keygen -f "/home/mag109/.ssh/known_hosts" \
+		-R [127.0.0.1]:3022
+
+     # Install the key in the VM:
+     ssh-copy-id -o "StrictHostKeyChecking no" \
+		 -i ~/.ssh/vm \
+		 -p 3022 webslat-user@127.0.0.1 
+   #+END_SRC
+
+   #+RESULTS:
+8. Run these commands on the VM as root. (I can't figure out how to do this from
+   a script on the host machine).
+
+   This will install the packages needed to build and run ~OpenSLAT~:
+   #+BEGIN_SRC sh
+     apt-get update
+     apt-get -y install  git \
+	 make \
+	 pkg-config \
+	 libgsl-dev \
+	 python3-dev \
+	 python3-pip \
+	 g++ \
+	 libboost-dev \
+	 libboost-log-dev \
+	 libboost-test-dev \
+	 swig3.0 \
+	 openjdk-8-jre-headless \
+	 curl \
+	 zile
+     curl \
+	 http://www.antlr.org/download/antlr-4.7-complete.jar \
+	 -o /usr/local/lib/antlr-4.7-complete.jar
+
+     ln -s /usr/bin/swig3.0 /usr/bin/swig
+
+     pip3 install antlr4-python3-runtime numpy typing
+   #+END_SRC
+9. Build the libraries:
+    #+BEGIN_SRC dash :results output :eval ask
+      echo \
+	   'if [[ -e SLAT ]]; then
+		cd SLAT/linux
+		git pull
+	    else
+		git clone \
+		http://github.com/mikelygee/SLAT
+		cd SLAT/linux
+	    fi;
+	    make' |
+	   ssh -i ~/.ssh/vm -p 3022 \
+	       webslat-user@127.0.0.1 |
+	   tail -5
+    #+END_SRC
+
+    #+RESULTS:
+    : g++ -fPIC -shared -Wl,-soname,_pyslatcore.so `pkg-config --libs python3` `pkg-config --libs gsl` obj/wrap_pyslatcore.o obj/pyslatcore.o -o lib/_pyslatcore.so  -Llib -lslat -lboost_log -lboost_thread -lboost_system -lpthread -lboost_unit_test_framework -lboost_filesystem `pkg-config --libs gsl` -lpthread -fopenmp
+    : g++ -c -g -O3 -fopenmp -Wall -Werror -fbounds-check -Warray-bounds -std=gnu++11 -DBOOST_ALL_DYN_LINK `pkg-config --cflags python3` -fPIC `pkg-config --cflags gsl` ../src/example2.cpp -o obj/example2.o
+    : g++ -fPIC obj/example2.o -Llib -lslat -o bin/example2 -lboost_log -lboost_thread -lboost_system -lpthread -lboost_unit_test_framework -lboost_filesystem `pkg-config --libs gsl` -lpthread -fopenmp
+    : cd ../src && java -jar /usr/local/lib/antlr-4.7-complete.jar -Dlanguage=Python3 -o /home/webslat-user/SLAT/linux/lib slatLexer.g4
+    : ../Makefile.common:97: recipe for target 'lib/slatLexer.py' failed
+10. Add the search paths to ~.bashrc~, if they aren't already there;
+   #+BEGIN_SRC dash :results output :eval ask
+     echo \
+	 "if ! grep PYTHONPATH .profile; then
+	      echo export LD_LIBRARY_PATH=~/SLAT/linux/lib >> .profile
+	      echo export PYTHONPATH=~/SLAT/linux/lib >> .profile
+	  fi
+     " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 | tail -5
+   #+END_SRC
+
+   #+RESULTS:
+   : the exact distribution terms for each program are described in the
+   : individual files in /usr/share/doc/*/copyright.
+   : 
+   : Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+   : permitted by applicable law.
+
+11. Run the unit tests:
+    #+BEGIN_SRC dash :results output :eval ask
+      echo "cd SLAT/linux/bin
+	     ./unit_tests
+      " | ssh -i ~/.ssh/vm -p 3022 \
+	      webslat-user@127.0.0.1 2>&1 | tail -5 
+    #+END_SRC
+
+    #+RESULTS:
+    : Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+    : permitted by applicable law.
+    : Running 39 test cases...
+    : 
+    : *** No errors detected
+
+
+12. Run the C++ example2 binary:
+    #+BEGIN_SRC dash :results output :eval  ask
+      echo "cd SLAT/parser/example2
+	       ../../linux/bin/example2
+      " | ssh -i ~/.ssh/vm -p 3022 \
+	      webslat-user@127.0.0.1 2>&1 | tail -5 
+    #+END_SRC
+
+    #+RESULTS:
+    : Total Search Evals: 1097206
+    : Number of Calls: 275268
+    : Successes: 275038
+    : NANs: 0
+    : Elapsed time: 20.4083
+13. Run the example2 Python script:
+    #+BEGIN_SRC dash :results output :eval ask
+      echo "cd SLAT/parser/example2
+	       ./example2.py
+      " | ssh -i ~/.ssh/vm -p 3022 \
+	      webslat-user@127.0.0.1 2>&1 | tail -5 
+    #+END_SRC
+
+    #+RESULTS:
+    : Total Search Evals: 1120332
+    : Number of Calls: 272733
+    : Successes: 272503
+    : NANs: 0
+    : 
+
+
+14. Run the example2 SLAT script:
+    #+BEGIN_SRC dash :results output :eval ask
+      echo "cd SLAT/parser/example2
+	       ../../linux/scripts/SlatInterpreter.py \
+		    example2.slat
+      " | ssh -i ~/.ssh/vm -p 3022 \
+	      webslat-user@127.0.0.1 2>&1 | tail -10 
+    #+END_SRC
+
+    #+RESULTS:
+    #+begin_example
+    Max Integration Evals: 124
+    Integration Failures: 0
+    Total Integration Evals: 8632362
+    Max Search Evals: 256
+    Number Search Fails: 230
+    Total Search Evals: 1120332
+    Number of Calls: 272733
+    Successes: 272503
+    NANs: 0
+
+#+end_example
+
+15. Run these commands on the VM as root. (I can't figure out how to do this from
+   a script on the host machine).
+
+   This will install the packages needed for ~WebSLAT~:
+   #+BEGIN_SRC sh
+     apt-get -y install gfortran \
+	     gsl-bin \
+	     liblapack-dev \
+	     libfreetype6-dev \
+	     python3-tk \
+	     links2
+     pip3 install virtualenv
+  #+END_SRC
+16. Set up a virtual python environment
+    #+BEGIN_SRC dash :results output :eval ask
+      echo "virtualenv webslat-env
+	       source webslat-env/bin/activate
+	       pip3 install numpy \
+		   matplotlib \
+		   scipy \
+		   django \
+		   django-graphos
+	       deactivate
+      " | ssh -i ~/.ssh/vm -p 3022 \
+	      webslat-user@127.0.0.1 2>&1 | tail -10
+    #+END_SRC
+
+    #+RESULTS:
+    #+begin_example
+    Requirement already satisfied: numpy in ./webslat-env/lib/python3.5/site-packages
+    Requirement already satisfied: matplotlib in ./webslat-env/lib/python3.5/site-packages
+    Requirement already satisfied: scipy in ./webslat-env/lib/python3.5/site-packages
+    Requirement already satisfied: django in ./webslat-env/lib/python3.5/site-packages
+    Requirement already satisfied: django-graphos in ./webslat-env/lib/python3.5/site-packages
+    Requirement already satisfied: pyparsing!=2.0.0,!=2.0.4,!=2.1.2,!=2.1.6,>=1.5.6 in ./webslat-env/lib/python3.5/site-packages (from matplotlib)
+    Requirement already satisfied: cycler>=0.10 in ./webslat-env/lib/python3.5/site-packages (from matplotlib)
+    Requirement already satisfied: pytz in ./webslat-env/lib/python3.5/site-packages (from matplotlib)
+    Requirement already satisfied: six>=1.10 in ./webslat-env/lib/python3.5/site-packages (from matplotlib)
+    Requirement already satisfied: python-dateutil in ./webslat-env/lib/python3.5/site-packages (from matplotlib)
+#+end_example
+
+17. Copy the ~webslat~ files to the VM, since they aren't yet on ~github~:
+    #+BEGIN_SRC bash :results output :eval ask
+      #scp -i ~/.ssh/vm -P 3022 -r \
+      #    -q /home/mag109/webslat webslat-user@127.0.0.1: 
+    #+END_SRC
+
+    #+RESULTS:
+
+    #+BEGIN_SRC bash :results output :eval ask
+      echo "git clone \
+                http://github.com/mikelygee/webslat
+      " | ssh -i ~/.ssh/vm -p 3022 \
+	      webslat-user@127.0.0.1 2>&1 | tail -10
+    #+END_SRC
+18. Test the ~django~ server:
+    As ~webslat-user~ on the VM, run:
+    #+BEGIN_SRC dash :results output
+      source webslat-env/bin/activate
+      cd webslat/webslat
+      python3 manage.py migrate
+      python3 manage.py runserver 0:8000
+    #+END_SRC
+
+    In a separate session, run:
+    #+BEGIN_SRC dash :results output
+      links2 127.0.0.1:8000/slat
+    #+END_SRC
+    to confirm the server is working.
+
+    Quit ~links2~ and kill the server.
+19. User ~apache2~ to serve ~webslat~. First, as ~root~ on the VM, run:
+   #+BEGIN_SRC sh
+     apt-get -y install apache2 \
+         libapache2-mod-wsgi-py3
+   #+END_SRC
+20. Make sure the ~apache2~ process can read the database file.
+    1. Assign appropriate permissions:
+       #+BEGIN_SRC dash :results output :eval ask
+	 echo "chmod 664 webslat/webslat/db.sqlite3
+	       chmod 775 webslat/webslat
+	 " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 2>&1 | tail -10 
+       #+END_SRC
+
+       #+RESULTS:
+       : Pseudo-terminal will not be allocated because stdin is not a terminal.
+       : Linux webslat 4.9.0-3-amd64 #1 SMP Debian 4.9.30-2+deb9u2 (2017-06-26) x86_64
+       : 
+       : The programs included with the Debian GNU/Linux system are free software;
+       : the exact distribution terms for each program are described in the
+       : individual files in /usr/share/doc/*/copyright.
+       : 
+       : Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+       : permitted by applicable law.
+
+    2. Assign the files to the ~www-data~ group. As root on the VM, run:
+       #+BEGIN_SRC sh :results output
+           chown :www-data /home/webslat-user/webslat/webslat/db.sqlite3
+           chown :www-data /home/webslat-user/webslat/webslat
+       #+END_SRC
+21. Edit ~webslat/webslat/webslat/settings.py~
+    1. Set:
+       #+BEGIN_SRC fundamental
+	 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '127.0.1.1']
+       #+END_SRC
+    2. Set:
+       #+BEGIN_SRC fundamental
+	 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+       #+END_SRC
+22. Create the static files:
+    #+BEGIN_SRC dash :results output :eval ask
+      echo "source webslat-env/bin/activate
+            cd webslat/webslat
+           ./manage.py collectstatic
+      " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 2>&1 | tail -10 
+    #+END_SRC
+
+    #+RESULTS:
+    #+begin_example
+    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/img/sorting-icons.svg'
+    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/img/icon-addlink.svg'
+    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/img/icon-unknown.svg'
+    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/img/selector-icons.svg'
+    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/img/LICENSE'
+    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/img/icon-calendar.svg'
+    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/img/gis/move_vertex_off.svg'
+    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/img/gis/move_vertex_on.svg'
+
+    61 static files copied to '/home/webslat-user/webslat/webslat/static'.
+#+end_example
+23. As ~root~ on the VM, edit ~/etc/apache2/sites-available/000-default.conf~, by
+    adding, inside the ~<VirtualHost...>~ tag:
+    #+BEGIN_SRC fundamental
+	Alias /static /home/webslat-user/webslat/webslat/static
+	<Directory /home/webslat-user/webslat/webslat/static>
+	  Require all granted
+	</Directory>
+
+	<Directory /home/webslat-user/webslat/webslat/webslat>
+	  <Files wsgi.py>
+	      Require all granted
+	  </Files>
+      </Directory>
+
+      WSGIDaemonProcess webslat python-home=/home/webslat-user/webslat-env python-path=/home/webslat-user/webslat/webslat:/home/webslat-user/SLAT/linux/lib
+      WSGIProcessGroup webslat
+      WSGIScriptAlias / /home/webslat-user/webslat/webslat/webslat/wsgi.py
+    #+END_SRC
+
+    As ~root~, run:
+    #+BEGIN_SRC sh
+    apache2ctl configtest
+    #+END_SRC
+    to check the configuration file.
+24. Install ~libslat~ where ~apache2~ can find it. As ~root~, on the VM, run:
+    #+BEGIN_SRC sh
+    ln -s /home/webslat-user/SLAT/linux/lib/libslat.so /usr/local/lib
+    ldconfig
+    #+END_SRC
+25. Restart the server. As ~root~, on the VM, run:
+    #+BEGIN_SRC sh
+    systemctl restart apache2
+    #+END_SRC
+    
+   
+To update OpenSLAT and WebSLAT without creating a new image:
+1. Update OpenSLAT from git, and build:
+   #+BEGIN_SRC dash :results output :eval ask
+     echo \
+         'cd SLAT/linux
+	  git pull
+          make' |
+	  ssh -i ~/.ssh/vm -p 3022 \
+	      webslat-user@127.0.0.1 |
+	  tail -5
+    #+END_SRC
+2. Update WebSLAT:
+   #+BEGIN_SRC dash :results output :eval ask
+     echo \
+	 'cd webslat
+	  git pull
+	  ' |
+	  ssh -i ~/.ssh/vm -p 3022 \
+	      webslat-user@127.0.0.1 |
+	  tail -5
+   #+END_SRC   
+3. Update the static files:
+   #+BEGIN_SRC dash :results output :eval ask
+     echo "source webslat-env/bin/activate
+	   cd webslat/webslat
+	  ./manage.py collectstatic
+     " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 2>&1 | tail -10 
+    #+END_SRC
+4. Restart the server. As ~root~, on the VM, run:
+   #+BEGIN_SRC sh
+   systemctl restart apache2
+   #+END_SRC

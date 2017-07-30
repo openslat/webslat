@@ -1,3 +1,7 @@
+WebSLAT is a web-based interface to the [OpenSLAT](http://github.com/mikelygee/SLAT) project. The procedure below
+will create a VirtualBox image including the OpenSLAT libraries and WebSLAT
+served via Apache.
+
 1.  Run `virtualbox`.
 2.  Click `New`, then `Expert Mode` (if not already active).
 3.  Fill out the form:
@@ -173,6 +177,36 @@
         ln -s /home/webslat-user/SLAT/linux/lib/libslat.so /usr/local/lib
         ldconfig
 12. Restart the server. As `root`, on the VM, run:
+    
+        systemctl restart apache2
+
+To update OpenSLAT and WebSLAT without creating a new image:
+
+1.  Update OpenSLAT from git, and build:
+    
+        echo \
+            'cd SLAT/linux
+             git pull
+             make' |
+             ssh -i ~/.ssh/vm -p 3022 \
+        	 webslat-user@127.0.0.1 |
+             tail -5
+2.  Update WebSLAT:
+    
+        echo \
+            'cd webslat
+             git pull
+             ' |
+             ssh -i ~/.ssh/vm -p 3022 \
+        	 webslat-user@127.0.0.1 |
+             tail -5
+3.  Update the static files:
+    
+        echo "source webslat-env/bin/activate
+              cd webslat/webslat
+             ./manage.py collectstatic
+        " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 2>&1 | tail -10
+4.  Restart the server. As `root`, on the VM, run:
     
         systemctl restart apache2
 
