@@ -97,7 +97,7 @@ served via Apache.
         " | ssh -i ~/.ssh/vm -p 3022 \
         	webslat-user@127.0.0.1 2>&1 | tail -10
 
-4.  Copy the `webslat` files to the VM, since they aren't yet on `github`:
+1.  Copy the `webslat` files to the VM, since they aren't yet on `github`:
     
         #scp -i ~/.ssh/vm -P 3022 -r \
         #    -q /home/mag109/webslat webslat-user@127.0.0.1: 
@@ -106,7 +106,8 @@ served via Apache.
         	  http://github.com/mikelygee/webslat
         " | ssh -i ~/.ssh/vm -p 3022 \
         	webslat-user@127.0.0.1 2>&1 | tail -10
-5.  Test the `django` server:
+
+2.  Test the `django` server:
     As `webslat-user` on the VM, run:
     
         source webslat-env/bin/activate
@@ -121,35 +122,37 @@ served via Apache.
     to confirm the server is working.
     
     Quit `links2` and kill the server.
-6.  User `apache2` to serve `webslat`. First, as `root` on the VM, run:
+3.  User `apache2` to serve `webslat`. First, as `root` on the VM, run:
     
         apt-get -y install apache2 \
             libapache2-mod-wsgi-py3
-7.  Make sure the `apache2` process can read the database file.
+4.  Make sure the `apache2` process can read the database file.
     1.  Assign appropriate permissions:
         
             echo "chmod 664 webslat/webslat/db.sqlite3
                   chmod 775 webslat/webslat
             " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 2>&1 | tail -10
+
+1.  Assign the files to the `www-data` group. As root on the VM, run:
     
-    2.  Assign the files to the `www-data` group. As root on the VM, run:
-        
-            chown :www-data /home/webslat-user/webslat/webslat/db.sqlite3
-            chown :www-data /home/webslat-user/webslat/webslat
-8.  Edit `webslat/webslat/webslat/settings.py`
+        chown :www-data /home/webslat-user/webslat/webslat/db.sqlite3
+        chown :www-data /home/webslat-user/webslat/webslat
+
+1.  Edit `webslat/webslat/webslat/settings.py`
     1.  Set:
         
             ALLOWED_HOSTS = ['localhost', '127.0.0.1', '127.0.1.1']
     2.  Set:
         
             STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
-9.  Create the static files:
+2.  Create the static files:
     
         echo "source webslat-env/bin/activate
               cd webslat/webslat
              ./manage.py collectstatic
         " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 2>&1 | tail -10
-10. As `root` on the VM, edit `/etc/apache2/sites-available/000-default.conf`, by
+
+3.  As `root` on the VM, edit `/etc/apache2/sites-available/000-default.conf`, by
     adding, inside the `<VirtualHost...>` tag:
     
           Alias /static /home/webslat-user/webslat/webslat/static
@@ -172,11 +175,11 @@ served via Apache.
         apache2ctl configtest
     
     to check the configuration file.
-11. Install `libslat` where `apache2` can find it. As `root`, on the VM, run:
+4.  Install `libslat` where `apache2` can find it. As `root`, on the VM, run:
     
         ln -s /home/webslat-user/SLAT/linux/lib/libslat.so /usr/local/lib
         ldconfig
-12. Restart the server. As `root`, on the VM, run:
+5.  Restart the server. As `root`, on the VM, run:
     
         systemctl restart apache2
 
@@ -204,7 +207,7 @@ To update OpenSLAT and WebSLAT without creating a new image:
     
         echo "source webslat-env/bin/activate
               cd webslat/webslat
-             ./manage.py collectstatic
+             yes yes | ./manage.py collectstatic
         " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 2>&1 | tail -10
 4.  Restart the server. As `root`, on the VM, run:
     

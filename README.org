@@ -118,11 +118,11 @@ served via Apache.
     #+END_SRC
 
     #+RESULTS:
-    : g++ -fPIC -shared -Wl,-soname,_pyslatcore.so `pkg-config --libs python3` `pkg-config --libs gsl` obj/wrap_pyslatcore.o obj/pyslatcore.o -o lib/_pyslatcore.so  -Llib -lslat -lboost_log -lboost_thread -lboost_system -lpthread -lboost_unit_test_framework -lboost_filesystem `pkg-config --libs gsl` -lpthread -fopenmp
-    : g++ -c -g -O3 -fopenmp -Wall -Werror -fbounds-check -Warray-bounds -std=gnu++11 -DBOOST_ALL_DYN_LINK `pkg-config --cflags python3` -fPIC `pkg-config --cflags gsl` ../src/example2.cpp -o obj/example2.o
-    : g++ -fPIC obj/example2.o -Llib -lslat -o bin/example2 -lboost_log -lboost_thread -lboost_system -lpthread -lboost_unit_test_framework -lboost_filesystem `pkg-config --libs gsl` -lpthread -fopenmp
     : cd ../src && java -jar /usr/local/lib/antlr-4.7-complete.jar -Dlanguage=Python3 -o /home/webslat-user/SLAT/linux/lib slatLexer.g4
-    : ../Makefile.common:97: recipe for target 'lib/slatLexer.py' failed
+    : cd ../src &&	java -jar /usr/local/lib/antlr-4.7-complete.jar -Dlanguage=Python3 -o /home/webslat-user/SLAT/linux/lib slatParser.g4
+    : cp ../src/SlatInterpreter.py scripts
+    : cp ../src/pyslat.py lib
+    : cp obj/pyslatcore.py lib
 10. Add the search paths to ~.bashrc~, if they aren't already there;
    #+BEGIN_SRC dash :results output :eval ask
      echo \
@@ -154,6 +154,7 @@ served via Apache.
     : Running 39 test cases...
     : 
     : *** No errors detected
+
 
 
 12. Run the C++ example2 binary:
@@ -243,12 +244,13 @@ served via Apache.
     Requirement already satisfied: scipy in ./webslat-env/lib/python3.5/site-packages
     Requirement already satisfied: django in ./webslat-env/lib/python3.5/site-packages
     Requirement already satisfied: django-graphos in ./webslat-env/lib/python3.5/site-packages
+    Requirement already satisfied: pytz in ./webslat-env/lib/python3.5/site-packages (from matplotlib)
+    Requirement already satisfied: python-dateutil in ./webslat-env/lib/python3.5/site-packages (from matplotlib)
+    Requirement already satisfied: six>=1.10 in ./webslat-env/lib/python3.5/site-packages (from matplotlib)
     Requirement already satisfied: pyparsing!=2.0.0,!=2.0.4,!=2.1.2,!=2.1.6,>=1.5.6 in ./webslat-env/lib/python3.5/site-packages (from matplotlib)
     Requirement already satisfied: cycler>=0.10 in ./webslat-env/lib/python3.5/site-packages (from matplotlib)
-    Requirement already satisfied: pytz in ./webslat-env/lib/python3.5/site-packages (from matplotlib)
-    Requirement already satisfied: six>=1.10 in ./webslat-env/lib/python3.5/site-packages (from matplotlib)
-    Requirement already satisfied: python-dateutil in ./webslat-env/lib/python3.5/site-packages (from matplotlib)
 #+end_example
+
 
 17. Copy the ~webslat~ files to the VM, since they aren't yet on ~github~:
     #+BEGIN_SRC bash :results output :eval ask
@@ -264,6 +266,21 @@ served via Apache.
       " | ssh -i ~/.ssh/vm -p 3022 \
 	      webslat-user@127.0.0.1 2>&1 | tail -10
     #+END_SRC
+
+    #+RESULTS:
+    #+begin_example
+    Pseudo-terminal will not be allocated because stdin is not a terminal.
+    Linux webslat-32 4.9.0-3-686 #1 SMP Debian 4.9.30-2+deb9u2 (2017-06-26) i686
+
+    The programs included with the Debian GNU/Linux system are free software;
+    the exact distribution terms for each program are described in the
+    individual files in /usr/share/doc/*/copyright.
+
+    Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+    permitted by applicable law.
+    Cloning into 'webslat'...
+#+end_example
+
 18. Test the ~django~ server:
     As ~webslat-user~ on the VM, run:
     #+BEGIN_SRC dash :results output
@@ -295,7 +312,7 @@ served via Apache.
 
        #+RESULTS:
        : Pseudo-terminal will not be allocated because stdin is not a terminal.
-       : Linux webslat 4.9.0-3-amd64 #1 SMP Debian 4.9.30-2+deb9u2 (2017-06-26) x86_64
+       : Linux webslat-32 4.9.0-3-686 #1 SMP Debian 4.9.30-2+deb9u2 (2017-06-26) i686
        : 
        : The programs included with the Debian GNU/Linux system are free software;
        : the exact distribution terms for each program are described in the
@@ -303,6 +320,8 @@ served via Apache.
        : 
        : Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
        : permitted by applicable law.
+
+
 
     2. Assign the files to the ~www-data~ group. As root on the VM, run:
        #+BEGIN_SRC sh :results output
@@ -328,17 +347,18 @@ served via Apache.
 
     #+RESULTS:
     #+begin_example
-    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/img/sorting-icons.svg'
-    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/img/icon-addlink.svg'
-    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/img/icon-unknown.svg'
-    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/img/selector-icons.svg'
-    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/img/LICENSE'
-    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/img/icon-calendar.svg'
-    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/img/gis/move_vertex_off.svg'
-    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/img/gis/move_vertex_on.svg'
 
-    61 static files copied to '/home/webslat-user/webslat/webslat/static'.
+    You have requested to collect static files at the destination
+    location as specified in your settings:
+
+	/home/webslat-user/webslat/webslat/static
+
+    This will overwrite existing files!
+    Are you sure you want to do this?
+
+    Type 'yes' to continue, or 'no' to cancel: CommandError: Collecting static files cancelled.
 #+end_example
+
 23. As ~root~ on the VM, edit ~/etc/apache2/sites-available/000-default.conf~, by
     adding, inside the ~<VirtualHost...>~ tag:
     #+BEGIN_SRC fundamental
@@ -399,7 +419,7 @@ To update OpenSLAT and WebSLAT without creating a new image:
    #+BEGIN_SRC dash :results output :eval ask
      echo "source webslat-env/bin/activate
 	   cd webslat/webslat
-	  ./manage.py collectstatic
+	  yes yes | ./manage.py collectstatic
      " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 2>&1 | tail -10 
     #+END_SRC
 4. Restart the server. As ~root~, on the VM, run:
