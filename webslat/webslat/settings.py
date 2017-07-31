@@ -25,7 +25,7 @@ SECRET_KEY = 'am-t+0fp%z2j^+r^1vafuku5&9x8bgr^6s+!r3^))ndg3$54i0'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -48,6 +48,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'webslat.middleware.filter_ip_middleware.FilterHostMiddleware'
 ]
 
 ROOT_URLCONF = 'webslat.urls'
