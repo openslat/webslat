@@ -280,6 +280,25 @@ served via Apache.
     permitted by applicable law.
     Cloning into 'webslat'...
 #+end_example
+17. Copy the ~graphos~ templates to the ~slat~ directory:
+    #+BEGIN_SRC bash :results output :eval ask
+      echo "cd .local/lib/python3.5/site-packages/graphos/templates
+            cp -r graphos/ ~/webslat/webslat/slat/templates
+      " | ssh -i ~/.ssh/vm -p 3022 \
+	      webslat-user@127.0.0.1 2>&1 | tail -10
+    #+END_SRC
+
+    #+RESULTS:
+    : Pseudo-terminal will not be allocated because stdin is not a terminal.
+    : Linux webslat 4.9.0-3-amd64 #1 SMP Debian 4.9.30-2+deb9u2 (2017-06-26) x86_64
+    : 
+    : The programs included with the Debian GNU/Linux system are free software;
+    : the exact distribution terms for each program are described in the
+    : individual files in /usr/share/doc/*/copyright.
+    : 
+    : Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+    : permitted by applicable law.
+    
 
 18. Test the ~django~ server:
     As ~webslat-user~ on the VM, run:

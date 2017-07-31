@@ -106,8 +106,14 @@ served via Apache.
         	  http://github.com/mikelygee/webslat
         " | ssh -i ~/.ssh/vm -p 3022 \
         	webslat-user@127.0.0.1 2>&1 | tail -10
+2.  Copy the `graphos` templates to the `slat` directory:
+    
+        echo "cd .local/lib/python3.5/site-packages/graphos/templates
+              cp -r graphos/ ~/webslat/webslat/slat/templates
+        " | ssh -i ~/.ssh/vm -p 3022 \
+        	webslat-user@127.0.0.1 2>&1 | tail -10
 
-2.  Test the `django` server:
+1.  Test the `django` server:
     As `webslat-user` on the VM, run:
     
         source webslat-env/bin/activate
@@ -122,11 +128,11 @@ served via Apache.
     to confirm the server is working.
     
     Quit `links2` and kill the server.
-3.  User `apache2` to serve `webslat`. First, as `root` on the VM, run:
+2.  User `apache2` to serve `webslat`. First, as `root` on the VM, run:
     
         apt-get -y install apache2 \
             libapache2-mod-wsgi-py3
-4.  Make sure the `apache2` process can read the database file.
+3.  Make sure the `apache2` process can read the database file.
     1.  Assign appropriate permissions:
         
             echo "chmod 664 webslat/webslat/db.sqlite3
