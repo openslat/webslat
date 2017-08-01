@@ -7,10 +7,18 @@ class FilterHostMiddleware(MiddlewareMixin):
         allowed_hosts = ['127.0.0.1', 'localhost']  # specify complete host names here
         host = request.META.get('HTTP_HOST')
 
-        if host[:7] == '132.181':  # if the host starts with 192.168 then add to the allowed hosts
+        if host[:10] == '127.0.0.1:': # Local host, with port number
+            allowed_hosts.append(host)
+        elif host[:10] == 'localhost:':  # Local host, with port number
+            allowed_hosts.append(host)
+        elif host[:7] == '132.181':  # UC address
             allowed_hosts.append(host)
 
+        print(host)
+        print(allowed_hosts)
+
         if host not in allowed_hosts:
-            raise HttpResponseForbidden
+            print("NOT ALLOWED")
+            return HttpResponseForbidden()
 
         return None
