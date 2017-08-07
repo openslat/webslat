@@ -16,9 +16,9 @@
 #+LATEX_HEADER: \lstset{frame=shadowbox}
 #+LATEX_HEADER: \definecolor{mygray}{gray}{0.8}
 #+LATEX_HEADER: \lstset{rulesepcolor=\color{mygray}}
-#+LATEX_HEADER: \lstdefinelanguage{bash}{basicstyle=\ttfamily\scriptsize,rulecolor=\color{green},rulesepcolor=\color{mygray},frameround=ffff,backgroundcolor=\color{cyan}}
-#+LATEX_HEADER: \lstdefinelanguage{dash}{basicstyle=\ttfamily\scriptsize,rulecolor=\color{green},rulesepcolor=\color{mygray},frameround=ffff,backgroundcolor=\color{yellow}}
-#+LATEX_HEADER: \lstdefinelanguage{sh}{basicstyle=\ttfamily\scriptsize,rulecolor=\color{green},rulesepcolor=\color{mygray},frameround=ffff,backgroundcolor=\color{orange}}
+#+LATEX_HEADER: \lstdefinelanguage{bash-local}{basicstyle=\ttfamily\scriptsize,rulecolor=\color{green},rulesepcolor=\color{mygray},frameround=ffff,backgroundcolor=\color{cyan}}
+#+LATEX_HEADER: \lstdefinelanguage{bash-remote}{basicstyle=\ttfamily\scriptsize,rulecolor=\color{green},rulesepcolor=\color{mygray},frameround=ffff,backgroundcolor=\color{yellow}}
+#+LATEX_HEADER: \lstdefinelanguage{bash-remote-root}{basicstyle=\ttfamily\scriptsize,rulecolor=\color{green},rulesepcolor=\color{mygray},frameround=ffff,backgroundcolor=\color{orange}}
 #+LATEX_HEADER: \lstdefinelanguage{fundamental}{basicstyle=\ttfamily\scriptsize,rulesepcolor=\color{cyan},frameround=tttt,backgroundcolor=\color{white},breaklines=true}
 #+LATEX_HEADER: \def\lst@visiblespace{\lst@ttfamily{\char32}-}
 #+PROPERTY: header-args :eval never
@@ -53,6 +53,7 @@ served via Apache.
    - user name & password :: webslat-user
    Install standard system utilities and SSH server, but no desktop environment.
 7. Set up a key for ssh logins:
+   #+ATTR_LATEX: :options language=bash-local
    #+BEGIN_SRC bash :results output :eval ask
      # Create an ssh key, without a password, for 
      # communicating with the VM:
@@ -71,12 +72,12 @@ served via Apache.
 		 -p 3022 webslat-user@127.0.0.1 
    #+END_SRC
 
-   #+RESULTS:
 8. Run these commands on the VM as root. (I can't figure out how to do this from
    a script on the host machine).
 
    This will install the packages needed to build and run ~OpenSLAT~:
-   #+BEGIN_SRC sh
+   #+ATTR_LATEX: :options language=bash-remote-root
+   #+BEGIN_SRC bash
      apt-get update
      apt-get -y install  git \
 	 make \
@@ -101,7 +102,8 @@ served via Apache.
      pip3 install antlr4-python3-runtime numpy typing
    #+END_SRC
 9. Build the libraries:
-    #+BEGIN_SRC dash :results output :eval ask
+   #+ATTR_LATEX: :options language=bash-remote
+    #+BEGIN_SRC bash :results output :eval ask
       echo \
 	   'if [[ -e SLAT ]]; then
 		cd SLAT/linux
@@ -124,7 +126,8 @@ served via Apache.
     : cp ../src/pyslat.py lib
     : cp obj/pyslatcore.py lib
 10. Add the search paths to ~.bashrc~, if they aren't already there;
-   #+BEGIN_SRC dash :results output :eval ask
+   #+ATTR_LATEX: :options language=bash-remote
+   #+BEGIN_SRC bash :results output :eval ask
      echo \
 	 "if ! grep PYTHONPATH .profile; then
 	      echo export LD_LIBRARY_PATH=~/SLAT/linux/lib >> .profile
@@ -141,7 +144,8 @@ served via Apache.
    : permitted by applicable law.
 
 11. Run the unit tests:
-    #+BEGIN_SRC dash :results output :eval ask
+   #+ATTR_LATEX: :options language=bash-remote
+    #+BEGIN_SRC bash :results output :eval ask
       echo "cd SLAT/linux/bin
 	     ./unit_tests
       " | ssh -i ~/.ssh/vm -p 3022 \
@@ -158,7 +162,8 @@ served via Apache.
 
 
 12. Run the C++ example2 binary:
-    #+BEGIN_SRC dash :results output :eval  ask
+   #+ATTR_LATEX: :options language=bash-remote
+    #+BEGIN_SRC bash :results output :eval  ask
       echo "cd SLAT/parser/example2
 	       ../../linux/bin/example2
       " | ssh -i ~/.ssh/vm -p 3022 \
@@ -172,7 +177,8 @@ served via Apache.
     : NANs: 0
     : Elapsed time: 20.4083
 13. Run the example2 Python script:
-    #+BEGIN_SRC dash :results output :eval ask
+   #+ATTR_LATEX: :options language=bash-remote
+    #+BEGIN_SRC bash :results output :eval ask
       echo "cd SLAT/parser/example2
 	       ./example2.py
       " | ssh -i ~/.ssh/vm -p 3022 \
@@ -188,7 +194,8 @@ served via Apache.
 
 
 14. Run the example2 SLAT script:
-    #+BEGIN_SRC dash :results output :eval ask
+   #+ATTR_LATEX: :options language=bash-remote
+    #+BEGIN_SRC bash :results output :eval ask
       echo "cd SLAT/parser/example2
 	       ../../linux/scripts/SlatInterpreter.py \
 		    example2.slat
@@ -214,7 +221,8 @@ served via Apache.
    a script on the host machine).
 
    This will install the packages needed for ~WebSLAT~:
-   #+BEGIN_SRC sh
+   #+ATTR_LATEX: :options language=bash-remote-root
+   #+BEGIN_SRC bash
      apt-get -y install gfortran \
 	     gsl-bin \
 	     liblapack-dev \
@@ -224,7 +232,8 @@ served via Apache.
      pip3 install virtualenv
   #+END_SRC
 16. Set up a virtual python environment
-    #+BEGIN_SRC dash :results output :eval ask
+   #+ATTR_LATEX: :options language=bash-remote
+    #+BEGIN_SRC bash :results output :eval ask
       echo "virtualenv webslat-env
 	       source webslat-env/bin/activate
 	       pip3 install numpy \
@@ -253,13 +262,7 @@ served via Apache.
 
 
 17. Copy the ~webslat~ files to the VM, since they aren't yet on ~github~:
-    #+BEGIN_SRC bash :results output :eval ask
-      #scp -i ~/.ssh/vm -P 3022 -r \
-      #    -q /home/mag109/webslat webslat-user@127.0.0.1: 
-    #+END_SRC
-
-    #+RESULTS:
-
+   #+ATTR_LATEX: :options language=bash-local
     #+BEGIN_SRC bash :results output :eval ask
       echo "git clone \
                 http://github.com/mikelygee/webslat
@@ -281,6 +284,7 @@ served via Apache.
     Cloning into 'webslat'...
 #+end_example
 17. Copy the ~graphos~ templates to the ~slat~ directory:
+   #+ATTR_LATEX: :options language=bash-remote
     #+BEGIN_SRC bash :results output :eval ask
       echo "cd .local/lib/python3.5/site-packages/graphos/templates
             cp -r graphos/ ~/webslat/webslat/slat/templates
@@ -302,7 +306,8 @@ served via Apache.
 
 18. Test the ~django~ server:
     As ~webslat-user~ on the VM, run:
-    #+BEGIN_SRC dash :results output
+   #+ATTR_LATEX: :options language=bash-remote
+    #+BEGIN_SRC bash :results output
       source webslat-env/bin/activate
       cd webslat/webslat
       python3 manage.py migrate
@@ -310,20 +315,23 @@ served via Apache.
     #+END_SRC
 
     In a separate session, run:
-    #+BEGIN_SRC dash :results output
+   #+ATTR_LATEX: :options language=bash-local
+    #+BEGIN_SRC bash :results output
       links2 127.0.0.1:8000/slat
     #+END_SRC
     to confirm the server is working.
 
     Quit ~links2~ and kill the server.
 19. User ~apache2~ to serve ~webslat~. First, as ~root~ on the VM, run:
-   #+BEGIN_SRC sh
+   #+ATTR_LATEX: :options language=bash-remote-root
+   #+BEGIN_SRC bash
      apt-get -y install apache2 \
          libapache2-mod-wsgi-py3
    #+END_SRC
 20. Make sure the ~apache2~ process can read the database file.
     1. Assign appropriate permissions:
-       #+BEGIN_SRC dash :results output :eval ask
+       #+ATTR_LATEX: :options language=bash-remote
+       #+BEGIN_SRC bash :results output :eval ask
 	 echo "chmod 664 webslat/webslat/db.sqlite3
 	       chmod 775 webslat/webslat
 	 " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 2>&1 | tail -10 
@@ -343,7 +351,8 @@ served via Apache.
 
 
     2. Assign the files to the ~www-data~ group. As root on the VM, run:
-       #+BEGIN_SRC sh :results output
+       #+ATTR_LATEX: :options language=bash-remote-root
+       #+BEGIN_SRC bash :results output
            chown :www-data /home/webslat-user/webslat/webslat/db.sqlite3
            chown :www-data /home/webslat-user/webslat/webslat
        #+END_SRC
@@ -357,7 +366,8 @@ served via Apache.
 	 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
        #+END_SRC
 22. Create the static files:
-    #+BEGIN_SRC dash :results output :eval ask
+   #+ATTR_LATEX: :options language=bash-remote
+    #+BEGIN_SRC bash :results output :eval ask
       echo "source webslat-env/bin/activate
             cd webslat/webslat
            ./manage.py collectstatic
@@ -398,24 +408,28 @@ served via Apache.
     #+END_SRC
 
     As ~root~, run:
-    #+BEGIN_SRC sh
+    #+ATTR_LATEX: :options language=bash-remote-root
+    #+BEGIN_SRC bash
     apache2ctl configtest
     #+END_SRC
     to check the configuration file.
 24. Install ~libslat~ where ~apache2~ can find it. As ~root~, on the VM, run:
-    #+BEGIN_SRC sh
+   #+ATTR_LATEX: :options language=bash-remote-root
+    #+BEGIN_SRC bash
     ln -s /home/webslat-user/SLAT/linux/lib/libslat.so /usr/local/lib
     ldconfig
     #+END_SRC
 25. Restart the server. As ~root~, on the VM, run:
-    #+BEGIN_SRC sh
+   #+ATTR_LATEX: :options language=bash-remote-root
+    #+BEGIN_SRC bash
     systemctl restart apache2
     #+END_SRC
     
    
 To update OpenSLAT and WebSLAT without creating a new image:
 1. Update OpenSLAT from git, and build:
-   #+BEGIN_SRC dash :results output :eval ask
+   #+ATTR_LATEX: :options language=bash-remote
+   #+BEGIN_SRC bash :results output :eval ask
      echo \
          'cd SLAT/linux
 	  git pull
@@ -425,7 +439,8 @@ To update OpenSLAT and WebSLAT without creating a new image:
 	  tail -5
     #+END_SRC
 2. Update WebSLAT:
-   #+BEGIN_SRC dash :results output :eval ask
+   #+ATTR_LATEX: :options language=bash-remote
+   #+BEGIN_SRC bash :results output :eval ask
      echo \
 	 'cd webslat
 	  git pull
@@ -435,13 +450,15 @@ To update OpenSLAT and WebSLAT without creating a new image:
 	  tail -5
    #+END_SRC   
 3. Update the static files:
-   #+BEGIN_SRC dash :results output :eval ask
+   #+ATTR_LATEX: :options language=bash-remote
+   #+BEGIN_SRC bash :results output :eval ask
      echo "source webslat-env/bin/activate
 	   cd webslat/webslat
 	  yes yes | ./manage.py collectstatic
      " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 2>&1 | tail -10 
     #+END_SRC
 4. Restart the server. As ~root~, on the VM, run:
-   #+BEGIN_SRC sh
+   #+ATTR_LATEX: :options language=bash-remote-root
+   #+BEGIN_SRC bash
    systemctl restart apache2
    #+END_SRC
