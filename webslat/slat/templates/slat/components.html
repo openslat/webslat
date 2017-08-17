@@ -1,0 +1,10 @@
+<p>Components:</p>
+{% if components_list %}
+    <table><tr><td><b>ID</b></td><td><b>Name</b></td></tr>
+    {% for component in components_list %}
+       <tr><td><a href="{% url 'slat:component' component.ident %}">{{ component.ident }}</a></td><td>{{ component.name }}</td></tr>
+    {% endfor %}
+    </table>
+{% else %}
+    <p>No components are available.</p>
+{% endif %}

@@ -13,6 +13,7 @@ from graphos.sources.model import ModelDataSource
 from graphos.renderers.gchart import LineChart
 
 from  .models import *
+from .component_models import *
 from slat.constants import *
 
 def index(request):

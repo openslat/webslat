@@ -1,12 +1,15 @@
 from django.conf.urls import url
 
 from . import views
+from . import component_views
 
 app_name = 'slat'
 urlpatterns = [
     url(r'^$', views.index, name='index'),
     url(r'^project/(?P<project_id>[0-9]+)$', views.project, name='project'),
     url(r'^project$', views.project, name='project'),
+    url(r'^components$', component_views.components, name='components'),
+    url(r'^components/(?P<component_id>[0-9]+)$', component_views.component, name='component'),
     url(r'^project/(?P<project_id>[0-9]+)/hazard$', views.hazard, name='hazard'),
     url(r'^project/(?P<project_id>[0-9]+)/hazard/choose$', views.hazard_choose, name='hazard_choose'),
     url(r'^project/(?P<project_id>[0-9]+)/hazard/nlh$', views.nlh, name='nlh'),
