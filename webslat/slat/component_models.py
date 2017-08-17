@@ -109,8 +109,6 @@ class CompRouter(object):
         """
         Allow relations if a model in the comp app is involved.
         """
-        if model._meta.db_table in self.tables:
-            return True
         return None
 
     def allow_migrate(self, db, app_label, model_name=None, **hints):
