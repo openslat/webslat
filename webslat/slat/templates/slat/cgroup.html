@@ -1,0 +1,15 @@
+<p><b>Component Group </b></p>
+{% if cg_form.instance %}
+<form action="{% url 'slat:compgroup' project_id  %}" method="post">
+{% else %}
+<form action="{% url 'slat:compgroup' project_id  cg_form.instance.id %}" method="post">
+{% endif %}
+    {% csrf_token %}
+    {{ cg_form }}
+    <br />
+    <input type="submit" value="Submit" />
+    <input type="submit" name="cancel" value="Cancel" />
+</form>
+<a href="{% url 'slat:project' project_id %}">Return to Project</a><br />
+<a href="{% url 'slat:index' %}">Return to Project List</a>
+

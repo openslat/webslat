@@ -650,7 +650,6 @@ def edp_userdef(request, project_id, edp_id):
     edp = get_object_or_404(EDP, pk=edp_id)
     charts = _plot_demand(edp)
     
-
     return render(request, 'slat/edp_userdef.html',
                   { 'project': project, 
                     'edp': edp,
@@ -705,7 +704,6 @@ def edp_userdef_edit(request, project_id, edp_id):
 def edp_userdef_import(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)
     edp = get_object_or_404(EDP, pk=edp_id)
-
     if request.method == 'POST':
         interp_form = Interpolation_Method_Form(request.POST)
         form = Input_File_Form(request.POST, request.FILES)
@@ -785,3 +783,74 @@ def edp_userdef_import(request, project_id, edp_id):
                                                                 'edp':edp})
     raise ValueError("EDP_USERDEF_IMPORT not implemented")
 
+def cgroup(request, project_id, cg_id=None):
+     project = get_object_or_404(Project, pk=project_id)
+     if request.method == 'POST':
+         print(request.POST)
+         if request.POST.get('cancel'):
+             return HttpResponseRedirect(reverse('slat:edp', args=(project_id)))
+         cg_form = CompGroupForm(request.POST)
+         cg_form.save()
+         cg_id = cg_form.instance.id
+         
+         return HttpResponseRedirect(reverse('slat:compgroup', args=(project_id, cg_id)))
+     else:
+         if cg_id:
+             cg = get_object_or_404(Component_Group, pk=cg_id)
+             cg_form = CompGroupForm(instance=cg)
+         else:
+             cg_form = CompGroupForm()
+             
+         return render(request, 'slat/cgroup.html', {'project_id': project_id,
+                                                     'cg_id': cg_id,
+                                                     'cg_form': cg_form})
+ 
+
+def edp_cgroups(request, project_id, edp_id):
+    project = get_object_or_404(Project, pk=project_id)
+    edp = get_object_or_404(EDP, pk=edp_id)
+        
+    if request.method == 'POST':
+         raise ValueError("SHOULD NOT GET HERE")
+    else:
+        return render(request, 'slat/edp_cgroups.html',
+                      {'project': project,
+                       'edp': edp,
+                       'cgs': Component_Group.objects.filter(demand=edp)})
+
+def edp_cgroup(request, project_id, edp_id, cg_id=None):
+    project = get_object_or_404(Project, pk=project_id)
+    edp = get_object_or_404(EDP, pk=edp_id)
+    if request.method == 'POST':
+         if request.POST.get('cancel'):
+             return HttpResponseRedirect(reverse('slat:edp_cgroups', args=(project_id, edp_id)))
+
+         if request.POST.get('delete'):
+             cg = Component_Group.objects.get(pk=cg_id)
+             cg.delete()
+             return HttpResponseRedirect(reverse('slat:edp_cgroups', args=(project_id, edp_id)))
+             
+
+         cg_form = EDPCompGroupForm(request.POST)
+         cg_form.save(commit=False)
+         cg_form.instance.id = cg_id
+         cg_form.save()
+
+         return HttpResponseRedirect(reverse('slat:edp_cgroups', args=(project_id, edp_id)))
+    else:
+        if cg_id:
+            cg = Component_Group.objects.get(pk=cg_id)
+            cg_form = EDPCompGroupForm(instance=cg)
+        else:
+            cg_form = EDPCompGroupForm(initial={'demand': edp})
+        
+        return render(request, 'slat/edp_cgroup.html',
+                      {'project': project,
+                       'edp': edp,
+                       'cg_form': cg_form})
+    
+def cgroups(request, project_id):
+     project = get_object_or_404(Project, pk=project_id)
+     return render(request, 'slat/cgroups.html', {'project': project,
+                                                  'cgs': Component_Group.objects.filter(demand__project=project)})
+ 

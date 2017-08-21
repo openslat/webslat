@@ -5,6 +5,7 @@
 <p>Engineering Demand: Power Curve</P>
 
 <p><b>Project:</b> {{ project.title }}</p>
+<p><a href="{% url 'slat:edp_cgroups' project.id edp.id %}">Component Groups</a></p>
 
 {% if charts %} 
     {% for chart in charts %}

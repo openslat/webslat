@@ -5,6 +5,7 @@ from django.forms import  ModelForm, BaseModelFormSet, Textarea, FloatField, Fil
 from django.forms import Form, ChoiceField
 from slat.constants import *
 from .nzs import *
+from .component_models import *
 
 # Create your models here.
 class Project(models.Model):
@@ -190,6 +191,16 @@ class EDP(models.Model):
     powercurve = models.ForeignKey(EDP_PowerCurve, null=True, blank=False)
     interpolation_method = models.ForeignKey(Interpolation_Method, null=True, blank=False)
 
+    def __str__(self):
+        if self.floor == 0:
+            floor = "Ground Floor"
+        else:
+            floor = "Floor #" + str(self.floor)
+        for c in self.EDP_TYPE_CHOICES:
+            if c[0] == self.type:
+                return floor + ' ' + c[1]
+        return floor + "????"
+
     def _make_model(self):
         if not self.flavour:
             return None
@@ -296,6 +307,21 @@ class EDP_Point(models.Model):
 
     def __str__(self):
         return("an EDP_Point: [{}]".format(self.id))
+
+class Component_Group(models.Model):
+    demand = models.ForeignKey('EDP', null=False)
+    component = models.ForeignKey('ComponentsTab', null=False)
+    quantity = models.IntegerField(blank=False, null=False)
+
+    def __str__(self):
+        result = str(self.demand) + " "
+        #if self.component:
+        #    result = result + str(self.component)
+        #else:
+        #    result = result + "NO COMPONENT"
+        result = result + " " + str(self.quantity)
+        return result
+
     
 class ProjectForm(ModelForm):
     class Meta:
@@ -352,4 +378,16 @@ class NZSForm(ModelForm):
 
 class FloorsForm(Form):
     floors = IntegerField(initial=4)
-        
+
+class CompGroupForm(ModelForm):
+    class Meta:
+        model = Component_Group
+        fields = '__all__'
+
+class EDPCompGroupForm(ModelForm):
+    class Meta:
+        model = Component_Group
+        fields = '__all__'
+        widgets = {
+            'demand': HiddenInput
+        }

@@ -28,4 +28,10 @@ urlpatterns = [
     url(r'^project/(?P<project_id>[0-9]+)/edp/(?P<edp_id>[0-9]+)/userdef$', views.edp_userdef, name='edp_userdef'),
     url(r'^project/(?P<project_id>[0-9]+)/edp/(?P<edp_id>[0-9]+)/userdef/edit$', views.edp_userdef_edit, name='edp_userdef_edit'),
     url(r'^project/(?P<project_id>[0-9]+)/edp/(?P<edp_id>[0-9]+)/userdef/import$', views.edp_userdef_import, name='edp_userdef_import'),
+    url(r'^project/(?P<project_id>[0-9]+)/edp/(?P<edp_id>[0-9]+)/cgroups$', views.edp_cgroups, name='edp_cgroups'),
+    url(r'^project/(?P<project_id>[0-9]+)/edp/(?P<edp_id>[0-9]+)/cgroup$', views.edp_cgroup, name='edp_cgroup'),
+    url(r'^project/(?P<project_id>[0-9]+)/edp/(?P<edp_id>[0-9]+)/cgroup/(?P<cg_id>[0-9]+)$', views.edp_cgroup, name='edp_cgroup'),
+    url(r'^project/(?P<project_id>[0-9]+)/cgroups$', views.cgroups, name='compgroups'),
+    url(r'^project/(?P<project_id>[0-9]+)/cgroup$', views.cgroup, name='compgroup'),
+    url(r'^project/(?P<project_id>[0-9]+)/cgroup/(?P<cg_id>[0-9]+)$', views.cgroup, name='compgroup'),
 ]

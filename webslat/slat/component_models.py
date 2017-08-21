@@ -11,7 +11,7 @@ from django.db import models
 
 
 class ComponentsTab(models.Model):
-    key = models.IntegerField(blank=True, null=True, primary_key=True)
+    key = models.IntegerField(blank=True, null=False, primary_key=True)
     ident = models.TextField()  # This field type is a guess.
     name = models.TextField(blank=True, null=True)  # This field type is a guess.
     system = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -21,6 +21,9 @@ class ComponentsTab(models.Model):
     class Meta:
         managed = False
         db_table = 'components_tab'
+
+    def __str__(self):
+        return self.ident + ": " + self.name
 
 
 class CostTab(models.Model):
@@ -39,7 +42,7 @@ class CostTab(models.Model):
 
 
 class DemandsTab(models.Model):
-    key = models.IntegerField(blank=True, null=True, primary_key=True)
+    key = models.IntegerField(blank=True, null=False, primary_key=True)
     name = models.TextField(blank=True, null=True)  # This field type is a guess.
 
     class Meta:
@@ -73,7 +76,7 @@ class FragilityTab(models.Model):
 
 
 class UnitsTab(models.Model):
-    key = models.IntegerField(blank=True, null=True, primary_key=True)
+    key = models.IntegerField(blank=True, null=False, primary_key=True)
     name = models.TextField(blank=True, null=True)  # This field type is a guess.
 
     class Meta:
@@ -109,7 +112,7 @@ class CompRouter(object):
         """
         Allow relations if a model in the comp app is involved.
         """
-        return None
+        return True
 
     def allow_migrate(self, db, app_label, model_name=None, **hints):
         """

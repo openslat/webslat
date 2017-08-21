@@ -1,0 +1,15 @@
+<p>Component Groups</P>
+{{ form.errors }}
+
+<P><B>Project:</B> {{ project.title_text }}</P>
+<table><tr><td><b>EDP</b></td><td><b>Component</b></td><td><b>Quantity</b></td></tr>
+{% for cg in cgs %}
+<tr><td><a href="{% url 'slat:edp_view' project.id cg.demand.id %}">{{ cg.demand }}</a></td>
+    <td><a href="{% url 'slat:component' cg.component.ident %}">{{ cg.component }}</a></td>
+    <td>{{ cg.quantity }}</td></tr>
+{% endfor %}
+</table>
+
+</br>
+<a href="{% url 'slat:project' project.id %}">Return to Project</a><br /><br/>
+<a href="{% url 'slat:index' %}">Return to Project List</a>

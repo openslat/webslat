@@ -1,0 +1,27 @@
+<p>Component Groups for {{ edp }}</P>
+{{ form.errors }}
+
+<P><B>Project:</B> {{ project.title_text }}</P>
+
+<table><tr><td><b>Component</b></td><td><b>Quantity</b></td></tr>
+{% for cg in cgs %}
+<tr><td><a href="{% url 'slat:component' cg.component.ident %}">{{ cg.component }}</a></td>
+    <td>{{ cg.quantity }}</td>
+    <td>
+    <form action="{% url 'slat:edp_cgroup' project.id edp.id cg.id  %}" method="get">
+        {% csrf_token %}
+    <input type="submit" name='edit' value="Edit" />
+    </form>
+    </td><td>
+    <form action="{% url 'slat:edp_cgroup' project.id edp.id cg.id  %}" method="post">
+        {% csrf_token %}
+      <input type="submit" name='delete' value="Delete" />
+    </form>
+    </td></tr>
+{% endfor %}
+</table>
+<p><a href="{% url 'slat:edp_cgroup' project.id edp.id %}">New Component Group</a></p>
+
+</br>
+<a href="{% url 'slat:project' project.id %}">Return to Project</a><br /><br/>
+<a href="{% url 'slat:index' %}">Return to Project List</a>

@@ -4,13 +4,15 @@
 </script>
 <p>User-Defined Engineering Demand Page</P>
 
-<p><b>Project:</b> {{ project.title }}</p>
+<p><b>Project:</b> {{ project.title_text }}</p>
+<p><a href="{% url 'slat:edp_cgroups' project.id edp.id %}">Component Groups</a></p>
 
 {% if charts %} 
     {% for chart in charts %}
         {{ chart.as_html }}
     {% endfor %}
 {% endif %}
+
 
 <p><b>Interpolation Method:</b>{{ edp.interpolation_method }}</p>
 
