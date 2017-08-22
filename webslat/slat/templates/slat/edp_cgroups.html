@@ -1,4 +1,4 @@
-<p>Component Groups for {{ edp }}</P>
+<p>Component Groups for <b>{{ edp }}</b></P>
 {{ form.errors }}
 
 <P><B>Project:</B> {{ project.title_text }}</P>
@@ -23,5 +23,6 @@
 <p><a href="{% url 'slat:edp_cgroup' project.id edp.id %}">New Component Group</a></p>
 
 </br>
+<a href="{% url 'slat:edp' project.id %}">Return to Demands</a><br /><br/>
 <a href="{% url 'slat:project' project.id %}">Return to Project</a><br /><br/>
 <a href="{% url 'slat:index' %}">Return to Project List</a>

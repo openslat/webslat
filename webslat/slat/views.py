@@ -844,6 +844,11 @@ def edp_cgroup(request, project_id, edp_id, cg_id=None):
         else:
             cg_form = EDPCompGroupForm(initial={'demand': edp})
         
+        if edp.type == 'A':
+            cg_form.fields['component'].queryset = ComponentsTab.objects.filter(demand=DemandsTab.objects.get(name__icontains='Accel'))
+        elif edp.type == 'D':
+            cg_form.fields['component'].queryset = ComponentsTab.objects.filter(demand=DemandsTab.objects.get(name__icontains='Drift'))
+            
         return render(request, 'slat/edp_cgroup.html',
                       {'project': project,
                        'edp': edp,

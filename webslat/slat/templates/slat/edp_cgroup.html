@@ -1,4 +1,5 @@
 <p><b>Component Group </b></p>
+<p>Driven by <b>{{ edp }}</b></p> 
 {% if cg_form.instance.id is None %}
 <form action="{% url 'slat:edp_cgroup' project.id edp.id  %}" method="post">
 {% else %}
