@@ -835,6 +835,7 @@ def edp_cgroup(request, project_id, edp_id, cg_id=None):
          cg_form.save(commit=False)
          cg_form.instance.id = cg_id
          cg_form.save()
+         cg_form.instance._make_model()
 
          return HttpResponseRedirect(reverse('slat:edp_cgroups', args=(project_id, edp_id)))
     else:

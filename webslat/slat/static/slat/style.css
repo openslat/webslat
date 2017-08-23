@@ -1,0 +1,11 @@
+body {
+    background: white;
+}
+
+table {
+    display: table;
+    background: white;
+    border-collapse: collapse;
+    border-spacing: 2px;
+    border-color: black;
+}

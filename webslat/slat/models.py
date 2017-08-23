@@ -313,6 +313,29 @@ class Component_Group(models.Model):
     component = models.ForeignKey('ComponentsTab', null=False)
     quantity = models.IntegerField(blank=False, null=False)
 
+    def _make_model(self):
+        print("MAKE MODEL")
+        frags = []
+        for f in FragilityTab.objects.filter(component = self.component).order_by('state'):
+            frags.append([f.median, f.beta])
+        fragility = pyslat.fragfn_user(self.id, {'mu': pyslat.LOGNORMAL_MU_TYPE.MEDIAN_X,
+                                          'sd': pyslat.LOGNORMAL_SIGMA_TYPE.SD_LN_X},
+                                frags)
+        costs = []
+        for c in CostTab.objects.filter(component = self.component).order_by('state'):
+            costs.append(pyslat.MakeBiLevelLoss(c.lower_limit, c.upper_limit,
+                                                c.max_cost, c.min_cost,
+                                                c.dispersion))
+        cost = pyslat.bilevellossfn(self.id, costs)
+        cg = pyslat.MakeCompGroup(self.demand.model().function(), fragility.function(), cost.function(), None, self.quantity, self.id)
+        print(cg.E_annual_cost())
+
+    def model(self):
+        if not pyslat.compgroup.lookup(self.id):
+            self._make_model()
+        return pyslat.compgroup.lookup(self.id)
+            
+
     def __str__(self):
         result = str(self.demand) + " "
         #if self.component:

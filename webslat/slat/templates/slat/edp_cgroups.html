@@ -1,12 +1,16 @@
+{% load static %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}" />
+
 <p>Component Groups for <b>{{ edp }}</b></P>
 {{ form.errors }}
 
 <P><B>Project:</B> {{ project.title_text }}</P>
 
-<table><tr><td><b>Component</b></td><td><b>Quantity</b></td></tr>
+<table border="1"><tr><td border="0"><b>Component</b></td><td border="0"><b>Quantity</b></td><td border="0"></td><td border=-"0"></td></tr>
 {% for cg in cgs %}
 <tr><td><a href="{% url 'slat:component' cg.component.ident %}">{{ cg.component }}</a></td>
-    <td>{{ cg.quantity }}</td>
+    <td align="RIGHT">{{ cg.quantity }}</td>
     <td>
     <form action="{% url 'slat:edp_cgroup' project.id edp.id cg.id  %}" method="get">
         {% csrf_token %}
