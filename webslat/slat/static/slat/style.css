@@ -9,3 +9,12 @@ table {
     border-spacing: 2px;
     border-color: black;
 }
+th, td {
+    padding-right: 15px;
+    padding-left: 15px;
+}
+input {
+  vertical-align: middle;
+  display: block;
+  margin-top: 10px;
+}
