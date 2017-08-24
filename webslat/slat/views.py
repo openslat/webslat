@@ -838,7 +838,8 @@ def edp_cgroup(request, project_id, edp_id, cg_id=None):
          cg_form = EDPCompGroupForm(request.POST, instance=cg)
 
          cg_form.save(commit=False)
-         cg_form.instance.id = int(cg_id)
+         if cg_id:
+             cg_form.instance.id = int(cg_id)
          cg_form.save()
          if cg_form.has_changed():
              cg_form.instance._make_model()
