@@ -831,11 +831,17 @@ def edp_cgroup(request, project_id, edp_id, cg_id=None):
              return HttpResponseRedirect(reverse('slat:edp_cgroups', args=(project_id, edp_id)))
              
 
-         cg_form = EDPCompGroupForm(request.POST)
+         if cg_id:
+             cg = Component_Group.objects.get(pk=cg_id)
+         else:
+             cg = None
+         cg_form = EDPCompGroupForm(request.POST, instance=cg)
+
          cg_form.save(commit=False)
-         cg_form.instance.id = cg_id
+         cg_form.instance.id = int(cg_id)
          cg_form.save()
-         cg_form.instance._make_model()
+         if cg_form.has_changed():
+             cg_form.instance._make_model()
 
          return HttpResponseRedirect(reverse('slat:edp_cgroups', args=(project_id, edp_id)))
     else:

@@ -314,7 +314,6 @@ class Component_Group(models.Model):
     quantity = models.IntegerField(blank=False, null=False)
 
     def _make_model(self):
-        print("MAKE MODEL")
         frags = []
         for f in FragilityTab.objects.filter(component = self.component).order_by('state'):
             frags.append([f.median, f.beta])
@@ -327,14 +326,13 @@ class Component_Group(models.Model):
                                                 c.max_cost, c.min_cost,
                                                 c.dispersion))
         cost = pyslat.bilevellossfn(self.id, costs)
-        cg = pyslat.MakeCompGroup(self.demand.model().function(), fragility.function(), cost.function(), None, self.quantity, self.id)
-        print(cg.E_annual_cost())
+        pyslat.compgroup(self.id, self.demand.model(), fragility, cost, None, self.quantity)
 
     def model(self):
         if not pyslat.compgroup.lookup(self.id):
             self._make_model()
         return pyslat.compgroup.lookup(self.id)
-            
+    
 
     def __str__(self):
         result = str(self.demand) + " "

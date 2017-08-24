@@ -7,10 +7,11 @@
 
 <P><B>Project:</B> {{ project.title_text }}</P>
 
-<table border="1"><tr><td border="0"><b>Component</b></td><td border="0"><b>Quantity</b></td><td border="0"></td><td border=-"0"></td></tr>
+<table border="1"><tr><td><b>Component</b></td><td><b>Quantity</b></td><td><b>E annual cost</b></td><td></td><td></td></tr>
 {% for cg in cgs %}
 <tr><td><a href="{% url 'slat:component' cg.component.ident %}">{{ cg.component }}</a></td>
     <td align="RIGHT">{{ cg.quantity }}</td>
+   <td>{{ cg.model.E_annual_cost }}</td>
     <td>
     <form action="{% url 'slat:edp_cgroup' project.id edp.id cg.id  %}" method="get">
         {% csrf_token %}

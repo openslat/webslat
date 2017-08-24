@@ -13,8 +13,13 @@ th, td {
     padding-right: 15px;
     padding-left: 15px;
 }
-input {
+input[type="submit"] {
   vertical-align: middle;
   display: block;
   margin-top: 10px;
+}
+
+input[type="number"] {
+  vertical-align: middle;
+  display: block;
 }
