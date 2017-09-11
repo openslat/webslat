@@ -6,6 +6,7 @@ from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.forms import modelformset_factory, ValidationError, HiddenInput
+from django.forms.models import model_to_dict
 from .nzs import *
 from math import *
 from graphos.sources.model import SimpleDataSource
@@ -22,37 +23,23 @@ def index(request):
     return render(request, 'slat/index.html', context)
 
 def project(request, project_id=None):
+    chart = None
     if request.method == 'POST':
         if project_id:
             project = Project.objects.get(pk=project_id)
-            old_rarity = project.rarity
-            old_mean_im_collapse = project.mean_im_collapse
-            old_sd_ln_im_collapse = project.sd_ln_im_collapse
-            old_mean_cost_collapse = project.mean_cost_collapse
-            old_sd_ln_cost_collapse = project.sd_ln_cost_collapse
-            old_mean_im_demolition = project.mean_im_demolition
-            old_sd_ln_im_demolition = project.sd_ln_im_demolition
-            old_mean_cost_demolition = project.mean_cost_demolition
-            old_sd_ln_cost_demolition = project.sd_ln_cost_demolition
-            
-            form = ProjectForm(request.POST, Project.objects.get(pk=project_id))
+            form = ProjectForm(request.POST, Project.objects.get(pk=project_id), initial=model_to_dict(project))
             form.instance.id = project_id
         else:
             form = ProjectForm(request.POST)
         
         if form.is_valid():
             form.save()
-            if project_id and (old_rarity != form.instance.rarity or
-                               old_mean_im_collapse != form.instance.mean_im_collapse or
-                               old_sd_ln_im_collapse != form.instance.sd_ln_im_collapse or
-                               old_mean_im_demolition != form.instance.mean_im_demolition or
-                               old_sd_ln_im_demolition != form.instance.sd_ln_im_demolition):
-                if project.IM:
-                    project.IM._make_model()
-                    if project.floors:
-                        for edp in EDP.objects.filter(project=project):
-                            edp._make_model()
-                            
+            if project_id and form.has_changed() and project.IM:
+                project.IM._make_model()
+                if project.floors:
+                    for edp in EDP.objects.filter(project=project):
+                        edp._make_model()
+                        
             return HttpResponseRedirect(reverse('slat:project', args=(form.instance.id,)))
     else:
         # If the project exists, use it to populate the form:
@@ -60,10 +47,8 @@ def project(request, project_id=None):
             project = Project.objects.get(pk=project_id)
             form = ProjectForm(instance=project)
             if project.IM:
-                print("GETTING; has hazard")
                 model = project.IM.model()
                 if model.CollapseRate() or model.DemolitionRate():
-                    print("plotting")
                     im_func = model
                     xlimit = im_func.plot_max()
 
@@ -94,7 +79,6 @@ def project(request, project_id=None):
                                                             'pointSize': 5})
         else:
             form = ProjectForm()
-            chart = None
             
     return render(request, 'slat/project.html', {'form': form, 'chart': chart})
 
@@ -574,7 +558,7 @@ def _plot_demand(edp):
             xval = i/10 * xlimit
             rate = edp_func.getlambda(xval)
             data.append([xval, rate])
-        print(data)
+
         data_source = SimpleDataSource(data=data)
         chart2 = LineChart(data_source, options={'title': 'Engineering Demand Rate of Exceedance', 
                                                 'hAxis': {'logScale': True, 'title': 'Demand'},
@@ -757,8 +741,6 @@ def edp_userdef_import(request, project_id, edp_id):
 
         try:
             if form.is_valid():
-                print("VALID")
-                print(form.cleaned_data['flavour'])
                 if form.cleaned_data['flavour'].id == INPUT_FORMAT_CSV:
                     data = np.genfromtxt(request.FILES['path'].file, comments="#", delimiter=",", invalid_raise=True)
                     for d in data:
@@ -770,7 +752,6 @@ def edp_userdef_import(request, project_id, edp_id):
                             if isnan(d):
                                 raise ValueError("Error importing data")
                 elif form.cleaned_data['flavour'].id == INPUT_FORMAT_LEGACY:
-                    print("LEGACY")
                     data = np.loadtxt(request.FILES['path'].file, skiprows=2)
                 else:
                     raise ValueError("Unrecognised file format specified.")
@@ -822,7 +803,6 @@ def edp_userdef_import(request, project_id, edp_id):
             interp_form = Interpolation_Method_Form(initial={'method': edp.interpolation_method.id})
         else:
             interp_form = Interpolation_Method_Form()
-        print(interp_form)
         form = Input_File_Form()
         return render(request, 'slat/edp_userdef_import.html', {'form': form, 
                                                                 'interp_form': interp_form,
@@ -833,7 +813,6 @@ def edp_userdef_import(request, project_id, edp_id):
 def cgroup(request, project_id, cg_id=None):
      project = get_object_or_404(Project, pk=project_id)
      if request.method == 'POST':
-         print(request.POST)
          if request.POST.get('cancel'):
              return HttpResponseRedirect(reverse('slat:edp', args=(project_id)))
          cg_form = CompGroupForm(request.POST)

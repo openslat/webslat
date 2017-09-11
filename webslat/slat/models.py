@@ -166,23 +166,16 @@ class IM(models.Model):
                 im_func.set_plot_max(xlimit)
 
         if project.mean_im_collapse and project.sd_ln_im_collapse:
-            print("HAS COLLAPSE")
             im_func.SetCollapse(
                 pyslat.MakeLogNormalDist(
                     project.mean_im_collapse, pyslat.LOGNORMAL_MU_TYPE.MEAN_X,
                     project.sd_ln_im_collapse, pyslat.LOGNORMAL_SIGMA_TYPE.SD_LN_X))
-        else:
-            print("NO COLLAPSE")
 
         if project.mean_im_demolition and project.sd_ln_im_demolition:
-            print("HAS DEMOLITION")
             im_func.SetDemolition(
                 pyslat.MakeLogNormalDist(
                     project.mean_im_demolition, pyslat.LOGNORMAL_MU_TYPE.MEAN_X,
                     project.sd_ln_im_demolition, pyslat.LOGNORMAL_SIGMA_TYPE.SD_LN_X))
-        else:
-            print("NO DEMOLITION")
-            
 
     def model(self):
         if not pyslat.im.lookup(self.id):
@@ -190,7 +183,7 @@ class IM(models.Model):
         return pyslat.im.lookup(self.id)
             
     def __str__(self):
-        return "I M: {} {} {} [{}]".format(self.flavour, self.nlh, self.interp_method, self.id)
+        return "IM: {} {} {} [{}]".format(self.flavour, self.nlh, self.interp_method, self.id)
 
 class EDP_Flavours(models.Model):
     name_text = models.CharField(max_length=25)
