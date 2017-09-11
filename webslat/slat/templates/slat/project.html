@@ -1,3 +1,11 @@
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}" />
+
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript">
+    google.load("visualization", "1", {packages:["corechart"]});
+</script>
+
 
 {% if form.instance.id %}
 <p><b>Project:</b> {{ form.instance.title_text }}</P>
@@ -7,13 +15,25 @@
 <form action="{% url 'slat:project' %}" method="post">
 {% endif %} 
     {% csrf_token %}
-    {{ form.as_p }}
+    {{ form.title_text.label }} {{ form.title_text }} <br/>
+    {{ form.description_text.label }} {{ form.description_text }} <br/>
+    {{ form.rarity.label }} {{form.rarity }} <br/>
+    {{ from.floors }} {{ form.IM }}
+    <table border="1"><tr><td><b>Event</b></td><td><b>mean(IM)</b></td><td><b>sd(ln(IM))</b></td><td><b>mean(Cost)</b></td><td><b/>sd(ln(Cost))</b></td></tr>
+    <tr><td><b>Collapse</b></td><td> {{ form.mean_im_collapse }} </td><td> {{ form.sd_ln_im_collapse }} </td><td> {{ form.mean_cost_collapse }} </td><td> {{ form.sd_ln_cost_collapse }} </td></tr>
+    <tr><td><b>Demolition</b></td><td> {{ form.mean_im_demolition }} </td><td> {{ form.sd_ln_im_demolition }} </td><td> {{ form.mean_cost_demolition }} </td><td> {{ form.sd_ln_cost_demolition }} </td></tr>
+    </table>
    {% if form.instance.id %}
     <input type="submit" value="Submit Changes" />
    {% else %}
     <input type="submit" value="Create Project" />
    {% endif %}    
 </form>
+
+{% if chart %} 
+    {{ chart.as_html }}
+{% endif %}
+
 
 {% if form.instance.id %}
     <hr/>

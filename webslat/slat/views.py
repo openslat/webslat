@@ -26,15 +26,27 @@ def project(request, project_id=None):
         if project_id:
             project = Project.objects.get(pk=project_id)
             old_rarity = project.rarity
+            old_mean_im_collapse = project.mean_im_collapse
+            old_sd_ln_im_collapse = project.sd_ln_im_collapse
+            old_mean_cost_collapse = project.mean_cost_collapse
+            old_sd_ln_cost_collapse = project.sd_ln_cost_collapse
+            old_mean_im_demolition = project.mean_im_demolition
+            old_sd_ln_im_demolition = project.sd_ln_im_demolition
+            old_mean_cost_demolition = project.mean_cost_demolition
+            old_sd_ln_cost_demolition = project.sd_ln_cost_demolition
+            
             form = ProjectForm(request.POST, Project.objects.get(pk=project_id))
             form.instance.id = project_id
         else:
             form = ProjectForm(request.POST)
-
         
         if form.is_valid():
             form.save()
-            if project_id and old_rarity != form.instance.rarity:
+            if project_id and (old_rarity != form.instance.rarity or
+                               old_mean_im_collapse != form.instance.mean_im_collapse or
+                               old_sd_ln_im_collapse != form.instance.sd_ln_im_collapse or
+                               old_mean_im_demolition != form.instance.mean_im_demolition or
+                               old_sd_ln_im_demolition != form.instance.sd_ln_im_demolition):
                 if project.IM:
                     project.IM._make_model()
                     if project.floors:
@@ -45,11 +57,46 @@ def project(request, project_id=None):
     else:
         # If the project exists, use it to populate the form:
         if project_id:
-            form = ProjectForm(instance=Project.objects.get(pk=project_id))
+            project = Project.objects.get(pk=project_id)
+            form = ProjectForm(instance=project)
+            if project.IM:
+                print("GETTING; has hazard")
+                model = project.IM.model()
+                if model.CollapseRate() or model.DemolitionRate():
+                    print("plotting")
+                    im_func = model
+                    xlimit = im_func.plot_max()
+
+                    columns = ['IM']
+                    if model.CollapseRate():
+                        columns.append('pCollapse')
+                    if model.DemolitionRate():
+                        columns.append('pDemolition')
+                        
+                    data = [columns]
+
+                    for i in range(11):
+                        x = i/10 * xlimit
+                        new_data = [x]
+                        if model.CollapseRate():
+                            y = im_func.pCollapse(x)
+                            new_data.append(y)
+                        if model.DemolitionRate():
+                            y = im_func.pDemolition(x)
+                            new_data.append(y)
+                        data.append(new_data)
+
+                    data_source = SimpleDataSource(data=data)
+                    chart = LineChart(data_source, options={'title': 'Intensity Measure Rate of Exceedance', 
+                                                            'hAxis': {'logScale': True, 'title': 'Intensity Measure'},
+                                                            'vAxis': {'logScale': True, 'format': 'scientific',
+                                                                      'title': 'Rate of Exceedance'},
+                                                            'pointSize': 5})
         else:
             form = ProjectForm()
+            chart = None
             
-    return render(request, 'slat/project.html', {'form': form})
+    return render(request, 'slat/project.html', {'form': form, 'chart': chart})
 
 
 def hazard(request, project_id):

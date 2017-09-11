@@ -14,6 +14,14 @@ class Project(models.Model):
     IM = models.ForeignKey('IM', null=True, blank=True)
     floors = models.IntegerField(null=True, blank=True)
     rarity = models.FloatField(null=False, default=1E-4)
+    mean_im_collapse = models.FloatField(null=True, blank=True)
+    sd_ln_im_collapse = models.FloatField(null=True, blank=True)
+    mean_cost_collapse = models.FloatField(null=True, blank=True)
+    sd_ln_cost_collapse = models.FloatField(null=True, blank=True)
+    mean_im_demolition = models.FloatField(null=True, blank=True)
+    sd_ln_im_demolition = models.FloatField(null=True, blank=True)
+    mean_cost_demolition = models.FloatField(null=True, blank=True)
+    sd_ln_cost_demolition = models.FloatField(null=True, blank=True)
     
 
     def __str__(self):
@@ -156,6 +164,25 @@ class IM(models.Model):
                 f = lambda x: im_func.getlambda(x[0]) - project.rarity
                 xlimit = fsolve(f, x[-2])[0]
                 im_func.set_plot_max(xlimit)
+
+        if project.mean_im_collapse and project.sd_ln_im_collapse:
+            print("HAS COLLAPSE")
+            im_func.SetCollapse(
+                pyslat.MakeLogNormalDist(
+                    project.mean_im_collapse, pyslat.LOGNORMAL_MU_TYPE.MEAN_X,
+                    project.sd_ln_im_collapse, pyslat.LOGNORMAL_SIGMA_TYPE.SD_LN_X))
+        else:
+            print("NO COLLAPSE")
+
+        if project.mean_im_demolition and project.sd_ln_im_demolition:
+            print("HAS DEMOLITION")
+            im_func.SetDemolition(
+                pyslat.MakeLogNormalDist(
+                    project.mean_im_demolition, pyslat.LOGNORMAL_MU_TYPE.MEAN_X,
+                    project.sd_ln_im_demolition, pyslat.LOGNORMAL_SIGMA_TYPE.SD_LN_X))
+        else:
+            print("NO DEMOLITION")
+            
 
     def model(self):
         if not pyslat.im.lookup(self.id):
