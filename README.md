@@ -51,6 +51,64 @@ served via Apache.
         	    -i ~/.ssh/vm \
         	    -p 3022 webslat-user@127.0.0.1
 
+8.  Run these commands on the VM as root. (I can't figure out how to do this from
+    a script on the host machine).
+    
+    This will install the packages needed to build and run `OpenSLAT`:
+    
+        apt-get update
+        apt-get -y install  git \
+            make \
+            pkg-config \
+            libgsl-dev \
+            python3-dev \
+            python3-pip \
+            g++ \
+            libboost-dev \
+            libboost-log-dev \
+            libboost-test-dev \
+            swig3.0 \
+            openjdk-8-jre-headless \
+            curl \
+            zile
+        curl \
+            http://www.antlr.org/download/antlr-4.7-complete.jar \
+            -o /usr/local/lib/antlr-4.7-complete.jar
+        
+        ln -s /usr/bin/swig3.0 /usr/bin/swig
+        
+        pip3 install antlr4-python3-runtime numpy typing
+9.  Build the libraries:
+    
+        echo \
+             'if [[ -e SLAT ]]; then
+        	  cd SLAT/linux
+        	  git pull
+              else
+        	  git clone \
+        	  http://github.com/mikelygee/SLAT
+        	  cd SLAT/linux
+              fi;
+              make' |
+             ssh -i ~/.ssh/vm -p 3022 \
+        	 webslat-user@127.0.0.1 |
+             tail -5
+10. Add the search paths to `.bashrc`, if they aren't already there;
+    
+        echo \
+            "if ! grep PYTHONPATH .profile; then
+        	 echo export LD_LIBRARY_PATH=~/SLAT/linux/lib >> .profile
+        	 echo export PYTHONPATH=~/SLAT/linux/lib >> .profile
+             fi
+        " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 | tail -5
+
+11. Run the unit tests:
+    
+        echo "cd SLAT/linux/bin
+               ./unit_tests
+        " | ssh -i ~/.ssh/vm -p 3022 \
+        	webslat-user@127.0.0.1 2>&1 | tail -5
+
 1.  Run the C++ example2 binary:
     
         echo "cd SLAT/parser/example2
@@ -98,9 +156,6 @@ served via Apache.
         	webslat-user@127.0.0.1 2>&1 | tail -10
 
 1.  Copy the `webslat` files to the VM, since they aren't yet on `github`:
-    
-        #scp -i ~/.ssh/vm -P 3022 -r \
-        #    -q /home/mag109/webslat webslat-user@127.0.0.1: 
     
         echo "git clone \
         	  http://github.com/mikelygee/webslat
@@ -200,6 +255,7 @@ To update OpenSLAT and WebSLAT without creating a new image:
              ssh -i ~/.ssh/vm -p 3022 \
         	 webslat-user@127.0.0.1 |
              tail -5
+
 2.  Update WebSLAT:
     
         echo \
@@ -209,13 +265,22 @@ To update OpenSLAT and WebSLAT without creating a new image:
              ssh -i ~/.ssh/vm -p 3022 \
         	 webslat-user@127.0.0.1 |
              tail -5
-3.  Update the static files:
+
+3.  Run migrations:
+    
+        echo "source webslat-env/bin/activate
+              cd webslat/webslat
+             yes yes | ./manage.py migrate
+        " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 2>&1 | tail -10
+
+4.  Update the static files:
     
         echo "source webslat-env/bin/activate
               cd webslat/webslat
              yes yes | ./manage.py collectstatic
         " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 2>&1 | tail -10
-4.  Restart the server. As `root`, on the VM, run:
+
+5.  Restart the server. As `root`, on the VM, run:
     
         systemctl restart apache2
 
