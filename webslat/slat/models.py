@@ -1,4 +1,6 @@
 import pyslat
+import sys
+import time
 from scipy.optimize import fsolve, newton
 from django.db import models
 from django.forms import  ModelForm, BaseModelFormSet, Textarea, FloatField, FileField, Form, ModelChoiceField, IntegerField, HiddenInput
@@ -22,8 +24,29 @@ class Project(models.Model):
     sd_ln_im_demolition = models.FloatField(null=True, blank=True)
     mean_cost_demolition = models.FloatField(null=True, blank=True)
     sd_ln_cost_demolition = models.FloatField(null=True, blank=True)
-    
 
+    def _make_model(self):
+        structure = pyslat.structure(self.id)
+        if self.mean_cost_collapse and self.sd_ln_cost_collapse:
+            structure.setRebuildCost(
+                pyslat.MakeLogNormalDist(
+                    self.mean_cost_collapse, pyslat.LOGNORMAL_MU_TYPE.MEAN_X,
+                    self.sd_ln_cost_collapse, pyslat.LOGNORMAL_SIGMA_TYPE.SD_LN_X))
+
+        if self.mean_cost_demolition and self.sd_ln_cost_demolition:
+            structure.setDemolitionCost(
+                pyslat.MakeLogNormalDist(
+                    self.mean_cost_demolition, pyslat.LOGNORMAL_MU_TYPE.MEAN_X,
+                    self.sd_ln_cost_demolition, pyslat.LOGNORMAL_SIGMA_TYPE.SD_LN_X))
+            
+        for cg in Component_Group.objects.filter(demand__project = self):
+            structure.AddCompGroup(cg.model())
+
+    def model(self):
+        if not pyslat.structure.lookup(self.id):
+            self._make_model()
+        return pyslat.structure.lookup(self.id)
+            
     def __str__(self):
         if self.IM:
             im = self.IM.id
@@ -334,19 +357,41 @@ class Component_Group(models.Model):
     quantity = models.IntegerField(blank=False, null=False)
 
     def _make_model(self):
+        print("Component_Group --> _make_model")
+        print("component: ", self.component)
+        print("demand: ", self.demand)
+        print("quantity: ", self.quantity)
+        
         frags = []
         for f in FragilityTab.objects.filter(component = self.component).order_by('state'):
+            print("f:", f)
             frags.append([f.median, f.beta])
         fragility = pyslat.fragfn_user(self.id, {'mu': pyslat.LOGNORMAL_MU_TYPE.MEDIAN_X,
-                                          'sd': pyslat.LOGNORMAL_SIGMA_TYPE.SD_LN_X},
-                                frags)
+                                                 'sd': pyslat.LOGNORMAL_SIGMA_TYPE.SD_LN_X},
+                                       frags)
+
+        print(fragility)
+        print("fragility done")
+        #time.sleep(1)
+        print("looking for costs")
+        #time.sleep(1)
+        print("costs: ", CostTab.objects.filter(component = self.component))
+        #time.sleep(1)
+        print("----")
+        #time.sleep(1)
+        
         costs = []
         for c in CostTab.objects.filter(component = self.component).order_by('state'):
+            print("c: ", c)
             costs.append(pyslat.MakeBiLevelLoss(c.lower_limit, c.upper_limit,
                                                 c.max_cost, c.min_cost,
                                                 c.dispersion))
+        print(costs)
         cost = pyslat.bilevellossfn(self.id, costs)
+        print("FRAG", fragility)
+        print("COST", cost)
         pyslat.compgroup(self.id, self.demand.model(), fragility, cost, None, self.quantity)
+        print("OK")
 
     def model(self):
         if not pyslat.compgroup.lookup(self.id):

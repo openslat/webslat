@@ -848,29 +848,28 @@ def edp_cgroup(request, project_id, edp_id, cg_id=None):
     project = get_object_or_404(Project, pk=project_id)
     edp = get_object_or_404(EDP, pk=edp_id)
     if request.method == 'POST':
-         if request.POST.get('cancel'):
-             return HttpResponseRedirect(reverse('slat:edp_cgroups', args=(project_id, edp_id)))
+        if request.POST.get('cancel'):
+            return HttpResponseRedirect(reverse('slat:edp_cgroups', args=(project_id, edp_id)))
 
-         if request.POST.get('delete'):
-             cg = Component_Group.objects.get(pk=cg_id)
-             cg.delete()
-             return HttpResponseRedirect(reverse('slat:edp_cgroups', args=(project_id, edp_id)))
+        if request.POST.get('delete'):
+            cg = Component_Group.objects.get(pk=cg_id)
+            cg.delete()
+            return HttpResponseRedirect(reverse('slat:edp_cgroups', args=(project_id, edp_id)))
              
-
-         if cg_id:
+        if cg_id:
              cg = Component_Group.objects.get(pk=cg_id)
-         else:
+        else:
              cg = None
-         cg_form = EDPCompGroupForm(request.POST, instance=cg)
+        cg_form = EDPCompGroupForm(request.POST, instance=cg)
+         
+        cg_form.save(commit=False)
+        if cg_id:
+            cg_form.instance.id = int(cg_id)
+        cg_form.save()
+        if cg_form.has_changed():
+            cg_form.instance._make_model()
 
-         cg_form.save(commit=False)
-         if cg_id:
-             cg_form.instance.id = int(cg_id)
-         cg_form.save()
-         if cg_form.has_changed():
-             cg_form.instance._make_model()
-
-         return HttpResponseRedirect(reverse('slat:edp_cgroups', args=(project_id, edp_id)))
+        return HttpResponseRedirect(reverse('slat:edp_cgroups', args=(project_id, edp_id)))
     else:
         if cg_id:
             cg = Component_Group.objects.get(pk=cg_id)
@@ -893,3 +892,7 @@ def cgroups(request, project_id):
      return render(request, 'slat/cgroups.html', {'project': project,
                                                   'cgs': Component_Group.objects.filter(demand__project=project)})
  
+def analysis(request, project_id):
+    project = get_object_or_404(Project, pk=project_id)
+    return render(request, 'slat/analysis.html', {'project': project, 
+                                                  'structure': project.model()})

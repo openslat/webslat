@@ -40,6 +40,9 @@ class CostTab(models.Model):
         managed = False
         db_table = 'cost_tab'
 
+    def __str__(self):
+        return "CostTab: {} {}".format(self.rowid, self.component)
+
 
 class DemandsTab(models.Model):
     key = models.IntegerField(blank=True, null=False, primary_key=True)
@@ -74,6 +77,8 @@ class FragilityTab(models.Model):
         managed = False
         db_table = 'fragility_tab'
 
+    def __str__(self):
+        return "FragilityTab: {} {}".format(self.rowid, self.component)
 
 class UnitsTab(models.Model):
     key = models.IntegerField(blank=True, null=False, primary_key=True)

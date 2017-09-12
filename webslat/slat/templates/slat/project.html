@@ -47,6 +47,10 @@
           <input type="submit" value="Engineering Demands" />
         </form>
      {% endif %}
+    <form action="{% url 'slat:analysis' form.instance.id %}" method="get">
+      {% csrf_token %}
+      <input type="submit" value="Analysis" />
+    </form>
 {% endif %}
     
 {% if form.instance.id %}

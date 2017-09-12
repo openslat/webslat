@@ -34,4 +34,5 @@ urlpatterns = [
     url(r'^project/(?P<project_id>[0-9]+)/cgroups$', views.cgroups, name='compgroups'),
     url(r'^project/(?P<project_id>[0-9]+)/cgroup$', views.cgroup, name='compgroup'),
     url(r'^project/(?P<project_id>[0-9]+)/cgroup/(?P<cg_id>[0-9]+)$', views.cgroup, name='compgroup'),
+    url(r'^project/(?P<project_id>[0-9]+)/analysis$', views.analysis, name='analysis'),
 ]
