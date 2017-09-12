@@ -438,6 +438,14 @@ To update OpenSLAT and WebSLAT without creating a new image:
 	      webslat-user@127.0.0.1 |
 	  tail -5
     #+END_SRC
+
+    #+RESULTS:
+    : 
+    : Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+    : permitted by applicable law.
+    : Already up-to-date.
+    : make: Nothing to be done for 'all'.
+
 2. Update WebSLAT:
    #+ATTR_LATEX: :options language=bash-remote
    #+BEGIN_SRC bash :results output :eval ask
@@ -449,7 +457,38 @@ To update OpenSLAT and WebSLAT without creating a new image:
 	      webslat-user@127.0.0.1 |
 	  tail -5
    #+END_SRC   
-3. Update the static files:
+
+   #+RESULTS:
+   : individual files in /usr/share/doc/*/copyright.
+   : 
+   : Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+   : permitted by applicable law.
+   : Already up-to-date.
+
+3. Run migrations:
+   #+ATTR_LATEX: :options language=bash-remote
+   #+BEGIN_SRC bash :results output :eval ask
+     echo "source webslat-env/bin/activate
+	   cd webslat/webslat
+	  yes yes | ./manage.py migrate
+     " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 2>&1 | tail -10 
+    #+END_SRC
+
+    #+RESULTS:
+    #+begin_example
+    The programs included with the Debian GNU/Linux system are free software;
+    the exact distribution terms for each program are described in the
+    individual files in /usr/share/doc/*/copyright.
+
+    Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+    permitted by applicable law.
+    Operations to perform:
+      Apply all migrations: admin, auth, contenttypes, sessions, slat
+    Running migrations:
+      No migrations to apply.
+#+end_example
+
+4. Update the static files:
    #+ATTR_LATEX: :options language=bash-remote
    #+BEGIN_SRC bash :results output :eval ask
      echo "source webslat-env/bin/activate
@@ -457,7 +496,22 @@ To update OpenSLAT and WebSLAT without creating a new image:
 	  yes yes | ./manage.py collectstatic
      " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 2>&1 | tail -10 
     #+END_SRC
-4. Restart the server. As ~root~, on the VM, run:
+
+    #+RESULTS:
+    #+begin_example
+    You have requested to collect static files at the destination
+    location as specified in your settings:
+
+	/home/webslat-user/webslat/webslat/static
+
+    This will overwrite existing files!
+    Are you sure you want to do this?
+
+    Type 'yes' to continue, or 'no' to cancel: 
+    0 static files copied to '/home/webslat-user/webslat/webslat/static', 63 unmodified.
+#+end_example
+
+5. Restart the server. As ~root~, on the VM, run:
    #+ATTR_LATEX: :options language=bash-remote-root
    #+BEGIN_SRC bash
    systemctl restart apache2
