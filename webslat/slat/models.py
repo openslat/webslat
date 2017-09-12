@@ -293,46 +293,44 @@ class EDP(models.Model):
             mean = edp_func.Mean(self.project.IM.model().plot_max())
             sigma =  edp_func.SD(self.project.IM.model().plot_max())
 
-            if False:
-                #f = lambda x: edp_func.getlambda(max(x[0], 0)) - self.project.rarity
-                #xlimit = fsolve(f, x[1])[0]
-                f = lambda x: (edp_func.getlambda(x) - self.project.rarity)
-                xlimit = newton(f, x[1], tol=self.project.rarity/2)
-
-            else:
-                epsilon = 1E-2
-                counter = 0
-                low_x = 0
-                low_y = edp_func.getlambda(low_x)
+            epsilon = 1E-2
+            counter = 0
+            low_x = 0
+            low_y = edp_func.getlambda(low_x)
 
 
-                high_x = edp_func.Median(self.project.IM.model().plot_max())
+            high_x = edp_func.Median(self.project.IM.model().plot_max())
+            high_y = edp_func.getlambda(high_x)
+            old_high_y = None
+            while high_y > self.project.rarity:
+                high_x = high_x * 2
+                old_high_y = high_y
                 high_y = edp_func.getlambda(high_x)
-                while high_y > self.project.rarity:
-                    high_x = high_x * 2
-                    high_y = edp_func.getlambda(high_x)
-                
-                mid_x = high_x/2
-                mid_y = edp_func.getlambda(mid_x)
 
-                while counter < 100:
-                    counter = counter + 1
+                rate = (edp_func.getlambda(high_x) - edp_func.getlambda(high_x * (1.0 + epsilon)))/(epsilon * high_x)
+                if rate < 1E-6:
+                    break
+
+            mid_x = high_x/2
+            mid_y = edp_func.getlambda(mid_x)
+
+            while counter < 100:
+                counter = counter + 1
+                xlimit = mid_x
+
+                error = self.project.rarity - mid_y
+                if abs(error) < self.project.rarity/10:
                     xlimit = mid_x
-                    
-                    error = self.project.rarity - mid_y
-                    if abs(error) < self.project.rarity/10:
-                        xlimit = mid_x
-                        break
-                    elif error > 0:
-                        high_x = mid_x
-                        high_y = mid_y
-                    else:
-                        low_x = mid_x
-                        low_y = mid_y
+                    break
+                elif error > 0:
+                    high_x = mid_x
+                    high_y = mid_y
+                else:
+                    low_x = mid_x
+                    low_y = mid_y
 
-                    mid_x = (low_x + high_x)/2
-                    mid_y = edp_func.getlambda(mid_x)
-
+                mid_x = (low_x + high_x)/2
+                mid_y = edp_func.getlambda(mid_x)
                     
             edp_func.set_plot_max(xlimit)
 
@@ -357,11 +355,6 @@ class Component_Group(models.Model):
     quantity = models.IntegerField(blank=False, null=False)
 
     def _make_model(self):
-        print("Component_Group --> _make_model")
-        print("component: ", self.component)
-        print("demand: ", self.demand)
-        print("quantity: ", self.quantity)
-        
         frags = []
         for f in FragilityTab.objects.filter(component = self.component).order_by('state'):
             print("f:", f)
@@ -370,15 +363,7 @@ class Component_Group(models.Model):
                                                  'sd': pyslat.LOGNORMAL_SIGMA_TYPE.SD_LN_X},
                                        frags)
 
-        print(fragility)
-        print("fragility done")
-        #time.sleep(1)
-        print("looking for costs")
-        #time.sleep(1)
         print("costs: ", CostTab.objects.filter(component = self.component))
-        #time.sleep(1)
-        print("----")
-        #time.sleep(1)
         
         costs = []
         for c in CostTab.objects.filter(component = self.component).order_by('state'):
@@ -388,10 +373,7 @@ class Component_Group(models.Model):
                                                 c.dispersion))
         print(costs)
         cost = pyslat.bilevellossfn(self.id, costs)
-        print("FRAG", fragility)
-        print("COST", cost)
         pyslat.compgroup(self.id, self.demand.model(), fragility, cost, None, self.quantity)
-        print("OK")
 
     def model(self):
         if not pyslat.compgroup.lookup(self.id):
