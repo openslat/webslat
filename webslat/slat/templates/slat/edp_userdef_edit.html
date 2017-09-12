@@ -4,7 +4,16 @@
 
 <p>User-Defined Engineering Demand Page</P>
 
-<p><b>Project:</b> {{ project.title }}</p>
+<p><b>Project:</b> {{ project.title_text }}</p>
+<p><b>Demand: </b>Floor #{{ edp.floor }}
+    {% if edp.type == 'A' %}
+        Acceleration
+    {% elif edp.type == 'D' %}
+        Drift
+    {% else %}
+        <i>Unknown Demand</i>
+    {% endif %}
+</p>
 
 <form action="{% url 'slat:edp_userdef_edit' project.id edp.id %}" method="post">
     {% csrf_token %}
