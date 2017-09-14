@@ -1,0 +1,225 @@
+#+Title:     Creating the Redbook Example
+#+AUTHOR:    Michael Gauland
+#+EMAIL:     michael.gauland@canterbury.ac.nz
+#+DATE:      {{{time(%Y-%m-%d %H:%M)}}}
+#+OPTIONS:   H:6 num:t toc:nil \n:nil @:t ::t |:t ^:{} -:t f:t *:t <:t
+#+LATEX_HEADER: \usepackage{unicode-math}
+#+LATEX_HEADER: \usepackage{pdflscape}
+#+LATEX_HEADER: \lstset{frame=shadowbox}
+#+LATEX_HEADER: \lstset{keywordstyle=\color{blue}\bfseries}
+#+LATEX_HEADER: \newfontfamily\listingsfont[Scale=.7]{DejaVu Sans Mono}
+#+LATEX_HEADER: \lstset{basicstyle=\listingsfont}
+#+LATEX_HEADER: \lstset{basicstyle=\small}
+#+LATEX_HEADER: \lstset{showspaces=true}
+#+LATEX_HEADER: \lstset{columns=fixed}
+#+LATEX_HEADER: \lstset{extendedchars=true}
+#+LATEX_HEADER: \lstset{frame=shadowbox}
+#+LATEX_HEADER: \definecolor{mygray}{gray}{0.8}
+#+LATEX_HEADER: \lstset{rulesepcolor=\color{mygray}}
+#+LATEX_HEADER: \lstdefinelanguage{bash-local}{basicstyle=\ttfamily\scriptsize,rulecolor=\color{green},rulesepcolor=\color{mygray},frameround=ffff,backgroundcolor=\color{cyan}}
+#+LATEX_HEADER: \lstdefinelanguage{bash-remote}{basicstyle=\ttfamily\scriptsize,rulecolor=\color{green},rulesepcolor=\color{mygray},frameround=ffff,backgroundcolor=\color{yellow}}
+#+LATEX_HEADER: \lstdefinelanguage{bash-remote-root}{basicstyle=\ttfamily\scriptsize,rulecolor=\color{green},rulesepcolor=\color{mygray},frameround=ffff,backgroundcolor=\color{orange}}
+#+LATEX_HEADER: \lstdefinelanguage{fundamental}{basicstyle=\ttfamily\scriptsize,rulesepcolor=\color{cyan},frameround=tttt,backgroundcolor=\color{white},breaklines=true}
+#+LATEX_HEADER: \def\lst@visiblespace{\lst@ttfamily{\char32}-}
+#+PROPERTY: header-args :eval never
+
+This document provides instructions for entering the Redbook example using ~webslat~.
+
+* New Project
+  From the projects page, click 'New Project'.
+
+   Fill in the form:
+   + Title Text :: Redbook Example
+   + Description :: The redbook example structure.
+   + Rarity :: 0.0001
+   + Collapse :: 1.2, 0.47, 14E6, 0.35
+   + Demolition :: 0.9, 0.47, 14E6, 0.35
+* IM
+  The IM is interpolated from the data in 'imfunc.slat'. The data is in the
+  'Old SLAT' format; use log-log interpolation.
+* Engineering Demands  
+  At the project page, click 'Engineering Demands.' Enter ~10~ floors.
+
+  Import the EDPs as follows. All are in 'Old SLAT' format; use linear interpolation.
+
+   | Floor | Demand       | File           |
+   |-------+--------------+----------------|
+   |     0 | Acceleration | RB_EDP_1.slat  |
+   |     1 | Acceleration | RB_EDP_3.slat  |
+   |     1 | Drift        | RB_EDP_2.slat  |
+   |     2 | Acceleration | RB_EDP_5.slat  |
+   |     2 | Drift        | RB_EDP_4.slat  |
+   |     3 | Acceleration | RB_EDP_7.slat  |
+   |     3 | Drift        | RB_EDP_6.slat  |
+   |     4 | Acceleration | RB_EDP_9.slat  |
+   |     4 | Drift        | RB_EDP_8.slat  |
+   |     5 | Acceleration | RB_EDP_11.slat |
+   |     5 | Drift        | RB_EDP_10.slat |
+   |     6 | Acceleration | RB_EDP_13.slat |
+   |     6 | Drift        | RB_EDP_12.slat |
+   |     7 | Acceleration | RB_EDP_15.slat |
+   |     7 | Drift        | RB_EDP_14.slat |
+   |     8 | Acceleration | RB_EDP_17.slat |
+   |     8 | Drift        | RB_EDP_16.slat |
+   |     9 | Acceleration | RB_EDP_19.slat |
+   |     9 | Drift        | RB_EDP_18.slat |
+   |    10 | Acceleration | RB_EDP_21.slat |
+   |    10 | Drift        | RB_EDP_20.slat |
+* Component Groups
+** Floor 0 Acceleration 
+   | Component | Description                                                           | Quantity |
+   |       208 | Desktop Computers - unfastened                                        |       53 |
+   |       204 | Conveying - Hydraulic elevator                                        |        2 |
+   |       214 | Generic acceleration sensitive non-structural component (Aslani 2005) |       10 |
+** Floor 1 Acceleration    
+   | Component | Description                                                           | Quantity |
+   |       203 | Ceiling Systems Suspended acoustical tile type1                       |      693 |
+   |       211 | Automatic sprinklers (Mitrani-Reiser, 2007)                           |       23 |
+   |       208 | Desktop Computers - unfastened                                        |       53 |
+   |       214 | Generic acceleration sensitive non-structural component (Aslani 2005) |       10 |
+** Floor 1 Drift 
+   | Component | Description                                                         | Quantity |
+   |         2 | Ductile CIP RC beams                                                |       20 |
+   |         2 | Ductile CIP RC beams                                                |       18 |
+   |         3 | Column slab-connections Aslani and Miranda, (2005a)                 |       16 |
+   |       105 | Drywall partition and finish (excl painting) (Mitrani-Reiser, 2007) |      721 |
+   |       107 | Exterior glazing (horizontal wall system) (Porter, 2000)            |       99 |
+   |       106 | Drywall Paint (Mitrani-Reiser, 2007)                                |      721 |
+   |       108 | Generic drift sensitive non-structural component (Aslani 2005)      |       10 |
+** Floor 2 Acceleration    
+   | Component | Description                                                           | Quantity |
+   |       203 | Ceiling Systems Suspended acoustical tile type1                       |      693 |
+   |       211 | Automatic sprinklers (Mitrani-Reiser, 2007)                           |       23 |
+   |       208 | Desktop Computers - unfastened                                        |       53 |
+   |       209 | Servers and network Equipment                                         |       16 |
+   |       214 | Generic acceleration sensitive non-structural component (Aslani 2005) |       10 |
+** Floor 2 Drift 
+   | Component | Description                                                         | Quantity |
+   |         2 | Ductile CIP RC beams                                                |        4 |
+   |         2 | Ductile CIP RC beams                                                |       18 |
+   |         3 | Column slab-connections Aslani and Miranda, (2005a)                 |       16 |
+   |       105 | Drywall partition and finish (excl painting) (Mitrani-Reiser, 2007) |      721 |
+   |       107 | Exterior glazing (horizontal wall system) (Porter, 2000)            |       99 |
+   |       106 | Drywall Paint (Mitrani-Reiser, 2007)                                |      721 |
+   |       108 | Generic drift sensitive non-structural component (Aslani 2005)      |       10 |
+** Floor 3 Acceleration    
+   | Component | Description                                                           | Quantity |
+   |       203 | Ceiling Systems Suspended acoustical tile type1                       |      693 |
+   |       211 | Automatic sprinklers (Mitrani-Reiser, 2007)                           |       23 |
+   |       208 | Desktop Computers - unfastened                                        |       53 |
+   |       214 | Generic acceleration sensitive non-structural component (Aslani 2005) |       10 |
+** Floor 3 Drift 
+   | Component | Description                                                         | Quantity |
+   |         2 | Ductile CIP RC beams                                                |        4 |
+   |         2 | Ductile CIP RC beams                                                |       18 |
+   |         3 | Column slab-connections Aslani and Miranda, (2005a)                 |       16 |
+   |       105 | Drywall partition and finish (excl painting) (Mitrani-Reiser, 2007) |      721 |
+   |       107 | Exterior glazing (horizontal wall system) (Porter, 2000)            |       99 |
+   |       106 | Drywall Paint (Mitrani-Reiser, 2007)                                |      721 |
+   |       108 | Generic drift sensitive non-structural component (Aslani 2005)      |       10 |
+** Floor 4 Acceleration    
+   | Component | Description                                                           | Quantity |
+   |       203 | Ceiling Systems Suspended acoustical tile type1                       |      693 |
+   |       211 | Automatic sprinklers (Mitrani-Reiser, 2007)                           |       23 |
+   |       208 | Desktop Computers - unfastened                                        |       53 |
+   |       214 | Generic acceleration sensitive non-structural component (Aslani 2005) |       10 |
+** Floor 4 Drift 
+   | Component | Description                                                         | Quantity |
+   |         2 | Ductile CIP RC beams                                                |        4 |
+   |         2 | Ductile CIP RC beams                                                |       18 |
+   |         3 | Column slab-connections Aslani and Miranda, (2005a)                 |       16 |
+   |       105 | Drywall partition and finish (excl painting) (Mitrani-Reiser, 2007) |      721 |
+   |       107 | Exterior glazing (horizontal wall system) (Porter, 2000)            |       99 |
+   |       106 | Drywall Paint (Mitrani-Reiser, 2007)                                |      721 |
+   |       108 | Generic drift sensitive non-structural component (Aslani 2005)      |       10 |
+** Floor 5 Acceleration    
+   | Component | Description                                                           | Quantity |
+   |       203 | Ceiling Systems Suspended acoustical tile type1                       |      693 |
+   |       211 | Automatic sprinklers (Mitrani-Reiser, 2007)                           |       23 |
+   |       208 | Desktop Computers - unfastened                                        |       53 |
+   |       209 | Servers and network Equipment                                         |       16 |
+   |       214 | Generic acceleration sensitive non-structural component (Aslani 2005) |       10 |
+** Floor 5 Drift 
+   | Component | Description                                                         | Quantity |
+   |         2 | Ductile CIP RC beams                                                |        4 |
+   |         2 | Ductile CIP RC beams                                                |       18 |
+   |         3 | Column slab-connections Aslani and Miranda, (2005a)                 |       16 |
+   |       105 | Drywall partition and finish (excl painting) (Mitrani-Reiser, 2007) |      721 |
+   |       107 | Exterior glazing (horizontal wall system) (Porter, 2000)            |       99 |
+   |       106 | Drywall Paint (Mitrani-Reiser, 2007)                                |      721 |
+   |       108 | Generic drift sensitive non-structural component (Aslani 2005)      |       10 |
+** Floor 6 Acceleration    
+   | Component | Description                                                           | Quantity |
+   |       203 | Ceiling Systems Suspended acoustical tile type1                       |      693 |
+   |       211 | Automatic sprinklers (Mitrani-Reiser, 2007)                           |       23 |
+   |       208 | Desktop Computers - unfastened                                        |       53 |
+   |       214 | Generic acceleration sensitive non-structural component (Aslani 2005) |       10 |
+** Floor 6 Drift 
+   | Component | Description                                                         | Quantity |
+   |         2 | Ductile CIP RC beams                                                |        4 |
+   |         2 | Ductile CIP RC beams                                                |       18 |
+   |         3 | Column slab-connections Aslani and Miranda, (2005a)                 |       16 |
+   |       105 | Drywall partition and finish (excl painting) (Mitrani-Reiser, 2007) |      721 |
+   |       107 | Exterior glazing (horizontal wall system) (Porter, 2000)            |       99 |
+   |       106 | Drywall Paint (Mitrani-Reiser, 2007)                                |      721 |
+   |       108 | Generic drift sensitive non-structural component (Aslani 2005)      |       10 |
+** Floor 7 Acceleration    
+   | Component | Description                                                           | Quantity |
+   |       203 | Ceiling Systems Suspended acoustical tile type1                       |      693 |
+   |       211 | Automatic sprinklers (Mitrani-Reiser, 2007)                           |       23 |
+   |       208 | Desktop Computers - unfastened                                        |       53 |
+   |       214 | Generic acceleration sensitive non-structural component (Aslani 2005) |       10 |
+** Floor 7 Drift 
+   | Component | Description                                                         | Quantity |
+   |         2 | Ductile CIP RC beams                                                |        4 |
+   |         2 | Ductile CIP RC beams                                                |       18 |
+   |         3 | Column slab-connections Aslani and Miranda, (2005a)                 |       16 |
+   |       105 | Drywall partition and finish (excl painting) (Mitrani-Reiser, 2007) |      721 |
+   |       107 | Exterior glazing (horizontal wall system) (Porter, 2000)            |       99 |
+   |       106 | Drywall Paint (Mitrani-Reiser, 2007)                                |      721 |
+   |       108 | Generic drift sensitive non-structural component (Aslani 2005)      |       10 |
+** Floor 8 Acceleration    
+   | Component | Description                                                           | Quantity |
+   |       203 | Ceiling Systems Suspended acoustical tile type1                       |      693 |
+   |       211 | Automatic sprinklers (Mitrani-Reiser, 2007)                           |       23 |
+   |       208 | Desktop Computers - unfastened                                        |       53 |
+   |       214 | Generic acceleration sensitive non-structural component (Aslani 2005) |       10 |
+** Floor 8 Drift 
+   | Component | Description                                                         | Quantity |
+   |         2 | Ductile CIP RC beams                                                |        4 |
+   |         2 | Ductile CIP RC beams                                                |       18 |
+   |         3 | Column slab-connections Aslani and Miranda, (2005a)                 |       16 |
+   |       105 | Drywall partition and finish (excl painting) (Mitrani-Reiser, 2007) |      721 |
+   |       107 | Exterior glazing (horizontal wall system) (Porter, 2000)            |       99 |
+   |       106 | Drywall Paint (Mitrani-Reiser, 2007)                                |      721 |
+   |       108 | Generic drift sensitive non-structural component (Aslani 2005)      |       10 |
+** Floor 9 Acceleration    
+   | Component | Description                                                           | Quantity |
+   |       203 | Ceiling Systems Suspended acoustical tile type1                       |      693 |
+   |       211 | Automatic sprinklers (Mitrani-Reiser, 2007)                           |       23 |
+   |       208 | Desktop Computers - unfastened                                        |       53 |
+   |       209 | Servers and network Equipment                                         |       16 |
+   |       214 | Generic acceleration sensitive non-structural component (Aslani 2005) |       10 |
+** Floor 9 Drift 
+   | Component | Description                                                         | Quantity |
+   |         2 | Ductile CIP RC beams                                                |        4 |
+   |         2 | Ductile CIP RC beams                                                |       18 |
+   |         3 | Column slab-connections Aslani and Miranda, (2005a)                 |       16 |
+   |       105 | Drywall partition and finish (excl painting) (Mitrani-Reiser, 2007) |      721 |
+   |       107 | Exterior glazing (horizontal wall system) (Porter, 2000)            |       99 |
+   |       106 | Drywall Paint (Mitrani-Reiser, 2007)                                |      721 |
+   |       108 | Generic drift sensitive non-structural component (Aslani 2005)      |       10 |
+** Floor 10 Acceleration    
+   | Component | Description                                     | Quantity |
+   |       203 | Ceiling Systems Suspended acoustical tile type1 |      693 |
+   |       211 | Automatic sprinklers (Mitrani-Reiser, 2007)     |       23 |
+   |       205 | Roof Mounted Equipment                          |        4 |
+** Floor 10 Drift
+   | Component | Description                                                         | Quantity |
+   |         2 | Ductile CIP RC beams                                                |        4 |
+   |         2 | Ductile CIP RC beams                                                |       18 |
+   |         3 | Column slab-connections Aslani and Miranda, (2005a)                 |       16 |
+   |       105 | Drywall partition and finish (excl painting) (Mitrani-Reiser, 2007) |      721 |
+   |       107 | Exterior glazing (horizontal wall system) (Porter, 2000)            |       99 |
+   |       106 | Drywall Paint (Mitrani-Reiser, 2007)                                |      721 |
+   |       108 | Generic drift sensitive non-structural component (Aslani 2005)      |       10 |
