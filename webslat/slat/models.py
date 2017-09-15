@@ -358,7 +358,7 @@ class Component_Group(models.Model):
         frags = []
         for f in FragilityTab.objects.filter(component = self.component).order_by('state'):
             frags.append([f.median, f.beta])
-        fragility = pyslat.fragfn_user(self.id, {'mu': pyslat.LOGNORMAL_MU_TYPE.MEAN_X,
+        fragility = pyslat.fragfn_user(self.id, {'mu': pyslat.LOGNORMAL_MU_TYPE.MEDIAN_X,
                                                  'sd': pyslat.LOGNORMAL_SIGMA_TYPE.SD_LN_X},
                                        frags)
 
