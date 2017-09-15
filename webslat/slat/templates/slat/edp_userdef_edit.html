@@ -22,7 +22,7 @@
     <p>To remove an existing point, change both values to 0.</p>
     <p>Submit the form to add more empty cells.</p>
     {{ points.management_form }}
-    <table border='1'><tr><td>IM</td><td>Mean(x)</td><td>SD(ln(x))</td><td>Delete?</td></tr>
+    <table border='1'><tr><td>IM</td><td>Median(x)</td><td>SD(ln(x))</td><td>Delete?</td></tr>
     {% for point in points %}
       <tr><td>{{ point.id }}{{ point.im }}</td><td>{{ point.median_x }}</td>
 	<td>{{ point.sd_ln_x }}</td>

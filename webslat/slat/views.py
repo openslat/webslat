@@ -554,10 +554,12 @@ def _plot_demand(edp):
         data = [['Demand', 'Lambda']]
         xlimit = edp_func.plot_max()
 
+        #print("{:>15.6}{:>15.6}".format("EDP", "LAMBDA"))
         for i in range(11):
             xval = i/10 * xlimit
             rate = edp_func.getlambda(xval)
             data.append([xval, rate])
+            #print("{:>15.6}{:>15.6}".format(xval, rate))
 
         data_source = SimpleDataSource(data=data)
         chart2 = LineChart(data_source, options={'title': 'Engineering Demand Rate of Exceedance', 
@@ -756,16 +758,18 @@ def edp_userdef_import(request, project_id, edp_id):
                 else:
                     raise ValueError("Unrecognised file format specified.")
             # Validate the data:
-            points = []
+            points = [{'im': 0.0, 'mu': 0.0, 'sigma': 0.0}]
             for d in data:
                 if len(d) < 2:
                     raise ValueError("Wrong number of columns")
                 im = d[0]
                 values = d[1:]
                 ln_values = []
+                nz_values = []
                 for value in values:
                     if value != 0:
                         ln_values.append(log(value))
+                        nz_values.append(value)
                 median_edp = exp(np.mean(ln_values))
                 sd_ln_edp = np.std(ln_values, ddof=1)
                 points.append({'im': im, 'mu': median_edp, 'sigma': sd_ln_edp})

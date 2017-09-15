@@ -357,21 +357,16 @@ class Component_Group(models.Model):
     def _make_model(self):
         frags = []
         for f in FragilityTab.objects.filter(component = self.component).order_by('state'):
-            print("f:", f)
             frags.append([f.median, f.beta])
-        fragility = pyslat.fragfn_user(self.id, {'mu': pyslat.LOGNORMAL_MU_TYPE.MEDIAN_X,
+        fragility = pyslat.fragfn_user(self.id, {'mu': pyslat.LOGNORMAL_MU_TYPE.MEAN_X,
                                                  'sd': pyslat.LOGNORMAL_SIGMA_TYPE.SD_LN_X},
                                        frags)
 
-        print("costs: ", CostTab.objects.filter(component = self.component))
-        
         costs = []
         for c in CostTab.objects.filter(component = self.component).order_by('state'):
-            print("c: ", c)
             costs.append(pyslat.MakeBiLevelLoss(c.lower_limit, c.upper_limit,
                                                 c.max_cost, c.min_cost,
                                                 c.dispersion))
-        print(costs)
         cost = pyslat.bilevellossfn(self.id, costs)
         pyslat.compgroup(self.id, self.demand.model(), fragility, cost, None, self.quantity)
 
