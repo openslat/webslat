@@ -76,7 +76,7 @@ def project(request, project_id=None):
                 data_source = SimpleDataSource(data=data)
                 chart = LineChart(data_source, options={'title': 'Cost | IM',
                                                         'hAxis': {'logScale': True, 'title': 'Intensity Measure (g)'},
-                                                        'vAxis': {'logScale': True, 'format': 'scientific',
+                                                        'vAxis': {'logScale': True, 'format': 'decimal',
                                                                   'title': 'Cost ($)'},
                                                         'pointSize': 5})
         else:
@@ -938,7 +938,7 @@ def analysis(request, project_id):
                                                           100 * rate)
         chart = LineChart(data_source, options={'title': title,
                                                 'hAxis': {'logScale': False, 'title': 'Time from present (years)'},
-                                                'vAxis': {'logScale': False, 'format': 'scientific',
+                                                'vAxis': {'logScale': False, 'format': 'decimal',
                                                           'title': 'Expected Loss ($k)'},
                                                 'pointSize': 5})
         print("{:>.2}".format(100 * building.AnnualCost().mean()/building.getRebuildCost().mean()))
