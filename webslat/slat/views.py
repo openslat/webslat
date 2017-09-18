@@ -55,9 +55,9 @@ def project(request, project_id=None):
 
                 columns = ['IM', 'Repair']
                 if im_func.DemolitionRate():
-                    columns.append('pDemolition')
+                    columns.append('Demolition')
                 if im_func.CollapseRate():
-                    columns.append('pCollapse')
+                    columns.append('Collapse')
                         
                 data = [columns]
 
