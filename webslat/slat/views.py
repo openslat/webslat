@@ -75,9 +75,9 @@ def project(request, project_id=None):
 
                 data_source = SimpleDataSource(data=data)
                 chart = LineChart(data_source, options={'title': 'Cost | IM',
-                                                        'hAxis': {'logScale': True, 'title': 'Intensity Measure'},
+                                                        'hAxis': {'logScale': True, 'title': 'Intensity Measure (g)'},
                                                         'vAxis': {'logScale': True, 'format': 'scientific',
-                                                                  'title': 'Cost'},
+                                                                  'title': 'Cost ($)'},
                                                         'pointSize': 5})
         else:
             form = ProjectForm()
@@ -195,10 +195,11 @@ def _plot_hazard(h):
             
         data_source = SimpleDataSource(data=data)
         chart = LineChart(data_source, options={'title': 'Intensity Measure Rate of Exceedance', 
-                                                'hAxis': {'logScale': True, 'title': 'Intensity Measure'},
+                                                'hAxis': {'logScale': True, 'title': 'Intensity Measure (g)'},
                                                 'vAxis': {'logScale': True, 'format': 'scientific',
                                                           'title': 'Rate of Exceedance'},
-                                                'pointSize': 5})
+                                                'pointSize': 5,
+                                                'legend': {'position': 'none'}})
         return chart
     
         
@@ -535,22 +536,33 @@ def im_nzs_edit(request, project_id):
     
 def _plot_demand(edp):
     if edp.model():
+        
+        if edp.type == 'D':
+            demand_type  = 'Drift (radians)'
+        elif edp.type == 'A':
+            demand_type  = 'Acceleration (g)'
+        else:
+            demand_type = 'Unknown'
+            
+        demand = "Floor {} {}".format(edp.floor, demand_type)
+                                    
         edp_func = edp.model()
         xlimit = edp.project.IM.model().plot_max()
 
-        data =  [['IM', 'Median', 'SD_ln']]
+        data =  [['IM', 'Median', "10%", "90%"]]
         for i in range(11):
             x = i/10 * xlimit
             median = edp_func.Median(x)
-            sd_ln = edp_func.SD_ln(x)
-            data.append([x, median, sd_ln])
+            x_10 = edp_func.X_at_exceedence(x, 0.10)
+            x_90 = edp_func.X_at_exceedence(x, 0.90)
+            data.append([x, median, x_10, x_90])
+
+        print(data)
             
         data_source = SimpleDataSource(data=data)
-        chart1 = LineChart(data_source, options={'title': 'Engineering Demand | Intensity Measure', 
-                                                 'series': { 0: {'targetAxisIndex': 0},
-                                                             1: {'targetAxisIndex': 1}},
-                                                 'vAxes': { 0: {'title': 'Median(Demand))'},
-                                                            1: {'title': 'Standard Deviation(log(Demand))'}},
+        chart1 = LineChart(data_source, options={'title': '{} | Intensity Measure'.format(demand), 
+                                                 'hAxis': {'title': 'Intensity Measure (g)'},
+                                                 'vAxis': {'title': demand},
                                                 'pointSize': 5})
         
         data = [['Demand', 'Lambda']]
@@ -564,10 +576,11 @@ def _plot_demand(edp):
             #print("{:>15.6}{:>15.6}".format(xval, rate))
 
         data_source = SimpleDataSource(data=data)
-        chart2 = LineChart(data_source, options={'title': 'Engineering Demand Rate of Exceedance', 
-                                                'hAxis': {'logScale': True, 'title': 'Demand'},
-                                                 'vAxis': {'logScale': True, 'title': 'Rate of Exceedance'},
-                                                'pointSize': 5})
+        chart2 = LineChart(data_source, options={'title': '{} Rate of Exceedance'.format(demand), 
+                                                'hAxis': {'logScale': False, 'title': demand},
+                                                 'vAxis': {'logScale': False, 'title': 'Rate of Exceedance'},
+                                                 'pointSize': 5,
+                                                 'legend': {'position': 'none'}})
         return [chart1, chart2]
     
 def edp(request, project_id):
@@ -908,25 +921,27 @@ def analysis(request, project_id):
         
         xlimit = im_func.plot_max()
         
-        data = [['IM', 'PDF']]
+        data = [['Year', 'Loss']]
 
-        max_pdf = 0
-        for i in range(21):
-            im = i/20 * xlimit
-            pdf = building.pdf(im)
-            if pdf > max_pdf:
-                max_pdf = pdf
-                        
-            data.append([im, pdf])
-        for pair in data[1:]:
-            pair[1] = pair[1] / max_pdf
+        rate = 0.06
+        for i in range(100):
+            year = i + 1
+            loss = building.E_cost(year, rate) / 1000
+            data.append([year, loss])
         
         data_source = SimpleDataSource(data=data)
-        chart = LineChart(data_source, options={ 'hAxis': {'logScale': False, 'title': 'Intensity Measure'},
+        
+        title = "EAL=${}\n({} % of rebuild cost)\nDiscount rate = {}%".format(round(building.AnnualCost().mean()),
+                                                          round(10000 * 
+                                                                building.AnnualCost().mean()/building.getRebuildCost().mean()) /
+                                                          100,
+                                                          100 * rate)
+        chart = LineChart(data_source, options={'title': title,
+                                                'hAxis': {'logScale': False, 'title': 'Time from present (years)'},
                                                 'vAxis': {'logScale': False, 'format': 'scientific',
-                                                          'title': 'Normalised PDF'},
+                                                          'title': 'Expected Loss ($k)'},
                                                 'pointSize': 5})
-        print(chart)
+        print("{:>.2}".format(100 * building.AnnualCost().mean()/building.getRebuildCost().mean()))
     
     return render(request, 'slat/analysis.html', {'project': project, 
                                                   'structure': project.model(),
