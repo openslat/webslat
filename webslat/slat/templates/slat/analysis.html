@@ -1,5 +1,23 @@
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}" />
+
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript">
+    google.load("visualization", "1", {packages:["corechart"]});
+</script>
+
 <p><b>Project Analysis:</b> {{ project.title_text }}</p>
 
-<p><b>Annual Cost:</b> {{ structure.AnnualCost }}</p>
-        
+<p><b>Annual Cost Mean:</b> {{ structure.AnnualCost.mean|floatformat:2 }}</p>
+<p><b>Annual Cost SD log:</b> {{ structure.AnnualCost.sd_ln|floatformat:2 }}</p>
+
+
+{% if chart %} 
+    {{ chart.as_html }}
+{% endif %}
+
+</hr>
+<a href="{% url 'slat:project' project.id %}">Return to Project</a><br /><br/>
+<a href="{% url 'slat:index' %}">Return to Project List</a>
+
 

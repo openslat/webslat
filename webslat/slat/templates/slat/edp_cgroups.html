@@ -11,7 +11,7 @@
 {% for cg in cgs %}
 <tr><td><a href="{% url 'slat:component' cg.component.ident %}">{{ cg.component }}</a></td>
     <td align="RIGHT">{{ cg.quantity }}</td>
-   <td>{{ cg.model.E_annual_cost }}</td>
+   <td align="RIGHT">{{ cg.model.E_annual_cost|floatformat:2 }}</td>
     <td>
     <form action="{% url 'slat:edp_cgroup' project.id edp.id cg.id  %}" method="get">
         {% csrf_token %}

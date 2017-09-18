@@ -39,6 +39,7 @@ def project(request, project_id=None):
                 if project.floors:
                     for edp in EDP.objects.filter(project=project):
                         edp._make_model()
+                    project._make_model()
                         
             return HttpResponseRedirect(reverse('slat:project', args=(form.instance.id,)))
     else:
@@ -47,36 +48,37 @@ def project(request, project_id=None):
             project = Project.objects.get(pk=project_id)
             form = ProjectForm(instance=project)
             if project.IM:
-                model = project.IM.model()
-                if model.CollapseRate() or model.DemolitionRate():
-                    im_func = model
-                    xlimit = im_func.plot_max()
+                building = project.model()
+                im_func = project.IM.model()
+                
+                xlimit = im_func.plot_max()
 
-                    columns = ['IM']
-                    if model.CollapseRate():
-                        columns.append('pCollapse')
-                    if model.DemolitionRate():
-                        columns.append('pDemolition')
+                columns = ['IM', 'Repair']
+                if im_func.DemolitionRate():
+                    columns.append('pDemolition')
+                if im_func.CollapseRate():
+                    columns.append('pCollapse')
                         
-                    data = [columns]
+                data = [columns]
 
-                    for i in range(11):
-                        x = i/10 * xlimit
-                        new_data = [x]
-                        if model.CollapseRate():
-                            y = im_func.pCollapse(x)
-                            new_data.append(y)
-                        if model.DemolitionRate():
-                            y = im_func.pDemolition(x)
-                            new_data.append(y)
-                        data.append(new_data)
+                for i in range(11):
+                    im = i/10 * xlimit
+                    new_data = [im]
+                    costs = building.CostsByFate(im)
+                    new_data.append(costs[0].mean())
+                        
+                    if im_func.DemolitionRate():
+                        new_data.append(costs[1].mean())
+                    if im_func.CollapseRate():
+                        new_data.append(costs[2].mean())
+                    data.append(new_data)
 
-                    data_source = SimpleDataSource(data=data)
-                    chart = LineChart(data_source, options={'title': 'Intensity Measure Rate of Exceedance', 
-                                                            'hAxis': {'logScale': True, 'title': 'Intensity Measure'},
-                                                            'vAxis': {'logScale': True, 'format': 'scientific',
-                                                                      'title': 'Rate of Exceedance'},
-                                                            'pointSize': 5})
+                data_source = SimpleDataSource(data=data)
+                chart = LineChart(data_source, options={'title': 'Cost | IM',
+                                                        'hAxis': {'logScale': True, 'title': 'Intensity Measure'},
+                                                        'vAxis': {'logScale': True, 'format': 'scientific',
+                                                                  'title': 'Cost'},
+                                                        'pointSize': 5})
         else:
             form = ProjectForm()
             
@@ -898,5 +900,34 @@ def cgroups(request, project_id):
  
 def analysis(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
+    chart = None
+
+    if project.IM:
+        building = project.model()
+        im_func = project.IM.model()
+        
+        xlimit = im_func.plot_max()
+        
+        data = [['IM', 'PDF']]
+
+        max_pdf = 0
+        for i in range(21):
+            im = i/20 * xlimit
+            pdf = building.pdf(im)
+            if pdf > max_pdf:
+                max_pdf = pdf
+                        
+            data.append([im, pdf])
+        for pair in data[1:]:
+            pair[1] = pair[1] / max_pdf
+        
+        data_source = SimpleDataSource(data=data)
+        chart = LineChart(data_source, options={ 'hAxis': {'logScale': False, 'title': 'Intensity Measure'},
+                                                'vAxis': {'logScale': False, 'format': 'scientific',
+                                                          'title': 'Normalised PDF'},
+                                                'pointSize': 5})
+        print(chart)
+    
     return render(request, 'slat/analysis.html', {'project': project, 
-                                                  'structure': project.model()})
+                                                  'structure': project.model(),
+                                                  'chart': chart})
