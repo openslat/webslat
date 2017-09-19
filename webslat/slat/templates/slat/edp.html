@@ -17,6 +17,10 @@
     </a></p>
 {% endfor %}
 
+{% if demand_table %}
+    {{ demand_table }}
+{% endif %}
+
 </br>
 <a href="{% url 'slat:project' project.id %}">Return to Project</a><br /><br/>
 <a href="{% url 'slat:index' %}">Return to Project List</a>

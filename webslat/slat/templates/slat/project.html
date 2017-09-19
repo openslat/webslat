@@ -6,7 +6,7 @@
     google.load("visualization", "1", {packages:["corechart"]});
 </script>
 
-
+<p>PROJECT.HTML</p>
 {% if form.instance.id %}
 <p><b>Project:</b> {{ form.instance.title_text }}</P>
 <form action="{% url 'slat:project' form.instance.id %}" method="post">
@@ -18,7 +18,13 @@
     {{ form.title_text.label }} {{ form.title_text }} <br/>
     {{ form.description_text.label }} {{ form.description_text }} <br/>
     {{ form.rarity.label }} {{form.rarity }} <br/>
-    {{ form.floors }} {{ form.IM }}
+    {% if form.instance.floors %}
+         <p>Floors: {{ form.instance.floors }}</p>
+	 {{ form.floors }}
+    {% else %}
+        {{ form.floors.label }} {{ form.floors }} <br/>
+    {% endif %}
+    {{ form.IM }}
     <table border="1"><tr><td><b>Event</b></td><td><b>mean(IM)</b></td><td><b>sd(ln(IM))</b></td><td><b>mean(Cost)</b></td><td><b/>sd(ln(Cost))</b></td></tr>
     <tr><td><b>Collapse</b></td><td> {{ form.mean_im_collapse }} </td><td> {{ form.sd_ln_im_collapse }} </td><td> {{ form.mean_cost_collapse }} </td><td> {{ form.sd_ln_cost_collapse }} </td></tr>
     <tr><td><b>Demolition</b></td><td> {{ form.mean_im_demolition }} </td><td> {{ form.sd_ln_im_demolition }} </td><td> {{ form.mean_cost_demolition }} </td><td> {{ form.sd_ln_cost_demolition }} </td></tr>
@@ -42,7 +48,7 @@
       <input type="submit" value="Site Hazard" />
     </form>
     {% if form.instance.IM %}
-        <form action="{% url 'slat:edp' form.instance.id %}" method="get">
+        <form action="{% url 'slat:floors' form.instance.id %}" method="get">
           {% csrf_token %}
           <input type="submit" value="Engineering Demands" />
         </form>

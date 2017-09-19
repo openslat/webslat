@@ -2,8 +2,6 @@
 <script type="text/javascript">
     google.load("visualization", "1", {packages:["corechart"]});
 </script>
-<p>User-Defined Engineering Demand Page</P>
-
 <p><b>Project:</b> {{ project.title_text }}</p>
 <p><b>Demand: </b>Floor #{{ edp.floor }}
     {% if edp.type == 'A' %}
@@ -14,15 +12,8 @@
         <i>Unknown Demand</i>
     {% endif %}
 </p>
-<p><a href="{% url 'slat:edp_cgroups' project.id edp.id %}">Component Groups</a></p>
 
-{% if charts %} 
-    {% for chart in charts %}
-        {{ chart.as_html }}
-    {% endfor %}
-{% endif %}
-
-
+<table><tr><td valign="top">
 <p><b>Interpolation Method:</b>{{ edp.interpolation_method }}</p>
 
     <details>
@@ -44,6 +35,15 @@
     <input type="submit" value="Import" />
 </form>
 <a href="{% url 'slat:edp_choose' project.id edp.id %}">Change Demand Type</a><br/>
-<a href="{% url 'slat:edp' project.id %}">Return to Demands</a><br />
+<br/>
+<a href="{% url 'slat:floors' project.id %}">Return to Floors</a><br />
 <a href="{% url 'slat:project' project.id %}">Return to Project</a><br />
 <a href="{% url 'slat:index' %}">Return to Project List</a>
+</td><td>
+{% if charts %} 
+    {% for chart in charts %}
+        {{ chart.as_html }}
+    {% endfor %}
+{% endif %}
+</td></tr></table>
+

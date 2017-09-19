@@ -32,7 +32,12 @@ urlpatterns = [
     url(r'^project/(?P<project_id>[0-9]+)/edp/(?P<edp_id>[0-9]+)/cgroup$', views.edp_cgroup, name='edp_cgroup'),
     url(r'^project/(?P<project_id>[0-9]+)/edp/(?P<edp_id>[0-9]+)/cgroup/(?P<cg_id>[0-9]+)$', views.edp_cgroup, name='edp_cgroup'),
     url(r'^project/(?P<project_id>[0-9]+)/cgroups$', views.cgroups, name='compgroups'),
+    url(r'^project/(?P<project_id>[0-9]+)/floor/(?P<floor_num>[0-9]+)/cgroup$', views.floor_cgroup, name='floor_compgroup'),
+    url(r'^project/(?P<project_id>[0-9]+)/floor/(?P<floor_num>[0-9]+)/cgroup/(?P<cg_id>[0-9]+)$', views.floor_cgroup, name='floor_compgroup'),
     url(r'^project/(?P<project_id>[0-9]+)/cgroup$', views.cgroup, name='compgroup'),
     url(r'^project/(?P<project_id>[0-9]+)/cgroup/(?P<cg_id>[0-9]+)$', views.cgroup, name='compgroup'),
     url(r'^project/(?P<project_id>[0-9]+)/analysis$', views.analysis, name='analysis'),
+    url(r'^project/(?P<project_id>[0-9]+)/floor/(?P<floor_num>[0-9]+)/cgroups$', views.floor_cgroups, name='floor_cgroups'),
+    url(r'^project/(?P<project_id>[0-9]+)/floor$', views.floors, name='floors'),
+    url(r'^project/(?P<project_id>[0-9]+)/floor/(?P<floor_num>[0-9]+)/(?P<type>(acceleration)|(drift))$', views.demand, name='demand'),
 ]

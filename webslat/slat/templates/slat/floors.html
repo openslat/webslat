@@ -1,0 +1,19 @@
+<p><b>Project: </b>{{ project.title_text }}</p>
+<p><b>Demands by Floor</b></p>
+<table cellpadding='3'>
+{% for f in floors %}
+   <tr><td><b>Floor #{{ f }}</b></td>
+      <td><a href="{% url 'slat:demand' project.id f 'acceleration' %}">Acceleration</a></td>
+      <td>{% if f %}
+	<a href="{% url 'slat:demand' project.id f 'drift' %}">Drift</a>
+	{% else %}&nbsp;
+	{% endif %}
+      </td>
+      <td><a href="{% url 'slat:floor_cgroups' project.id f %}">Components</a></td>
+      </tr>
+{% endfor %}
+</table>
+<br/><br/>
+<a href="{% url 'slat:project' project.id %}">Return to Project</a><br />
+<a href="{% url 'slat:index' %}">Return to Project List</a>
+

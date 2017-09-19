@@ -1,4 +1,6 @@
+import sys
 import pyslat
+import re
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import fsolve
@@ -29,11 +31,28 @@ def project(request, project_id=None):
             project = Project.objects.get(pk=project_id)
             form = ProjectForm(request.POST, Project.objects.get(pk=project_id), initial=model_to_dict(project))
             form.instance.id = project_id
+            form.instance.floors = project.floors
         else:
+            project = None
             form = ProjectForm(request.POST)
-        
+
         if form.is_valid():
+            if project:
+                form.instance.floors = project.floors
             form.save()
+
+            if not project_id:
+                project = form.instance
+                
+                for f in range(int(project.floors) + 1):
+                    EDP(project=project,
+                        floor=f,
+                        type=EDP.EDP_TYPE_ACCEL).save()
+                    if f > 0:
+                        EDP(project=project,
+                            floor=f,
+                            type=EDP.EDP_TYPE_DRIFT).save()
+                
             if project_id and form.has_changed() and project.IM:
                 project.IM._make_model()
                 if project.floors:
@@ -42,12 +61,14 @@ def project(request, project_id=None):
                     project._make_model()
                         
             return HttpResponseRedirect(reverse('slat:project', args=(form.instance.id,)))
+
     else:
         # If the project exists, use it to populate the form:
         if project_id:
             project = Project.objects.get(pk=project_id)
-            form = ProjectForm(instance=project)
-            if project.IM:
+            form = ProjectForm(instance=project, initial=model_to_dict(project))
+            form.fields['floors'].widget = HiddenInput()
+            if project.IM and len(project.model().ComponentsByEDP()) > 0:
                 building = project.model()
                 im_func = project.IM.model()
                 
@@ -594,8 +615,10 @@ def edp(request, project_id):
     #    - If not, we'll redirect to the 'init' page:
     if project.floors :
         # EDP has been defined exists:
+        demand_table = "<demand table>"
         return render(request, 'slat/edp.html', {'project': project,
-                                                 'edps': EDP.objects.filter(project=project).order_by('floor', 'type')})
+                                                 'edps': EDP.objects.filter(project=project).order_by('floor', 'type'),
+                                                 'demand_table': demand_table})
     else:
         return HttpResponseRedirect(reverse('slat:edp_init', args=(project_id)))
     
@@ -830,7 +853,7 @@ def edp_userdef_import(request, project_id, edp_id):
                                                                 'edp':edp})
     raise ValueError("EDP_USERDEF_IMPORT not implemented")
 
-def cgroup(request, project_id, cg_id=None):
+def cgroup(request, project_id, floor_num, cg_id=None):
      project = get_object_or_404(Project, pk=project_id)
      if request.method == 'POST':
          if request.POST.get('cancel'):
@@ -848,9 +871,65 @@ def cgroup(request, project_id, cg_id=None):
              cg_form = CompGroupForm()
              
          return render(request, 'slat/cgroup.html', {'project_id': project_id,
+                                                     'floor_num': floor_num, 
                                                      'cg_id': cg_id,
                                                      'cg_form': cg_form})
- 
+
+def floor_cgroup(request, project_id, floor_num, cg_id=None):
+     project = get_object_or_404(Project, pk=project_id)
+     if request.method == 'POST':
+         if request.POST.get('cancel'):
+             return HttpResponseRedirect(reverse('slat:floor_cgroups', args=(project_id, floor_num)))
+
+         if request.POST.get('delete'):
+             cg = Component_Group.objects.get(pk=cg_id)
+             project.model().RemoveCompGroup(cg.model())
+             cg.delete()
+             return HttpResponseRedirect(reverse('slat:floor_cgroups', args=(project_id, floor_num)))
+
+         print("ID: ", cg_id)
+         if cg_id:
+             cg = Component_Group.objects.get(pk=cg_id)
+             cg_form = FloorCompGroupForm(request.POST, initial=model_to_dict(cg))
+         else:
+             cg = Component_Group()
+             cg_form = FloorCompGroupForm(request.POST)
+
+         cg_form.is_valid()
+         component = cg_form.cleaned_data['component']
+         edp = EDP.objects.filter(project=project).filter(floor=floor_num)
+
+         if re.search('^Accel(?i)', component.demand.name):
+             edp = edp.filter(type='A')
+         else:
+             edp = edp.filter(type='D')
+         print("EDP: ", edp[0])
+
+         cg.demand = edp[0]
+         cg.component = component
+         cg.quantity = cg_form.cleaned_data['quantity']
+         cg.save()
+         cg_id = cg.id
+         print("CG: ", cg)
+         print("ID: ", cg_id)
+         
+         return HttpResponseRedirect(reverse('slat:floor_cgroups', args=(project_id, floor_num)))
+     else:
+         if cg_id:
+             cg = get_object_or_404(Component_Group, pk=cg_id)
+             cg_form = FloorCompGroupForm(initial=model_to_dict(cg))
+         else:
+             cg_form = FloorCompGroupForm()
+         
+         if int(floor_num)==0:
+             acceleration = DemandsTab.objects.filter(name__icontains='Accel')[0]
+             cg_form.fields['component'].queryset=ComponentsTab.objects.filter(demand=acceleration)
+             
+         return render(request, 'slat/floor_cgroup.html', {'project': project,
+                                                     'floor_num': floor_num, 
+                                                     'cg_id': cg_id,
+                                                     'cg_form': cg_form})
+     
 
 def edp_cgroups(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)
@@ -873,6 +952,7 @@ def edp_cgroup(request, project_id, edp_id, cg_id=None):
 
         if request.POST.get('delete'):
             cg = Component_Group.objects.get(pk=cg_id)
+            project.model().RemoveCompGroup(cg.model())
             cg.delete()
             return HttpResponseRedirect(reverse('slat:edp_cgroups', args=(project_id, edp_id)))
              
@@ -912,6 +992,55 @@ def cgroups(request, project_id):
      return render(request, 'slat/cgroups.html', {'project': project,
                                                   'cgs': Component_Group.objects.filter(demand__project=project)})
  
+def floor_cgroups(request, project_id, floor_num):
+    print(" --> floor_cgroups(", project_id, ", ", floor_num, ")")
+    project = get_object_or_404(Project, pk=project_id)
+    edps = EDP.objects.filter(project=project).filter(floor=floor_num)
+    cgs = []
+    for edp in edps:
+        groups = Component_Group.objects.filter(demand=edp)
+        for cg in groups:
+            cgs.append(cg)
+            
+    if request.method == 'POST':
+         raise ValueError("SHOULD NOT GET HERE")
+    else:
+        return render(request, 'slat/floor_cgroups.html',
+                      {'project': project,
+                       'floor_num': floor_num,
+                       'cgs': cgs})
+
+def floors(request, project_id):
+    project = get_object_or_404(Project, pk=project_id)
+    print(project.floors)
+    return render(request, 'slat/floors.html', {'project': project, 
+                                                'floors': range(project.floors + 1)})
+def demand(request, project_id, floor_num, type):
+    project = get_object_or_404(Project, pk=project_id)
+    if type == 'drift':
+        type = 'D'
+    elif type =='acceleration':
+        type = 'A'
+    else:
+        raise ValueError("UNKNOWN DEMAND TYPE")
+        
+    demand = EDP.objects.filter(project=project).filter(floor=floor_num).filter(type=type)
+    if len(demand) != 1:
+        raise ValueError("Demand does not exist")
+
+
+    demand = demand[0]
+    flavour = demand.flavour
+    if not flavour:
+        return HttpResponseRedirect(reverse('slat:edp_choose', args=(project_id, demand.id)))
+    elif flavour.id == EDP_FLAVOUR_POWERCURVE:
+        return HttpResponseRedirect(reverse('slat:edp_power', args=(project_id, demand.id)))
+    elif flavour.id == EDP_FLAVOUR_USERDEF:
+        return HttpResponseRedirect(reverse('slat:edp_userdef', args=(project_id, demand.id)))
+    else:
+        raise ValueError("demand view not implemented")
+
+    
 def analysis(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     chart = None

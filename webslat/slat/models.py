@@ -14,7 +14,7 @@ class Project(models.Model):
     title_text = models.CharField(max_length=50)
     description_text = models.CharField(max_length=200, blank=True)
     IM = models.ForeignKey('IM', null=True, blank=True)
-    floors = models.IntegerField(null=True, blank=True)
+    floors = models.IntegerField(null=False, blank=False)
     rarity = models.FloatField(null=False, default=1E-4)
     mean_im_collapse = models.FloatField(null=True, blank=True)
     sd_ln_im_collapse = models.FloatField(null=True, blank=True)
@@ -378,10 +378,10 @@ class Component_Group(models.Model):
 
     def __str__(self):
         result = str(self.demand) + " "
-        #if self.component:
-        #    result = result + str(self.component)
-        #else:
-        #    result = result + "NO COMPONENT"
+        if self.component:
+            result = result + str(self.component)
+        else:
+            result = result + "NO COMPONENT"
         result = result + " " + str(self.quantity)
         return result
 
@@ -393,7 +393,6 @@ class ProjectForm(ModelForm):
         widgets = {
             'description_text': Textarea(attrs={'cols': 50, 'rows': 4}),
             'IM': HiddenInput,
-            'floors': HiddenInput
             }
         
 class HazardForm(ModelForm):
@@ -454,3 +453,8 @@ class EDPCompGroupForm(ModelForm):
         widgets = {
             'demand': HiddenInput
         }
+
+class FloorCompGroupForm(Form):
+    component = ModelChoiceField(queryset=ComponentsTab.objects)
+    quantity = IntegerField(initial=1)
+        
