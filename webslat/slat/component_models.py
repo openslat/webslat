@@ -17,6 +17,7 @@ class ComponentsTab(models.Model):
     system = models.TextField(blank=True, null=True)  # This field type is a guess.
     units = models.ForeignKey('UnitsTab', models.DO_NOTHING, db_column='units', blank=True, null=True)
     demand = models.ForeignKey('DemandsTab', models.DO_NOTHING, db_column='demand', blank=True, null=True)
+    structural = models.IntegerField()
 
     class Meta:
         managed = False

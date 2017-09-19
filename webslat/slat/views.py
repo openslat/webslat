@@ -196,8 +196,9 @@ def _plot_hazard(h):
         data_source = SimpleDataSource(data=data)
         chart = LineChart(data_source, options={'title': 'Intensity Measure Rate of Exceedance', 
                                                 'hAxis': {'logScale': True, 'title': 'Intensity Measure (g)'},
-                                                'vAxis': {'logScale': True, 'format': 'scientific',
-                                                          'title': 'Rate of Exceedance'},
+                                                'vAxis': {'logScale': True, 
+                                                          'title': 'Rate of Exceedance',
+                                                          'format': 'scientific'},
                                                 'pointSize': 5,
                                                 'legend': {'position': 'none'}})
         return chart
@@ -924,8 +925,8 @@ def analysis(request, project_id):
         data = [['Year', 'Loss']]
 
         rate = 0.06
-        for i in range(100):
-            year = i + 1
+        for i in range(20):
+            year = (i + 1) * 5
             loss = building.E_cost(year, rate) / 1000
             data.append([year, loss])
         
@@ -940,7 +941,10 @@ def analysis(request, project_id):
                                                 'hAxis': {'logScale': False, 'title': 'Time from present (years)'},
                                                 'vAxis': {'logScale': False, 'format': 'decimal',
                                                           'title': 'Expected Loss ($k)'},
-                                                'pointSize': 5})
+                                                'pointSize': 5,
+                                                'pointsVisible': False,
+                                                'curveType': 'function',
+                                                'legend': {'position': 'none'}})
         print("{:>.2}".format(100 * building.AnnualCost().mean()/building.getRebuildCost().mean()))
     
     return render(request, 'slat/analysis.html', {'project': project, 
