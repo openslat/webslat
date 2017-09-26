@@ -14,6 +14,7 @@ from math import *
 from graphos.sources.model import SimpleDataSource
 from graphos.sources.model import ModelDataSource
 from graphos.renderers.gchart import LineChart
+from dal import autocomplete
 
 from  .models import *
 from .component_models import *
@@ -579,7 +580,6 @@ def _plot_demand(edp):
             x_90 = edp_func.X_at_exceedence(x, 0.90)
             data.append([x, median, x_10, x_90])
 
-        print(data)
             
         data_source = SimpleDataSource(data=data)
         chart1 = LineChart(data_source, options={'title': '{} | Intensity Measure'.format(demand), 
@@ -870,14 +870,18 @@ def cgroup(request, project_id, floor_num, cg_id=None):
          else:
              cg_form = CompGroupForm()
              
+             
+             
          return render(request, 'slat/cgroup.html', {'project_id': project_id,
                                                      'floor_num': floor_num, 
                                                      'cg_id': cg_id,
                                                      'cg_form': cg_form})
 
 def floor_cgroup(request, project_id, floor_num, cg_id=None):
+     print(" > floor_cgroup()")
      project = get_object_or_404(Project, pk=project_id)
      if request.method == 'POST':
+         print("POST")
          if request.POST.get('cancel'):
              return HttpResponseRedirect(reverse('slat:floor_cgroups', args=(project_id, floor_num)))
 
@@ -887,7 +891,6 @@ def floor_cgroup(request, project_id, floor_num, cg_id=None):
              cg.delete()
              return HttpResponseRedirect(reverse('slat:floor_cgroups', args=(project_id, floor_num)))
 
-         print("ID: ", cg_id)
          if cg_id:
              cg = Component_Group.objects.get(pk=cg_id)
              cg_form = FloorCompGroupForm(request.POST, initial=model_to_dict(cg))
@@ -897,38 +900,33 @@ def floor_cgroup(request, project_id, floor_num, cg_id=None):
 
          cg_form.is_valid()
          component = cg_form.cleaned_data['component']
+         
          edp = EDP.objects.filter(project=project).filter(floor=floor_num)
 
          if re.search('^Accel(?i)', component.demand.name):
              edp = edp.filter(type='A')
          else:
              edp = edp.filter(type='D')
-         print("EDP: ", edp[0])
 
          cg.demand = edp[0]
          cg.component = component
          cg.quantity = cg_form.cleaned_data['quantity']
          cg.save()
          cg_id = cg.id
-         print("CG: ", cg)
-         print("ID: ", cg_id)
          
          return HttpResponseRedirect(reverse('slat:floor_cgroups', args=(project_id, floor_num)))
      else:
          if cg_id:
              cg = get_object_or_404(Component_Group, pk=cg_id)
-             cg_form = FloorCompGroupForm(initial=model_to_dict(cg))
+             demand_form = ComponentForm(initial=model_to_dict(cg), floor_num=floor_num)
          else:
-             cg_form = FloorCompGroupForm()
-         
-         if int(floor_num)==0:
-             acceleration = DemandsTab.objects.filter(name__icontains='Accel')[0]
-             cg_form.fields['component'].queryset=ComponentsTab.objects.filter(demand=acceleration)
-             
+             demand_form = ComponentForm(floor_num=floor_num)
+
+         print(demand_form.errors)
          return render(request, 'slat/floor_cgroup.html', {'project': project,
-                                                     'floor_num': floor_num, 
-                                                     'cg_id': cg_id,
-                                                     'cg_form': cg_form})
+                                                           'floor_num': floor_num, 
+                                                           'cg_id': cg_id,
+                                                           'demand_form': demand_form})
      
 
 def edp_cgroups(request, project_id, edp_id):
@@ -1079,3 +1077,23 @@ def analysis(request, project_id):
     return render(request, 'slat/analysis.html', {'project': project, 
                                                   'structure': project.model(),
                                                   'chart': chart})
+class ComponentAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        # Don't forget to filter out results depending on the visitor !
+        #if not self.request.user.is_authenticated():
+        #    return Country.objects.none()
+
+        qs = ComponentsTab.objects.all()
+
+        demand = self.forwarded.get('demand', None)
+        floor_num = self.forwarded.get('floor', None)
+        
+        if demand:
+            qs = qs.filter(ident__regex=demand)
+
+        if floor_num and int(floor_num)==0:
+            acceleration = DemandsTab.objects.filter(name__icontains='Accel')[0]
+            qs = qs.filter(demand=acceleration)
+            
+            
+        return qs

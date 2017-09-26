@@ -9,7 +9,7 @@ urlpatterns = [
     url(r'^project/(?P<project_id>[0-9]+)$', views.project, name='project'),
     url(r'^project$', views.project, name='project'),
     url(r'^components$', component_views.components, name='components'),
-    url(r'^components/(?P<component_id>[0-9]+)$', component_views.component, name='component'),
+    url(r'^components/(?P<component_id>[A-Za-z0-9.]+)$', component_views.component, name='component'),
     url(r'^project/(?P<project_id>[0-9]+)/hazard$', views.hazard, name='hazard'),
     url(r'^project/(?P<project_id>[0-9]+)/hazard/choose$', views.hazard_choose, name='hazard_choose'),
     url(r'^project/(?P<project_id>[0-9]+)/hazard/nlh$', views.nlh, name='nlh'),
@@ -40,4 +40,5 @@ urlpatterns = [
     url(r'^project/(?P<project_id>[0-9]+)/floor/(?P<floor_num>[0-9]+)/cgroups$', views.floor_cgroups, name='floor_cgroups'),
     url(r'^project/(?P<project_id>[0-9]+)/floor$', views.floors, name='floors'),
     url(r'^project/(?P<project_id>[0-9]+)/floor/(?P<floor_num>[0-9]+)/(?P<type>(acceleration)|(drift))$', views.demand, name='demand'),
+    url(r'^component-autocomplete/$', views.ComponentAutocomplete.as_view(), name='component-autocomplete'),
 ]

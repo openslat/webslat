@@ -4,10 +4,14 @@ import time
 from scipy.optimize import fsolve, newton
 from django.db import models
 from django.forms import  ModelForm, BaseModelFormSet, Textarea, FloatField, FileField, Form, ModelChoiceField, IntegerField, HiddenInput
-from django.forms import Form, ChoiceField
+from django.forms import Form, ChoiceField, Select
 from slat.constants import *
 from .nzs import *
 from .component_models import *
+from dal import autocomplete
+from django.urls import get_script_prefix
+from django.utils.safestring import mark_safe
+from dal import forward
 
 # Create your models here.
 class Project(models.Model):
@@ -458,3 +462,24 @@ class FloorCompGroupForm(Form):
     component = ModelChoiceField(queryset=ComponentsTab.objects)
     quantity = IntegerField(initial=1)
         
+def ListOfComponentCategories():
+    demands = [[r"", "All"], ["^[0-9]", "SLAT"], ["^[A-Z]", "PACT"]]
+    for d in PACT_CatsTab.objects.all():
+        if len(ComponentsTab.objects.filter(ident__regex=d.ident)) > 0:
+               demands.append((d.ident, mark_safe(len(d.ident) * "&nbsp;" + str(d))))
+    return demands
+    
+    
+class ComponentForm(Form):
+    def __init__(self, initial=None, floor_num=None):
+        super(ComponentForm, self).__init__(initial)
+        if floor_num:
+            self.fields['component'].widget.forward.append(forward.Const(floor_num, 'floor'))
+        
+    category = ChoiceField(ListOfComponentCategories, required=False)
+    component = ModelChoiceField(
+        queryset=ComponentsTab.objects.all(),
+        widget=autocomplete.ModelSelect2(url='/slat/component-autocomplete/',
+                                         forward=['demand']))
+    quantity = IntegerField(help_text="Select a component here.")
+

@@ -53,6 +53,9 @@ class DemandsTab(models.Model):
         managed = False
         db_table = 'demands_tab'
 
+    def __str__(self):
+        return self.name
+
 
 class DjangoMigrations(models.Model):
     id = models.IntegerField(primary_key=True)  # AutoField?
@@ -89,6 +92,18 @@ class UnitsTab(models.Model):
         managed = False
         db_table = 'units_tab'
 
+class PACT_CatsTab(models.Model):
+    rowid = models.IntegerField(blank=True, null=False, primary_key=True)
+    ident = models.TextField(blank=True, null=False)
+    description = models.TextField(blank=True, null=True)
+    formula = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'pact_cats_tab'
+
+    def __str__(self):
+        return self.ident + ": " + self.description
 
 class CompRouter(object):
     """
@@ -96,7 +111,7 @@ class CompRouter(object):
     comp application.
     """
     def __init__(self):
-        self.tables = ['components_tab', 'cost_tab', 'demands_tab', 'fragility_tab', 'units_tab']
+        self.tables = ['components_tab', 'cost_tab', 'demands_tab', 'fragility_tab', 'units_tab', 'pact_cats_tab']
 
     def db_for_read(self, model, **hints):
         """

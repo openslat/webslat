@@ -100,6 +100,7 @@ served via Apache.
      ln -s /usr/bin/swig3.0 /usr/bin/swig
 
      pip3 install antlr4-python3-runtime numpy typing
+     pip3 install django-autocomplete-light
    #+END_SRC
 9. Build the libraries:
    #+ATTR_LATEX: :options language=bash-remote
