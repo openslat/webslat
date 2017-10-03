@@ -22,7 +22,6 @@ def components(request):
     return render(request, 'slat/components.html', context)
 
 def component(request, component_id):
-    print("component", type(component_id))
     c = ComponentsTab.objects.get(ident=component_id)
     f = FragilityTab.objects.filter(component = c)
     costs = CostTab.objects.filter(component = c)

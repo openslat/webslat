@@ -480,6 +480,6 @@ class ComponentForm(Form):
     component = ModelChoiceField(
         queryset=ComponentsTab.objects.all(),
         widget=autocomplete.ModelSelect2(url='/slat/component-autocomplete/',
-                                         forward=['demand']))
+                                         forward=['category']))
     quantity = IntegerField(help_text="Select a component here.")
 

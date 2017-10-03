@@ -922,7 +922,6 @@ def floor_cgroup(request, project_id, floor_num, cg_id=None):
          else:
              demand_form = ComponentForm(floor_num=floor_num)
 
-         print(demand_form.errors)
          return render(request, 'slat/floor_cgroup.html', {'project': project,
                                                            'floor_num': floor_num, 
                                                            'cg_id': cg_id,
@@ -1085,11 +1084,11 @@ class ComponentAutocomplete(autocomplete.Select2QuerySetView):
 
         qs = ComponentsTab.objects.all()
 
-        demand = self.forwarded.get('demand', None)
+        category = self.forwarded.get('category', None)
         floor_num = self.forwarded.get('floor', None)
         
-        if demand:
-            qs = qs.filter(ident__regex=demand)
+        if category:
+            qs = qs.filter(ident__regex=category)
 
         if floor_num and int(floor_num)==0:
             acceleration = DemandsTab.objects.filter(name__icontains='Accel')[0]
