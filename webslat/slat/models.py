@@ -469,17 +469,26 @@ def ListOfComponentCategories():
                demands.append((d.ident, mark_safe(len(d.ident) * "&nbsp;" + str(d))))
     return demands
     
-    
+
 class ComponentForm(Form):
     def __init__(self, initial=None, floor_num=None):
         super(ComponentForm, self).__init__(initial)
+        if initial:
+            self.fields['component'].initial = initial['component']
+            self.fields['description'].initial = initial['component']
         if floor_num:
             self.fields['component'].widget.forward.append(forward.Const(floor_num, 'floor'))
         
     category = ChoiceField(ListOfComponentCategories, required=False)
     component = ModelChoiceField(
         queryset=ComponentsTab.objects.all(),
-        widget=autocomplete.ModelSelect2(url='/slat/component-autocomplete/',
-                                         forward=['category']))
-    quantity = IntegerField(help_text="Select a component here.")
+        widget=autocomplete.Select2(url='/slat/component-autocomplete/',
+                         forward=['category'],
+                         attrs={'onChange': 'document.forms[0].quantity.value=this.value;alert(document.forms[0].quantity);' +
+                                'document.forms[0].description.value=this.value;alert(document.forms[0].description);'}))
+    description = ChoiceField(map(lambda n: [n.key, n.ident + ": " + n.system],
+                                        list(ComponentsTab.objects.all())), 
+                       required=False, 
+                       disabled=True)
+    quantity = IntegerField()
 
