@@ -13,6 +13,11 @@ th, td {
     padding-right: 15px;
     padding-left: 15px;
 }
+label {
+   color: blue;
+   vertical-align:top;
+}
+
 input[type="submit"] {
   vertical-align: middle;
   display: block;

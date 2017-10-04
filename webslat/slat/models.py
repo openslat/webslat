@@ -3,7 +3,7 @@ import sys
 import time
 from scipy.optimize import fsolve, newton
 from django.db import models
-from django.forms import  ModelForm, BaseModelFormSet, Textarea, FloatField, FileField, Form, ModelChoiceField, IntegerField, HiddenInput
+from django.forms import  ModelForm, BaseModelFormSet, Textarea, FloatField, FileField, Form, ModelChoiceField, IntegerField, HiddenInput, CharField
 from django.forms import Form, ChoiceField, Select
 from slat.constants import *
 from .nzs import *
@@ -484,11 +484,16 @@ class ComponentForm(Form):
         queryset=ComponentsTab.objects.all(),
         widget=autocomplete.Select2(url='/slat/component-autocomplete/',
                          forward=['category'],
-                         attrs={'onChange': 'document.forms[0].quantity.value=this.value;alert(document.forms[0].quantity);' +
-                                'document.forms[0].description.value=this.value;alert(document.forms[0].description);'}))
+                         attrs={'onChange': 'document.forms[0].quantity.value=this.value;' +
+                                'document.forms[0].description.value=this.value;' +
+                                'document.forms[0].desc2.value=document.forms[0].description.item(' +
+                                'document.forms[0].description.value-1).text;'
+                         }))
     description = ChoiceField(map(lambda n: [n.key, n.ident + ": " + n.system],
                                         list(ComponentsTab.objects.all())), 
                        required=False, 
                        disabled=True)
     quantity = IntegerField()
+    desc2 = CharField(required=False, disabled=False,
+                      widget=Textarea(attrs={'rows': 10, 'cols':80}))
 
