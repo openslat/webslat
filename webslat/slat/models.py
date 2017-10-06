@@ -475,26 +475,13 @@ class ComponentForm(Form):
         super(ComponentForm, self).__init__(initial)
         if initial:
             self.fields['component'].initial = initial['component']
-            self.fields['description'].initial = initial['component']
         if floor_num:
             self.fields['component'].widget.forward.append(forward.Const(floor_num, 'floor'))
         
+    quantity = IntegerField()
     category = ChoiceField(ListOfComponentCategories, required=False)
     component = ModelChoiceField(
         queryset=ComponentsTab.objects.all(),
         widget=autocomplete.Select2(url='/slat/component-autocomplete/',
-                         forward=['category'],
-                         attrs={'onChange': 'document.forms[0].quantity.value=this.value;' +
-                                'document.forms[0].description.value=this.value;'
-#                                'document.forms[0].desc2.value=document.forms[0].description.item(' +
-#                                'document.forms[0].description.value-1).text;'
-
-                         }))
-    description = ChoiceField(map(lambda n: [n.key, n.ident + ": " + n.system],
-                                        list(ComponentsTab.objects.all())), 
-                       required=False, 
-                       disabled=True)
-    quantity = IntegerField()
-    desc2 = CharField(required=False, disabled=False,
-                      widget=Textarea(attrs={'rows': 10, 'cols':80}))
+                                    forward=['category']))
 

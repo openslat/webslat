@@ -6,7 +6,7 @@
 
 
 <p><b>Project: </b>{{ project.title_text }}</p>
-<p><b>Floor #{{ floor_num }}</b></p>
+<p><b><a href="{% url 'slat:floor_cgroups' project.id floor_num %}">Floor #{{ floor_num }}</a></b></p>
 <p><b>Component Group </b></p>
 {% if demand_form %} 
     <form action="" method="post">
@@ -14,23 +14,25 @@
         {{ demand_form.as_p }}
        <input type="submit" name="submit" value="submit" />
     </form>
-    <br />
-{% endif %}
-<hr/>
-{% if cg_id %}
-<form action="{% url 'slat:floor_compgroup' project.id  floor_num cg_id %}" method="post">
-{% else %}
-<form action="{% url 'slat:floor_compgroup' project.id floor_num  %}" method="post">
-{% endif %}
-    {% csrf_token %}
-    <input type="submit" name="cancel" value="Cancel" />
-</form>
-<a href="{% url 'slat:project' project.id %}">Return to Project</a><br />
+      {% if cg_id %}
+           <form action="{% url 'slat:floor_compgroup' project.id  floor_num cg_id %}" method="post">
+      {% else %}
+           <form action="{% url 'slat:floor_compgroup' project.id floor_num  %}" method="post">
+      {% endif %}
+      {% csrf_token %}
+      <input type="submit" name="cancel" value="Cancel" />
+      </form>
+	   {% endif %}
+<a href="{% url 'slat:floors' project.id %}">Return to Floors</a>
+&nbsp;	&nbsp;	&nbsp;	&nbsp;	
+<a href="{% url 'slat:project' project.id %}">Return to Project</a>
+&nbsp;	&nbsp;	&nbsp;	&nbsp;	
 <a href="{% url 'slat:index' %}">Return to Project List</a>
+<hr/>
+
+<div id="like_count"></div> 
 
 {% block footer %}
-<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
-
 {{ demand_form.media }}
 {% endblock %}
 <button onClick="alert('You clicked the button using Javascript.');">

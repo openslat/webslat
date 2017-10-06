@@ -1098,7 +1098,9 @@ class ComponentAutocomplete(autocomplete.Select2QuerySetView):
         return qs
 
 def ComponentDescription(request, component_key):
-    print("> ComponentDescription(..., ", component_key, ")")
+    component = ComponentsTab.objects.get(pk=component_key)
     result = render(request, 'slat/component-description.html', 
-                    {'component': ComponentsTab.objects.get(pk=component_key)})
+                    {'component': component,
+                     'fragility': FragilityTab.objects.filter(component = component).order_by('state'),
+                     'costs': CostTab.objects.filter(component = component).order_by('state')})
     return(result)
