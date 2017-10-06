@@ -41,4 +41,5 @@ urlpatterns = [
     url(r'^project/(?P<project_id>[0-9]+)/floor$', views.floors, name='floors'),
     url(r'^project/(?P<project_id>[0-9]+)/floor/(?P<floor_num>[0-9]+)/(?P<type>(acceleration)|(drift))$', views.demand, name='demand'),
     url(r'^component-autocomplete/$', views.ComponentAutocomplete.as_view(), name='component-autocomplete'),
+    url(r'^component-description/(?P<component_key>[0-9]+)$', views.ComponentDescription, name='component-description'),
 ]

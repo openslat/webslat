@@ -1095,5 +1095,10 @@ class ComponentAutocomplete(autocomplete.Select2QuerySetView):
             acceleration = DemandsTab.objects.filter(name__icontains='Accel')[0]
             qs = qs.filter(demand=acceleration)
             
-            
         return qs
+
+def ComponentDescription(request, component_key):
+    print("> ComponentDescription(..., ", component_key, ")")
+    result = render(request, 'slat/component-description.html', 
+                    {'component': ComponentsTab.objects.get(pk=component_key)})
+    return(result)
