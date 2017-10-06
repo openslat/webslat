@@ -6,7 +6,7 @@
 
 
 <p><b>Project: </b>{{ project.title_text }}</p>
-<p><b><a href="{% url 'slat:floor_cgroups' project.id floor_num %}">Floor #{{ floor_num }}</a></b></p>
+<p><b>Floor #{{ floor_num }}</b></p>
 <p><b>Component Group </b></p>
 {% if demand_form %} 
     <form action="" method="post">
