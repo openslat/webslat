@@ -1,5 +1,10 @@
 {% load static %}
 
+<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}" />
+<script src="{% static "js/jquery-3.2.1.min.js" %}"></script>
+<script src="{% static "js/slat-utils.js" %}"></script>
+
+
 <p><b>Project: </b>{{ project.title_text }}</p>
 <p><b>Floor #{{ floor_num }}</b></p>
 <p><b>Component Group </b></p>
@@ -9,22 +14,24 @@
         {{ demand_form.as_p }}
        <input type="submit" name="submit" value="submit" />
     </form>
-    <br />
-{% endif %}
-<hr/>
-{% if cg_id %}
-<form action="{% url 'slat:floor_compgroup' project.id  floor_num cg_id %}" method="post">
-{% else %}
-<form action="{% url 'slat:floor_compgroup' project.id floor_num  %}" method="post">
-{% endif %}
-    {% csrf_token %}
-    <input type="submit" name="cancel" value="Cancel" />
-</form>
-<a href="{% url 'slat:project' project.id %}">Return to Project</a><br />
+      {% if cg_id %}
+           <form action="{% url 'slat:floor_compgroup' project.id  floor_num cg_id %}" method="post">
+      {% else %}
+           <form action="{% url 'slat:floor_compgroup' project.id floor_num  %}" method="post">
+      {% endif %}
+      {% csrf_token %}
+      <input type="submit" name="cancel" value="Cancel" />
+      </form>
+	   {% endif %}
+<a href="{% url 'slat:floors' project.id %}">Return to Floors</a>
+&nbsp;	&nbsp;	&nbsp;	&nbsp;	
+<a href="{% url 'slat:project' project.id %}">Return to Project</a>
+&nbsp;	&nbsp;	&nbsp;	&nbsp;	
 <a href="{% url 'slat:index' %}">Return to Project List</a>
+<hr/>
+
+<div id="like_count"></div> 
 
 {% block footer %}
-<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
-
 {{ demand_form.media }}
 {% endblock %}
