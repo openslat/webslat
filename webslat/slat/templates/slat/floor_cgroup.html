@@ -6,7 +6,7 @@
 
 
 <p><b>Project: </b>{{ project.title_text }}</p>
-<p><b>Floor #{{ floor_num }}</b></p>
+<p><b><a href="{% url 'slat:floor_cgroups' project.id floor_num %}">Floor #{{ floor_num }}</a></b></p>
 <p><b>Component Group </b></p>
 {% if demand_form %} 
     <form action="" method="post">
@@ -35,3 +35,14 @@
 {% block footer %}
 {{ demand_form.media }}
 {% endblock %}
+<button onClick="alert('You clicked the button using Javascript.');">
+       Click Me - I run Javascript
+</button>
+
+
+<button id="about-btn"> Click Me - I'm Javascript on Speed</button>
+
+<p>This is a example</p>
+
+<p>This is another example</p>
+<strong id="like_count"></strong> people like this category

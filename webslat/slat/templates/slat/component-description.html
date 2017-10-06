@@ -1,0 +1,42 @@
+<p><b>Component: </b>#{{ component.ident }}</p>
+<p><b>Name: </b>{{ component.name }}</p>
+<p><b>System: </b>{{ component.system }}</p>
+<p><b>Units: </b>{{ component.units.name }}</P>
+<p><b>Demand: </b>{{ component.demand.name }}</P>
+<br/>
+<p>Fragility:</p>
+<table><tr><td><b>State</b>
+    </td><td><b>Description</b></td>
+    <td><b>Repairs</b></td>
+    <td><b>Median EDP</b>
+    </td><td><b>Dispersion</b>
+  </td></tr>
+{% for f in fragility %}
+    <tr><td>DS{{ f.state }}</td>
+      <td>{{ f.description }}</td>
+      <td>{{ f.repairs }}</td>
+      <td>{{ f.median }}</td>
+      <td>{{ f.beta }}</td></tr>
+{% endfor %}
+</table>
+<br/>
+<p>Costs:</p>
+<table><tr><td><b>State</b>
+    </td><td><b>Min Cost</b></td>
+    <td><b>Max Cost</b></td>
+    </td><td><b>Dispersion</b>
+    <td><b>Lower Limit</b>
+    <td><b>Upper Limit</b>
+  </td></tr>
+{% for c in costs %}
+    <tr><td>DS{{ c.state }}</td>
+      <td>{{ c.min_cost }}</td>
+      <td>{{ c.max_cost }}</td>
+      <td>{{ c.dispersion }}</td>
+      <td>{{ c.lower_limit }}</td>
+      <td>{{ c.upper_limit }}</td>
+{% endfor %}
+</table>
+<br/>
+<br/>
+<hr/>
