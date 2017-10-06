@@ -1,5 +1,10 @@
 {% load static %}
 
+<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}" />
+<script src="{% static "js/jquery-3.2.1.min.js" %}"></script>
+<script src="{% static "js/slat-utils.js" %}"></script>
+
+
 <p><b>Project: </b>{{ project.title_text }}</p>
 <p><b>Floor #{{ floor_num }}</b></p>
 <p><b>Component Group </b></p>
@@ -28,3 +33,14 @@
 
 {{ demand_form.media }}
 {% endblock %}
+<button onClick="alert('You clicked the button using Javascript.');">
+       Click Me - I run Javascript
+</button>
+
+
+<button id="about-btn"> Click Me - I'm Javascript on Speed</button>
+
+<p>This is a example</p>
+
+<p>This is another example</p>
+<strong id="like_count"></strong> people like this category

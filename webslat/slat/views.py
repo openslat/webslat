@@ -879,6 +879,7 @@ def cgroup(request, project_id, floor_num, cg_id=None):
 
 def floor_cgroup(request, project_id, floor_num, cg_id=None):
      print(" > floor_cgroup()")
+     print(request)
      project = get_object_or_404(Project, pk=project_id)
      if request.method == 'POST':
          print("POST")
@@ -1094,5 +1095,10 @@ class ComponentAutocomplete(autocomplete.Select2QuerySetView):
             acceleration = DemandsTab.objects.filter(name__icontains='Accel')[0]
             qs = qs.filter(demand=acceleration)
             
-            
         return qs
+
+def ComponentDescription(request, component_key):
+    print("> ComponentDescription(..., ", component_key, ")")
+    result = render(request, 'slat/component-description.html', 
+                    {'component': ComponentsTab.objects.get(pk=component_key)})
+    return(result)
