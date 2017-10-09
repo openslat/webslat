@@ -913,6 +913,8 @@ def floor_cgroup(request, project_id, floor_num, cg_id=None):
          cg.component = component
          cg.quantity = cg_form.cleaned_data['quantity']
          cg.save()
+         if cg_form.has_changed():
+             cg._make_model()
          cg_id = cg.id
          
          return HttpResponseRedirect(reverse('slat:floor_cgroups', args=(project_id, floor_num)))
