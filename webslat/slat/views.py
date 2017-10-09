@@ -13,7 +13,7 @@ from .nzs import *
 from math import *
 from graphos.sources.model import SimpleDataSource
 from graphos.sources.model import ModelDataSource
-from graphos.renderers.gchart import LineChart
+from graphos.renderers.gchart import LineChart, AreaChart
 from dal import autocomplete
 
 from  .models import *
@@ -1042,6 +1042,7 @@ def demand(request, project_id, floor_num, type):
 def analysis(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     chart = None
+    by_fate_chart = None
 
     if project.IM:
         building = project.model()
@@ -1072,11 +1073,82 @@ def analysis(request, project_id):
                                                 'pointsVisible': False,
                                                 'curveType': 'function',
                                                 'legend': {'position': 'none'}})
-        print("{:>.2}".format(100 * building.AnnualCost().mean()/building.getRebuildCost().mean()))
+        im_func = project.IM.model()
+        columns = ['IM', 'Repair Costs']
+        if im_func.DemolitionRate() or im_func.CollapseRate():
+            columns.append('Total Costs')
+                
+        data = [columns]
+        xlimit = im_func.plot_max()
+        for i in range(10):
+            im = i/10 * xlimit
+            new_data = [im]
+            costs = building.CostsByFate(im)
+            new_data.append(costs[0].mean())
+            
+            
+            if im_func.DemolitionRate() or im_func.CollapseRate():
+                non_repair_cost = new_data[1]
+                if im_func.DemolitionRate():
+                    non_repair_cost = non_repair_cost + costs[1].mean()
+                if im_func.CollapseRate():
+                    non_repair_cost = non_repair_cost + costs[2].mean()
+                new_data.append(non_repair_cost)
+            data.append(new_data)
+                   
+        data_source = SimpleDataSource(data=data)
+        by_fate_chart = AreaChart(data_source, options={'title': 'Cost | IM',
+                                                        'hAxis': {'logScale': True, 'title': 'Intensity Measure (g)'},
+                                                        'vAxis': {'logScale': True, 'format': 'decimal',
+                                                                  'title': 'Cost ($)'},
+                                                        'pointSize': 5})
+
+        # Split repair costs by Structural and Non-Structural Components
+        im_func = project.IM.model()
+        columns = ['IM', 'Structural', 'Non-Structural', 'Total']
+
+        structural_components = []
+        non_structural_components = []
+        demands = EDP.objects.filter(project=project)
+        for edp in demands:
+            for c in Component_Group.objects.filter(demand=edp):
+                if c.component.structural != 0:
+                    structural_components.append(c)
+                else:
+                    non_structural_components.append(c)
+
+        data = [columns]
+        xlimit = im_func.plot_max()
+        for i in range(10):
+            im = i/10 * xlimit
+            new_data = [im]
+            
+            costs = 0
+            for cg in structural_components:
+                costs = costs + cg.model().E_Cost_IM(im)
+            new_data.append(costs)
+
+            costs = 0
+            for cg in non_structural_components:
+                costs = costs + cg.model().E_Cost_IM(im)
+            new_data.append(costs)
+                   
+            total_cost = building.Cost(im, False)
+            new_data.append(total_cost.mean())
+            data.append(new_data)
+
+        data_source = SimpleDataSource(data=data)
+        s_ns_chart = AreaChart(data_source, options={'title': 'Cost | IM',
+                                                     'hAxis': {'logScale': True, 'title': 'Intensity Measure (g)'},
+                                                     'vAxis': {'logScale': True, 'format': 'decimal',
+                                                               'title': 'Cost ($)'},
+                                                     'pointSize': 5})
     
     return render(request, 'slat/analysis.html', {'project': project, 
                                                   'structure': project.model(),
-                                                  'chart': chart})
+                                                  'chart': chart,
+                                                  'by_fate_chart': by_fate_chart,
+                                                  's_ns_chart': s_ns_chart})
 class ComponentAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         # Don't forget to filter out results depending on the visitor !

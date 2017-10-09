@@ -16,6 +16,13 @@
     {{ chart.as_html }}
 {% endif %}
 
+{% if by_fate_chart %} 
+    {{ by_fate_chart.as_html }}
+{% endif %}
+
+{% if s_ns_chart %} 
+    {{ s_ns_chart.as_html }}
+{% endif %}
 </hr>
 <a href="{% url 'slat:project' project.id %}">Return to Project</a><br /><br/>
 <a href="{% url 'slat:index' %}">Return to Project List</a>
