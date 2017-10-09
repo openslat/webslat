@@ -23,6 +23,10 @@
 {% if s_ns_chart %} 
     {{ s_ns_chart.as_html }}
 {% endif %}
+
+{% if by_floor_chart %} 
+    {{ by_floor_chart.as_html }}
+{% endif %}
 </hr>
 <a href="{% url 'slat:project' project.id %}">Return to Project</a><br /><br/>
 <a href="{% url 'slat:index' %}">Return to Project List</a>

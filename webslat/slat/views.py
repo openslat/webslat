@@ -1102,7 +1102,10 @@ def analysis(request, project_id):
                                                         'vAxis': {'logScale': True, 'format': 'decimal',
                                                                   'title': 'Cost ($)'},
                                                         'pointSize': 5})
-
+        floors = []
+        for f in range(project.floors + 1):
+            floors.append([])
+            
         # Split repair costs by Structural and Non-Structural Components
         im_func = project.IM.model()
         columns = ['IM', 'Structural', 'Non-Structural', 'Total']
@@ -1112,6 +1115,7 @@ def analysis(request, project_id):
         demands = EDP.objects.filter(project=project)
         for edp in demands:
             for c in Component_Group.objects.filter(demand=edp):
+                floors[edp.floor].append(c)
                 if c.component.structural != 0:
                     structural_components.append(c)
                 else:
@@ -1143,12 +1147,40 @@ def analysis(request, project_id):
                                                      'vAxis': {'logScale': True, 'format': 'decimal',
                                                                'title': 'Cost ($)'},
                                                      'pointSize': 5})
-    
+
+        columns = ['IM']
+        for f in range(project.floors + 1):
+            columns.append("Floor #{}".format(f))
+        #columns.append('Total')
+        data = [columns]
+        
+        xlimit = im_func.plot_max()
+        for i in range(10):
+            im = i/10 * xlimit
+            new_data = [im]
+
+            for f in range(project.floors + 1):
+                costs = 0
+                for c in floors[f]:
+                    costs = costs + c.model().E_Cost_IM(im)
+                new_data.append(costs)
+            data.append(new_data)
+
+        data_source = SimpleDataSource(data=data)
+        by_floor_chart = LineChart(data_source, options={'title': 'Cost | IM',
+                                                         'hAxis': {'logScale': False, 'title': 'Intensity Measure (g)'},
+                                                         'vAxis': {'logScale': False, 'format': 'decimal',
+                                                                   'title': 'Cost ($)'},
+                                                         'pointSize': 5})
+        
+
     return render(request, 'slat/analysis.html', {'project': project, 
                                                   'structure': project.model(),
                                                   'chart': chart,
                                                   'by_fate_chart': by_fate_chart,
-                                                  's_ns_chart': s_ns_chart})
+                                                  's_ns_chart': s_ns_chart,
+                                                  'by_floor_chart': by_floor_chart})
+
 class ComponentAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         # Don't forget to filter out results depending on the visitor !
