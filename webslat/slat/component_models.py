@@ -76,6 +76,7 @@ class FragilityTab(models.Model):
     repairs = models.TextField(blank=True, null=True)
     median = models.FloatField(blank=True, null=True)
     beta = models.FloatField(blank=True, null=True)
+    image = models.TextField(blank=True, null=True)
 
     class Meta:
         managed = False

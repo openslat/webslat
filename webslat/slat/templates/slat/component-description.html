@@ -1,3 +1,4 @@
+{% load static %}
 <p><b>Component: </b>#{{ component.ident }}</p>
 <p><b>Name: </b>{{ component.name }}</p>
 <p><b>System: </b>{{ component.system }}</p>
@@ -10,13 +11,21 @@
     <td><b>Repairs</b></td>
     <td><b>Median EDP</b>
     </td><td><b>Dispersion</b>
-  </td></tr>
+    </td><td><b>Image</b>
+    </td></tr>
 {% for f in fragility %}
     <tr><td>DS{{ f.state }}</td>
       <td>{{ f.description }}</td>
       <td>{{ f.repairs }}</td>
       <td>{{ f.median }}</td>
-      <td>{{ f.beta }}</td></tr>
+      <td>{{ f.beta }}</td>
+      <td>{% if f.image %}
+	   <img src="{% static "slat/images/" %}{{ component.ident }}/{{ f.image }}"/>
+	{% else %}
+	   &nbsp;
+	{% endif %}
+	</td>
+    </tr>
 {% endfor %}
 </table>
 <br/>

@@ -465,8 +465,8 @@ class FloorCompGroupForm(Form):
 def ListOfComponentCategories():
     demands = [[r"", "All"], ["^[0-9]", "SLAT"], ["^[A-Z]", "PACT"]]
     for d in PACT_CatsTab.objects.all():
-        if len(ComponentsTab.objects.filter(ident__regex=d.ident)) > 0:
-               demands.append((d.ident, mark_safe(len(d.ident) * "&nbsp;" + str(d))))
+        #if len(ComponentsTab.objects.filter(ident__regex=d.ident)) > 0:
+        demands.append((d.ident, mark_safe(len(d.ident) * "&nbsp;" + str(d))))
     return demands
     
 
