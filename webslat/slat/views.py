@@ -19,12 +19,19 @@ from dal import autocomplete
 from  .models import *
 from .component_models import *
 from slat.constants import *
+from django.contrib.auth.decorators import login_required
 
 def index(request):
+    if request.user.is_authenticated:
+        user = "User is authenticated"
+    else:
+        user = "User is NOT authenticated"
+        
     project_list = Project.objects.all()
-    context = { 'project_list': project_list }
+    context = { 'project_list': project_list, 'user': user }
     return render(request, 'slat/index.html', context)
 
+@login_required
 def project(request, project_id=None):
     chart = None
     if request.method == 'POST':

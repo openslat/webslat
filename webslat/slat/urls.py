@@ -1,10 +1,10 @@
-from django.conf.urls import url
+from django.conf.urls import include, url
 
 from . import views
 from . import component_views
 
 app_name = 'slat'
-urlpatterns = [
+urlpatterns = [    
     url(r'^$', views.index, name='index'),
     url(r'^project/(?P<project_id>[0-9]+)$', views.project, name='project'),
     url(r'^project$', views.project, name='project'),
