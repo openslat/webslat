@@ -15,6 +15,7 @@ from graphos.sources.model import SimpleDataSource
 from graphos.sources.model import ModelDataSource
 from graphos.renderers.gchart import LineChart, AreaChart
 from dal import autocomplete
+from django.template import RequestContext
 
 from  .models import *
 from .component_models import *
@@ -1217,3 +1218,7 @@ def ComponentDescription(request, component_key):
                      'fragility': FragilityTab.objects.filter(component = component).order_by('state'),
                      'costs': CostTab.objects.filter(component = component).order_by('state')})
     return(result)
+
+def register(request):
+    return render(request, 'registration/register.html')
+    

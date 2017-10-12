@@ -1,5 +1,18 @@
 body {
-    background: white;
+  background: #9A0000; /* For browsers that do not support gradients */
+  background: -webkit-linear-gradient(left, #9A0000, #BE0000, #9A0000); /* For Safari 5.1 to 6.0 */
+  background: -o-linear-gradient(right, #9A0000, #BE0000, #9A0000); /* For Opera 11.1 to 12.0 */
+  background: -moz-linear-gradient(right, #9A0000, #BE0000, #9A0000); /* For Firefox 3.6 to 15 */
+  background: linear-gradient(to right, #9A0000, #BE0000, #9A0000); /* Standard syntax */
+}
+
+p.branding {
+  color: green;
+  background: #9A0000; /* For browsers that do not support gradients */
+  background: -webkit-linear-gradient(left, #9A0000, #BE0000, #9A0000); /* For Safari 5.1 to 6.0 */
+  background: -o-linear-gradient(right, #9A0000, #BE0000, #9A0000); /* For Opera 11.1 to 12.0 */
+  background: -moz-linear-gradient(right, #9A0000, #BE0000, #9A0000); /* For Firefox 3.6 to 15 */
+  background: linear-gradient(to right, #9A0000, #BE0000, #9A0000); /* Standard syntax */
 }
 
 table {
@@ -21,7 +34,7 @@ label {
 input[type="submit"] {
   vertical-align: middle;
   display: block;
-  margin-top: 10px;
+  margin-top: 20px;
 }
 
 input[type="number"] {

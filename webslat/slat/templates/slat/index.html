@@ -1,4 +1,7 @@
-<B>{{ user }}</B>
+{% extends "base_site.html" %}
+{% block title %}WebSLAT Project List}}{% endblock %}
+
+{% block content %}
 {% if project_list %}
     <p>Projects:</p>
     <ul>
@@ -13,3 +16,4 @@
 <form action="{% url 'slat:project' %}" method="get">
 {% csrf_token %}
 <input type="submit" value="New Project" />
+{% endblock %}
