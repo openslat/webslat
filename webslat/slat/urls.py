@@ -5,8 +5,11 @@ from . import component_views
 
 app_name = 'slat'
 urlpatterns = [    
+    url(r'^accounts/register/$',
+        views.SLATRegistrationView.as_view(),
+        name='registration_register'),
+    url(r'^accounts/', include('registration.backends.simple.urls')),
     url(r'^$', views.index, name='index'),
-    url(r'^register$', views.register, name='register'), 
     url(r'^project/(?P<project_id>[0-9]+)$', views.project, name='project'),
     url(r'^project$', views.project, name='project'),
     url(r'^components$', component_views.components, name='components'),

@@ -241,7 +241,8 @@ served via Apache.
 		   scipy \
 		   django \
 		   django-graphos \
-		   django-autocomplete-light
+		   django-autocomplete-light \
+		   django-registration
 	       deactivate
       " | ssh -i ~/.ssh/vm -p 3022 \
 	      webslat-user@127.0.0.1 2>&1 | tail -10

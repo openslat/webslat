@@ -21,6 +21,7 @@ from  .models import *
 from .component_models import *
 from slat.constants import *
 from django.contrib.auth.decorators import login_required
+from registration.backends.simple.views import RegistrationView
 
 def index(request):
     if request.user.is_authenticated:
@@ -1222,3 +1223,6 @@ def ComponentDescription(request, component_key):
 def register(request):
     return render(request, 'registration/register.html')
     
+class SLATRegistrationView(RegistrationView):
+    def get_success_url(self, activateduser):
+        return(reverse('slat:index'))

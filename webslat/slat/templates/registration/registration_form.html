@@ -1,0 +1,10 @@
+{% extends "base_site.html" %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/login.css' %}" />
+
+<form action="" method="post">
+  {% csrf_token %}
+  {{ form }}
+  <input type="submit" name="submit" value="submit" />
+</form>
+{% endblock %}
