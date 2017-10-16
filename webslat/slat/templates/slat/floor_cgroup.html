@@ -1,11 +1,22 @@
-{% load static %}
+{% extends "base_site.html" %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
+    <script src="{% static "js/jquery-3.2.1.min.js" %}"></script>
+    <script src="{% static "js/slat-utils.js" %}"></script>
+    {{ form.media }}
+{% endblock %}
 
-<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}" />
-<script src="{% static "js/jquery-3.2.1.min.js" %}"></script>
-<script src="{% static "js/slat-utils.js" %}"></script>
-
-
+{% block bodyclass %}{{ block.super }} slat {% endblock %}
+{% block title %}WebSLAT: {{ title }}{% endblock %}
+{% block content_title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="project_title">
 <p><b>Project: </b>{{ project.title_text }}</p>
+</div>
+
+
+
 <p><b>Floor #{{ floor_num }}</b></p>
 <p><b>Component Group </b></p>
 {% if demand_form %} 
@@ -31,7 +42,7 @@
 <hr/>
 
 <div id="like_count"></div> 
-
+{% endblock %}
 {% block footer %}
 {{ demand_form.media }}
 {% endblock %}

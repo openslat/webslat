@@ -23,6 +23,7 @@ from slat.constants import *
 from django.contrib.auth.decorators import login_required
 from registration.backends.simple.views import RegistrationView
 
+@login_required
 def index(request):
     if request.user.is_authenticated:
         user = "User is authenticated"

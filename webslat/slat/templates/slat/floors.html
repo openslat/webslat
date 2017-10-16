@@ -1,4 +1,17 @@
+{% extends "base_site.html" %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
+{{ form.media }}
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} slat {% endblock %}
+{% block title %}WebSLAT: {{ title }}{% endblock %}
+{% block content_title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="project_title">
 <p><b>Project: </b>{{ project.title_text }}</p>
+</div>
+
 <p><b>Demands by Floor</b></p>
 <table cellpadding='3'>
 {% for f in floors %}
@@ -17,3 +30,4 @@
 <a href="{% url 'slat:project' project.id %}">Return to Project</a><br />
 <a href="{% url 'slat:index' %}">Return to Project List</a>
 
+{% endblock %}

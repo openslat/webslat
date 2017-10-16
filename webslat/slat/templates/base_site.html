@@ -4,10 +4,15 @@
 
 {% block title %}{{ title }} | {{ site_title|default:_('WebSLAT Admin') }}{% endblock %}
 
-{% block branding %}
-<h1 id="site-name">
-<img src="{% static 'slat/qclogo-medium.png' %}"/>
-<a href="{% url 'admin:index' %}">{{ site_header|default:_('WebSLAT') }}</a></h1>
+{% block branding-right %}
+<a href="http://www.quakecentre.co.nz/"><img height="46" width="233" src="{% static 'slat/qclogo-small.png' %}"/></a>
+{% endblock %}
+{% block branding-left %}
+<a href="/"><img height="46" width="233" src="{% static 'slat/openslat-logo.png' %}"/></a>
 {% endblock %}
 
-{% block nav-global %}{% endblock %}
+{% block nav-global %}<navigation>{% endblock %}
+
+
+{% block footer %}
+{% endblock %}

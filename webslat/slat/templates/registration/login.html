@@ -1,21 +1,23 @@
-{% extends "base_site.html" %}
+o{% extends "base_site.html" %}
 {% load i18n static %}
-{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/login.css' %}" />
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}" />
 
 {{ form.media }}
 {% endblock %}
 
-{% block bodyclass %}{{ block.super }} login{% endblock %}
+{% block bodyclass %}{{ block.super }}login{% endblock %}
 
 {% block usertools %}{% endblock %}
 
 {% block nav-global %}{% endblock %}
 
-{% block content_title %}{% endblock %}
-
 {% block breadcrumbs %}{% endblock %}
 
+{% block title %}WebSLAT Login{% endblock %}
+{% block content_title %}WebSLAT Login{% endblock %}
+
 {% block content %}
+<div>
 Log in to WebSLAT, or 
 <a href="{% url 'slat:registration_register'%}">register for the site</a>.
 {% if form.errors and not form.non_field_errors %}
@@ -63,6 +65,7 @@ Log in to WebSLAT, or
   </div>
 </form>
 
+</div>
 </div>
 </div>
 {% endblock %}

@@ -1,18 +1,32 @@
 body {
-  background: #9A0000; /* For browsers that do not support gradients */
-  background: -webkit-linear-gradient(left, #9A0000, #BE0000, #9A0000); /* For Safari 5.1 to 6.0 */
-  background: -o-linear-gradient(right, #9A0000, #BE0000, #9A0000); /* For Opera 11.1 to 12.0 */
-  background: -moz-linear-gradient(right, #9A0000, #BE0000, #9A0000); /* For Firefox 3.6 to 15 */
-  background: linear-gradient(to right, #9A0000, #BE0000, #9A0000); /* Standard syntax */
+  background: #C80000; /* For browsers that do not support gradients */
+  background: -webkit-linear-gradient(left, #C80000, #F70000, #C80000);  /* For Safari 5.1 to 6.0 */
+  background: -o-linear-gradient(right, #C80000, #F70000, #C80000);  /* For Opera 11.1 to 12.0 */
+  background: -moz-linear-gradient(right, #C80000, #F70000, #C80000);  /* For Firefox 3.6 to 15 */
+  background: linear-gradient(to right, #C80000, #F70000, #C80000);  /* Standard syntax */
+ }
+
+div.header_strip {
+  color: white;
+  background: #C80000; /* For browsers that do not support gradients */
+  background: -webkit-linear-gradient(left, #C80000, #F70000, #C80000); /* For Safari 5.1 to 6.0 */
+  background: -o-linear-gradient(right, #C80000, #F70000, #C80000); /* For Opera 11.1 to 12.0 */
+  background: -moz-linear-gradient(right, #C80000, #F70000, #C80000); /* For Firefox 3.6 to 15 */
+  background: linear-gradient(to right, #C80000, #F70000, #C80000); /* Standard syntax */
 }
 
-p.branding {
-  color: green;
-  background: #9A0000; /* For browsers that do not support gradients */
-  background: -webkit-linear-gradient(left, #9A0000, #BE0000, #9A0000); /* For Safari 5.1 to 6.0 */
-  background: -o-linear-gradient(right, #9A0000, #BE0000, #9A0000); /* For Opera 11.1 to 12.0 */
-  background: -moz-linear-gradient(right, #9A0000, #BE0000, #9A0000); /* For Firefox 3.6 to 15 */
-  background: linear-gradient(to right, #9A0000, #BE0000, #9A0000); /* Standard syntax */
+table.loose{
+    display: table;
+    background: white;
+    border-collapse: collapse;
+    border-spacing: 2px;
+    border-color: black;
+    padding: 1em;
+}
+th.loose, td.loose {
+   padding-right: 1em;
+   padding-left: 1em;
+   padding-bottom: 1em;
 }
 
 table {
@@ -26,18 +40,184 @@ th, td {
     padding-right: 15px;
     padding-left: 15px;
 }
+
+th {
+   background: lightgray;
+}
+
 label {
    color: blue;
    vertical-align:top;
 }
 
+input.normal[type="submit"] {
+  vertical-align: middle;
+  display: block;
+  font-size: medium;
+  margin-top: 20px;
+  padding: 5px;
+}
+
+input[type="text"] {
+   /*font-size: x-large;*/
+   background: white;
+}
+
+input[type="password"] {
+   font-size: x-large;
+}
+
 input[type="submit"] {
   vertical-align: middle;
   display: block;
-  margin-top: 20px;
+  font-size: x-large;
+  margin-top: 5px;
+  padding: 10px;
+  background: lightgray;
+   border: 1px solid black;
+}
+
+input.login[type="submit"] {
+  vertical-align: middle;
+  display: block;
+  font-size: x-large;
+  margin-top: 5px;
+  padding: 10px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 input[type="number"] {
   vertical-align: middle;
   display: block;
+}
+
+.flex-container {
+    align: left;
+    display: -webkit-flex;
+    display: flex;
+    height: 60px;
+   color: black;
+   background: white;
+   position: relative;
+}
+
+.flex-item {
+   margin: 5px;
+   position: absolute;
+   position-top:50%; 
+   height:46px;
+   margin-top:7px;
+}
+
+.flex-item2 {
+   position: absolute;
+   position-top:50%;
+   height:40px;
+   /*margin-left:250px;*/
+   margin-top: -30px;
+   font-size: x-large;
+   text-align: center;
+   width:100%;
+}
+
+.flex-item3 {
+   position: absolute;
+   position-top:50%;
+   height:44px;
+   width:202px;
+   right:40px;
+   margin-top: 7px;
+}
+
+.intro {
+   background: white;
+   text-align: center;
+   font-size: xx-large;
+}
+
+.slat #content {
+   background: white;
+   margin-left: auto;
+   margin-right: auto;
+   margin-top: 50px;
+   padding: 1em;
+   width: 90%;
+   text-align: left;
+   font-size: x-large;
+   border: 5px solid black;
+   margin-top: 50px;
+   padding: 1em;
+   text-align: left;
+   font-size: large;
+   border: 5px solid black;
+}
+
+.project_title {
+   font-size: x-large
+   color: blue;
+   padding-bottom: 1em;
+   }
+
+.login #content, .welcome #content {
+   background: white;
+   margin-left: auto;
+   margin-right: auto;
+   margin-top: 50px;
+   padding: 1em;
+   text-align: left;
+   font-size: x-large;
+   border: 5px solid black;
+   /*padding: 20px 20px 0;*/
+   width: 50%;
+   text-align: center;
+}
+
+.login #content-main {
+   width: 100%;
+   background: white;
+}
+
+
+.login .form-row {
+    padding: 4px 0;
+    float: left;
+    width: 100%;
+    border-bottom: none;
+}
+
+.login .form-row label {
+    padding-right: 0.5em;
+    line-height: 2em;
+    font-size: 1em;
+    clear: both;
+    color: #333;
+}
+
+.login .form-row #id_username, .login .form-row #id_password {
+    clear: both;
+    padding: 8px;
+    width: 80%;
+    font-size: x-large;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.login span.help {
+    font-size: 10px;
+    display: block;
+}
+
+.login .submit-row {
+    clear: both;
+    padding: 0 5px 5px 0;
+    margin: 10px;
+    border: none;
+    background: none;
+    text-align: center;
+}
+
+.login .password-reset-link {
+    text-align: center;
 }
