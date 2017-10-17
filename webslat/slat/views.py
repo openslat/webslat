@@ -79,6 +79,12 @@ def project(request, project_id=None):
             project = Project.objects.get(pk=project_id)
             form = ProjectForm(instance=project, initial=model_to_dict(project))
             form.fields['floors'].widget = HiddenInput()
+            print(form.fields['floors'].label)
+            form.fields['floors'].label = "Number of Floors"
+            print(form.fields['floors'].widget.attrs)
+            print(dir(form.fields['floors'].widget.attrs))
+            form.fields['floors'].widget.attrs['title'] = 'Enter the number of floors';
+            
             if project.IM and len(project.model().ComponentsByEDP()) > 0:
                 building = project.model()
                 im_func = project.IM.model()

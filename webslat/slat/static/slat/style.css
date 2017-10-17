@@ -51,11 +51,31 @@ label {
 }
 
 input.normal[type="submit"] {
-  vertical-align: middle;
-  display: block;
-  font-size: medium;
-  margin-top: 20px;
-  padding: 5px;
+  background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #ededed), color-stop(1, #c4c0c4) );
+  background:-moz-linear-gradient( center top, #ededed 5%, #c4cd0c4 100% );
+  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#ededed', endColorstr='#c4c0c4');
+  background-color:#ededed;
+  border:1px solid #000000;
+  color: #000000;
+  font-family:Arial;
+  font-size:x-large;
+  font-style:normal;
+  width:auto;
+  padding-left: 0.5em;;
+  padding-right: 0.5em;
+  text-decoration:none;
+  text-align:center;
+}
+
+input.normal[type="submit"]:hover {
+   background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #c4c0c4), color-stop(1, #ededed) );
+   background:-moz-linear-gradient( center top, #c4c0c4 5%, #ededed 100% );
+   filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#c4c0c4', endColorstr='#ededed');
+   background-color:#c4c0c4;
+}
+input.normal[type="submit"]:active {
+   position:relative;
+   top:1px;
 }
 
 input[type="text"] {
@@ -220,4 +240,34 @@ input[type="number"] {
 
 .login .password-reset-link {
     text-align: center;
+}
+
+.link_button {
+   background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #ededed), color-stop(1, #c4c0c4) );
+   background:-moz-linear-gradient( center top, #ededed 5%, #c4cd0c4 100% );
+   filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#ededed', endColorstr='#c4c0c4');
+   background-color:#ededed;
+   border:1px solid #000000;
+   display:inline-block;
+   color: #000000;
+   font-family:Arial;
+   font-size:x-large;
+   font-style:normal;
+   /*height:2em;*/
+   line-height:2em;
+   width:auto;
+   padding-left: 0.5em;;
+   padding-right: 0.5em;
+   text-decoration:none;
+   text-align:center;
+}
+
+.link_button:hover {
+	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #c4c0c4), color-stop(1, #ededed) );
+	background:-moz-linear-gradient( center top, #c4c0c4 5%, #ededed 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#c4c0c4', endColorstr='#ededed');
+	background-color:#c4c0c4;
+}.link_button:active {
+	position:relative;
+	top:1px;
 }

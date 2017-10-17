@@ -3,7 +3,7 @@ import sys
 import time
 from scipy.optimize import fsolve, newton
 from django.db import models
-from django.forms import  ModelForm, BaseModelFormSet, Textarea, FloatField, FileField, Form, ModelChoiceField, IntegerField, HiddenInput, CharField
+from django.forms import  ModelForm, BaseModelFormSet, NumberInput, Textarea, TextInput, FloatField, FileField, Form, ModelChoiceField, IntegerField, HiddenInput, CharField
 from django.forms import Form, ChoiceField, Select
 from slat.constants import *
 from .nzs import *
@@ -395,8 +395,19 @@ class ProjectForm(ModelForm):
         model = Project
         fields = '__all__'
         widgets = {
-            'description_text': Textarea(attrs={'cols': 50, 'rows': 4}),
+            'description_text': Textarea(attrs={'cols': 50, 'rows': 4, 'title': "Enter the description"}),
             'IM': HiddenInput,
+            'title_text': TextInput(attrs={'title': 'Enter the title text here.'}),
+            'rarity': NumberInput(attrs={'title': "The rate-of-exceedence of the rarest event we are interested in displaying."}),
+            'floors': NumberInput(attrs={'title': "The number of floors in the structure."}),
+            'mean_im_collapse': NumberInput(attrs={'title': 'The mean IM value at which collapse occurs.'}),
+            'sd_ln_im_collapse': NumberInput(attrs={'title': 'The standard deviation of log(IM) at which collapse occurs.'}),
+            'mean_cost_collapse': NumberInput(attrs={'title': 'The mean cost of collapse.'}),
+            'sd_ln_cost_collapse': NumberInput(attrs={'title': 'The standard deviation of log(cost) of collapse.'}),
+            'mean_im_demolition': NumberInput(attrs={'title': 'The mean IM value at which demolition occurs.'}),
+            'sd_ln_im_demolition': NumberInput(attrs={'title': 'The standard deviation of log(IM) at which demolition occurs.'}),
+            'mean_cost_demolition': NumberInput(attrs={'title': 'The mean cost of demolition.'}),
+            'sd_ln_cost_demolition': NumberInput(attrs={'title': 'The standard deviation of log(cost) of demolition.'}),
             }
         
 class HazardForm(ModelForm):

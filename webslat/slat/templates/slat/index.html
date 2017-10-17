@@ -19,7 +19,5 @@
     <p>No projects are available.</p>
 {% endif %}
 
-<form action="{% url 'slat:project' %}" method="get">
-{% csrf_token %}
-<input type="submit" value="New Project" />
+<a href="{% url 'slat:project' %}" class="link_button">New Project</a>
 {% endblock %}
