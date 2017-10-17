@@ -445,8 +445,8 @@ class EDP_PowerCurve_Form(ModelForm):
         fields = '__all__'
         
 class Input_File_Form(Form):
-    def __init__(self, initial=None):
-        super(Input_File_Form, self).__init__(initial)
+    def __init__(self, post=None, files=None):
+        super(Input_File_Form, self).__init__(post, files)
         self.fields['path'].widget.attrs['class'] = 'normal'
         self.fields['path'].widget.attrs['title'] = 'Choose the data file to read.'
         self.fields['flavour'].widget.attrs['class'] = 'normal'
