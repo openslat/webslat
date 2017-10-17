@@ -72,5 +72,7 @@
 {% endif %}
 
 <br/>    
+{% if form.instance.id %}
 <a href="{% url 'slat:index' %}">Return to Project List</a>
+{% endif %}
 {% endblock %}
