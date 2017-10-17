@@ -1,6 +1,15 @@
-<p>Import IM data from a file</P>
-
-<p><b>Project:</b> {{ title }}</p>
+{% extends "base_site.html" %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
+{{ form.media }}
+{% endblock %}
+{% block bodyclass %}{{ block.super }} slat {% endblock %}
+{% block title %}WebSLAT: {{ title }} Hazard{% endblock %}
+{% block content_title %}{{ title }}: Hazard{% endblock %}
+{% block content %}
+<div class="project_title">
+<b>Project:</b> {{ title }}
+</div>
 
 <form enctype="multipart/form-data" action="{% url 'slat:im_file' project_id %}" method="post">
     {% csrf_token %}
@@ -14,7 +23,8 @@
       {% endfor %}
       </table>
     {% endif %}
-    <input type="submit" value="Submit" />
+    <input type="submit" value="Submit" class="normal"/>
 </form>
 <a href="{% url 'slat:project' project_id %}">Return to Project</a><br />
 <a href="{% url 'slat:index' %}">Return to Project List</a>
+{% endblock %}

@@ -46,11 +46,17 @@ th {
 }
 
 label {
+   font-size: large;
    color: blue;
    vertical-align:top;
 }
 
-input.normal[type="submit"] {
+select {
+   font-size: large;
+   margin-left: 30px;
+}
+
+input.normal[type="submit"], input.normal[type="file"] {
   background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #ededed), color-stop(1, #c4c0c4) );
   background:-moz-linear-gradient( center top, #ededed 5%, #c4cd0c4 100% );
   filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#ededed', endColorstr='#c4c0c4');
@@ -83,7 +89,11 @@ input[type="text"] {
    background: white;
 }
 
-input[type="password"] {
+
+input[type="password"], 
+input#id_username[type="text"], 
+input[type="email"]  
+{
    font-size: x-large;
 }
 
@@ -179,7 +189,7 @@ input[type="number"] {
    padding-bottom: 1em;
    }
 
-.login #content, .welcome #content {
+.registration #content {
    background: white;
    margin-left: auto;
    margin-right: auto;
@@ -188,7 +198,17 @@ input[type="number"] {
    text-align: left;
    font-size: x-large;
    border: 5px solid black;
-   /*padding: 20px 20px 0;*/
+   width: 50%;
+}
+
+.login #content, .welcome #content {
+   background: white;
+   margin-left: auto;
+   margin-right: auto;
+   margin-top: 50px;
+   padding: 1em;
+   font-size: x-large;
+   border: 5px solid black;
    width: 50%;
    text-align: center;
 }

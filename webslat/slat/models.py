@@ -3,7 +3,7 @@ import sys
 import time
 from scipy.optimize import fsolve, newton
 from django.db import models
-from django.forms import  ModelForm, BaseModelFormSet, NumberInput, Textarea, TextInput, FloatField, FileField, Form, ModelChoiceField, IntegerField, HiddenInput, CharField
+from django.forms import  ModelForm, BaseModelFormSet, NumberInput, Textarea, TextInput, FloatField, FileInput, FileField, Form, ModelChoiceField, IntegerField, HiddenInput, CharField
 from django.forms import Form, ChoiceField, Select
 from slat.constants import *
 from .nzs import *
@@ -445,6 +445,13 @@ class EDP_PowerCurve_Form(ModelForm):
         fields = '__all__'
         
 class Input_File_Form(Form):
+    def __init__(self, initial=None):
+        super(Input_File_Form, self).__init__(initial)
+        self.fields['path'].widget.attrs['class'] = 'normal'
+        self.fields['path'].widget.attrs['title'] = 'Choose the data file to read.'
+        self.fields['flavour'].widget.attrs['class'] = 'normal'
+        self.fields['flavour'].widget.attrs['title'] = 'Select the file format.'
+
     path = FileField()
     flavour = ModelChoiceField(queryset=Input_File_Formats.objects, empty_label=None)
 

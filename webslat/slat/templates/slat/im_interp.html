@@ -32,10 +32,9 @@
       </table>
     </details>
 </form>
-<form action="{% url 'slat:im_interp_edit' project_id %}" method="get">
-    {% csrf_token %}
-    <input type="submit" value="Edit" />
-</form><b/r>
+<br/>
+<a href="{% url 'slat:im_interp_edit' project_id %}" class="link_button">Edit Points</a>
+<br/><br/>
 <a href="{% url 'slat:hazard_choose' project_id %}">Change Hazard Type</a><br/>
 <a href="{% url 'slat:project' project_id %}">Return to Project</a><br /><br/>
 <a href="{% url 'slat:index' %}">Return to Project List</a>

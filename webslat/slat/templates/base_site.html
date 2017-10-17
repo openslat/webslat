@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
-<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}" />
+<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{% now "U" %}" />
 
 {% block title %}{{ title }} | {{ site_title|default:_('WebSLAT Admin') }}{% endblock %}
 

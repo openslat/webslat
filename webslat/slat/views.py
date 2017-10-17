@@ -493,6 +493,9 @@ def im_file(request, project_id):
             interp_form = Interpolation_Method_Form(initial={'method': hazard.interp_method.id})
         else:
             interp_form = Interpolation_Method_Form()
+        form.fields['path'].widget.attrs['class'] = 'normal'
+        form.fields['path'].widget.attrs['title'] = 'Choose the input file'
+        
         return render(request, 'slat/im_file.html', {'form': form, 
                                                      'interp_form': interp_form,
                                                      'project_id': project_id,
