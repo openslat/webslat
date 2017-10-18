@@ -1,9 +1,20 @@
+{% extends "base_site.html" %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
+{{ form.media }}
+
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 <script type="text/javascript">
     google.load("visualization", "1", {packages:["corechart"]});
 </script>
-<p><b>Project:</b> {{ project.title_text }}</p>
-<p><b>Demand: </b>Floor #{{ edp.floor }}
+{% endblock %}
+{% block bodyclass %}{{ block.super }} slat {% endblock %}
+{% block title %}WebSLAT Project {{ form.instance.title_text }}{% endblock %}
+{% block content_title %}WebSLAT Project {{ form.instance.title_text }}{% endblock %}
+{% block content %}
+<div class="project_title">
+<b>Project:</b>{{ project.title_text }}<br/>
+<b>Demand: </b>Floor #{{ edp.floor }}
     {% if edp.type == 'A' %}
         Acceleration
     {% elif edp.type == 'D' %}
@@ -11,26 +22,25 @@
     {% else %}
         <i>Unknown Demand</i>
     {% endif %}
-</p>
-
-<table><tr><td valign="top">
-
+</div>
+<table><tr><td>
 <table border="1">
-  <tr><td><b>Attribute</b></td><td><b>a</b></td><td><b>b</b></td></tr>
+  <tr><th><b>Attribute</b></th><th><b>a</b></th><th><b>b</b></th></tr>
   <tr><td>Median(x)</td><td>{{ edp.powercurve.median_x_a }}</td><td> {{ edp.powercurve.median_x_b }}</td></tr>
   <tr><td>Sd_Ln(x)</td><td>{{ edp.powercurve.sd_ln_x_a }}</td><td> {{ edp.powercurve.sd_ln_x_b }}</td></tr>
 </table>
 <form action="{% url 'slat:edp_power_edit' project.id edp.id  %}" method="get">
     {% csrf_token %}
-    <input type="submit" name='edit' value="Edit" />
+    <input type="submit" name='edit' value="Edit" class="normal"/>
 </form>
+<br/>
 
 <a href="{% url 'slat:edp_choose' project.id edp.id %}">Change Demand Type</a><br/>
 <br/>
 <a href="{% url 'slat:floors' project.id %}">Return to Floors</a><br />
 <a href="{% url 'slat:project' project.id %}">Return to Project</a><br />
 <a href="{% url 'slat:index' %}">Return to Project List</a>
-
+</td>
 </td><td>
 {% if charts %} 
     {% for chart in charts %}
@@ -38,3 +48,4 @@
     {% endfor %}
 {% endif %}
 </td></tr></table>
+{% endblock %}

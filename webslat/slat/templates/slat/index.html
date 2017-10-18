@@ -1,3 +1,13 @@
+{% extends "base_site.html" %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
+{{ form.media }}
+{% endblock %}
+{% block bodyclass %}{{ block.super }} slat {% endblock %}
+{% block title %}WebSLAT Project List{% endblock %}
+{% block content_title %}Your WebsSLAT projects{% endblock %}
+
+{% block content %}
 {% if project_list %}
     <p>Projects:</p>
     <ul>
@@ -9,6 +19,5 @@
     <p>No projects are available.</p>
 {% endif %}
 
-<form action="{% url 'slat:project' %}" method="get">
-{% csrf_token %}
-<input type="submit" value="New Project" />
+<a href="{% url 'slat:project' %}" class="link_button">New Project</a>
+{% endblock %}

@@ -1,37 +1,46 @@
-{% load static %}
+{% extends "base_site.html" %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
+    <script src="{% static "js/jquery-3.2.1.min.js" %}"></script>
+    <script src="{% static "js/slat-utils.js" %}"></script>
+    {{ form.media }}
+{% endblock %}
 
-<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}" />
-<script src="{% static "js/jquery-3.2.1.min.js" %}"></script>
-<script src="{% static "js/slat-utils.js" %}"></script>
-
-
-<p><b>Project: </b>{{ project.title_text }}</p>
-<p><b>Floor #{{ floor_num }}</b></p>
-<p><b>Component Group </b></p>
+{% block bodyclass %}{{ block.super }} slat {% endblock %}
+{% block title %}WebSLAT: {{ project.title_text}}: Component Group{% endblock %}
+{% block content_title %}{{ project.title_text}}: Component Group{% endblock %}
+{% block content %}
+<div class="project_title">
+<b>Project: </b>{{ project.title_text }}<br/>
+<b>Floor #{{ floor_num }}</b>
+<b>Component Group </b>
+</div>
 {% if demand_form %} 
     <form action="" method="post">
         {% csrf_token %}
-        {{ demand_form.as_p }}
-       <input type="submit" name="submit" value="submit" />
+    <table border="1">
+      <tr><td><label for="id_quantity" class="normal">{{ demand_form.quantity.label }}</td><td>{{ demand_form.quantity }}</td></tr>
+      <tr><td><label for="id_category" class="normal">{{ demand_form.category.label }}</td><td>{{ demand_form.category }}</td></tr>
+      <tr><td><label for="id_component" class="normal">{{ demand_form.component.label }}</td><td>{{ demand_form.component }}</td></tr>
+      </table>
+    <br />
+    <table><tr><td style="vertical-align:middle">
+    <input type="submit" value="Submit" class="normal"/>
+    </td><td style="vertical-align:bottom">
+       <a href= "{% url 'slat:floor_cgroups' project.id  floor_num %}" class="link_button">Cancel</a>
+    </td></tr></table>
     </form>
-      {% if cg_id %}
-           <form action="{% url 'slat:floor_compgroup' project.id  floor_num cg_id %}" method="post">
-      {% else %}
-           <form action="{% url 'slat:floor_compgroup' project.id floor_num  %}" method="post">
-      {% endif %}
-      {% csrf_token %}
-      <input type="submit" name="cancel" value="Cancel" />
-      </form>
-	   {% endif %}
-<a href="{% url 'slat:floors' project.id %}">Return to Floors</a>
-&nbsp;	&nbsp;	&nbsp;	&nbsp;	
+    <br/>
+{% endif %}
+	   
 <a href="{% url 'slat:project' project.id %}">Return to Project</a>
-&nbsp;	&nbsp;	&nbsp;	&nbsp;	
+<br/>
 <a href="{% url 'slat:index' %}">Return to Project List</a>
 <hr/>
 
 <div id="like_count"></div> 
-
+{% endblock %}
 {% block footer %}
 {{ demand_form.media }}
 {% endblock %}

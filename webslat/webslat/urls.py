@@ -20,6 +20,7 @@ from django.views.generic import TemplateView
 from . import views
 
 urlpatterns = [
+    url('^', include('django.contrib.auth.urls')),
     url(r'^$', TemplateView.as_view(template_name="slat/welcome.html"), name='welcome'),
     url(r'^slat/', include('slat.urls')),
     url(r'^admin/', admin.site.urls),

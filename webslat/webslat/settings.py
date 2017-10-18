@@ -128,3 +128,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(os.path.dirname(__file__), '../static')
+LOGIN_URL='/login'
+LOGIN_REDIRECT_URL= '/slat'
+LOGOUT_REDIRECT_URL='/login'
+

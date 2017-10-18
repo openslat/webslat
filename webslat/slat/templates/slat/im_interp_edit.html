@@ -1,29 +1,36 @@
-<p>User-defined Seismic Hazard</P>
-
-<p><b>Project:</b> {{ title }}</p>
-<form action="{% url 'slat:im_file' project_id %}" method="get">
-    {% csrf_token %}
-    <input type="submit" value="Import from a file" />
-</form>
+{% extends "base_site.html" %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
+{{ form.media }}
+{% endblock %}
+{% block bodyclass %}{{ block.super }} slat {% endblock %}
+{% block title %}WebSLAT: {{ title }} Hazard{% endblock %}
+{% block content_title %}{{ title }}: Hazard{% endblock %}
+{% block content %}
+<div class="project_title">
+<b>Project: </b>{{ title }}
+</div>
+<a href="{% url 'slat:im_file' project_id %}" class="link_button">Import new points from a file</a>
 <hr/>
 <form action="{% url 'slat:im_interp_edit' project_id %}" method="post">
     <p>Submit the form to confirm changes and add more empty cells.</p>
-    <input type="submit" value="Submit Changes
-and Continue Editing" />
-    <input type="submit" name="done" value="Submit Changes and
-return to Project" />
-    <input type="submit" name="cancel" value="Cancel
-&nbsp;" />
-    <br/>
     {% csrf_token %}
     {{ form }}
-    <br />
+    <br /><br />
     {{ points.management_form }}
-    <table border='1'><tr><td>IM</td><td>Rate</td><td>Delete?</td></tr>
+    <table border='1'><tr><th>IM</th><th>Rate</th><th>Delete?</th></tr>
     {% for point in points %}
       <tr><td>{{ point.id }}{{ point.im_value }}</td>
 	  <td>{{ point.rate }}</td>
           <td>{{ point.DELETE }}</td></tr>
     {% endfor %}
-      </table>
+    </table>
+    <table><tr><td style="vertical-align:middle">
+    <input type="submit" value="Submit Changes and Continue Editing" class="normal"/>
+    </td><td style="vertical-align:middle">
+    <input type="submit" name="done" value="Submit Changes and Return to Project" class="normal"/>
+    </td><td style="vertical-align:bottom">
+    <a href="{% url 'slat:project' project_id %}"  class="link_button">Cancel</a>
+    </td></tr></table>
 </form>
+{% endblock %}

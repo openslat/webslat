@@ -1,10 +1,17 @@
+{% extends "base_site.html" %}
 {% load static %}
-<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}" />
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{% now "U" %}" />
+{% endblock %}
 
-<img src="{% static "slat/qclogo.jpg" %}" alt="Quake Centre Logo"/><br/>
-<center>
-<p>Welcome to WebSLAT</p>
- <a href="{% url 'slat:index' %}">Enter</a>
-</center>
+{% block bodyclass %}{{ block.super }}welcome{% endblock %}
+{% block title %}Welcome to WebSLAT{% endblock %}
+{% block content_title %}Welcome to WebSLAT{% endblock %}
+{% block content %}
 
- 
+   WebSLAT is an on-line tool for performing seismic loss assessment, using the 
+   <a href="http://github.com/mikelygee/SLAT">OpenSLAT</a> library
+   provided by the <a href="http://www.quakecentre.co.nz/">Quake Centre</a>.
+   <p><a href="{% url 'slat:index' %}">Enter</a></p>
+
+{% endblock %}
+{% block footer %}{% endblock %}

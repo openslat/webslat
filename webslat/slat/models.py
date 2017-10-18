@@ -3,7 +3,7 @@ import sys
 import time
 from scipy.optimize import fsolve, newton
 from django.db import models
-from django.forms import  ModelForm, BaseModelFormSet, Textarea, FloatField, FileField, Form, ModelChoiceField, IntegerField, HiddenInput, CharField
+from django.forms import  ModelForm, BaseModelFormSet, NumberInput, Textarea, TextInput, FloatField, FileInput, FileField, Form, ModelChoiceField, IntegerField, HiddenInput, CharField
 from django.forms import Form, ChoiceField, Select
 from slat.constants import *
 from .nzs import *
@@ -395,11 +395,27 @@ class ProjectForm(ModelForm):
         model = Project
         fields = '__all__'
         widgets = {
-            'description_text': Textarea(attrs={'cols': 50, 'rows': 4}),
+            'description_text': Textarea(attrs={'cols': 50, 'rows': 4, 'title': "Enter the description"}),
             'IM': HiddenInput,
+            'title_text': TextInput(attrs={'title': 'Enter the title text here.'}),
+            'rarity': NumberInput(attrs={'title': "The rate-of-exceedence of the rarest event we are interested in displaying."}),
+            'floors': NumberInput(attrs={'title': "The number of floors in the structure."}),
+            'mean_im_collapse': NumberInput(attrs={'title': 'The mean IM value at which collapse occurs.'}),
+            'sd_ln_im_collapse': NumberInput(attrs={'title': 'The standard deviation of log(IM) at which collapse occurs.'}),
+            'mean_cost_collapse': NumberInput(attrs={'title': 'The mean cost of collapse.'}),
+            'sd_ln_cost_collapse': NumberInput(attrs={'title': 'The standard deviation of log(cost) of collapse.'}),
+            'mean_im_demolition': NumberInput(attrs={'title': 'The mean IM value at which demolition occurs.'}),
+            'sd_ln_im_demolition': NumberInput(attrs={'title': 'The standard deviation of log(IM) at which demolition occurs.'}),
+            'mean_cost_demolition': NumberInput(attrs={'title': 'The mean cost of demolition.'}),
+            'sd_ln_cost_demolition': NumberInput(attrs={'title': 'The standard deviation of log(cost) of demolition.'}),
             }
         
 class HazardForm(ModelForm):
+    def __init__(self, instance=None, initial=None):
+        super(HazardForm, self).__init__(instance=instance, initial=initial)
+        self.fields['flavour'].label='Hazard Definition Type'
+        self.fields['flavour'].widget.attrs['title'] ='Choose how to specify the hazard curve.'
+        
     class Meta:
         model = IM
         fields = '__all__'
@@ -410,11 +426,25 @@ class HazardForm(ModelForm):
             }
 
 class NLHForm(ModelForm):
+    def __init__(self, request=None, instance=None):
+        super(NLHForm, self).__init__(request, instance=instance)
+        self.fields['v_assy_float'].widget.attrs['class'] = 'normal'
+        self.fields['im_asy_float'].widget.attrs['class'] = 'normal'
+        self.fields['alpha_float'].widget.attrs['class'] = 'normal'
+        self.fields['v_assy_float'].widget.attrs['title'] = "v_assy"
+        self.fields['im_asy_float'].widget.attrs['title'] = 'im_asy'
+        self.fields['alpha_float'].widget.attrs['title'] = 'alpha'
+
     class Meta:
         model = NonLinearHyperbolic
         fields = '__all__'
 
 class Interpolation_Method_Form(Form):
+    def __init__(self, request=None, initial=None):
+        super(Interpolation_Method_Form, self).__init__(request, initial=initial)
+        self.fields['method'].widget.attrs['class'] = 'normal'
+        self.fields['method'].widget.attrs['title'] = 'Choose the interpolation method.'
+
     def choices():
         objects = []
         for method in Interpolation_Method.objects.all():
@@ -434,6 +464,14 @@ class EDP_PowerCurve_Form(ModelForm):
         fields = '__all__'
         
 class Input_File_Form(Form):
+    def __init__(self, post=None, files=None):
+        super(Input_File_Form, self).__init__(post, files)
+        self.fields['path'].widget.attrs['class'] = 'normal'
+        self.fields['path'].widget.attrs['title'] = 'Choose the data file to read.'
+        self.fields['flavour'].widget.attrs['class'] = 'normal'
+        self.fields['flavour'].widget.attrs['title'] = 'Select the file format.'
+        self.fields['flavour'].label = 'File Format'
+
     path = FileField()
     flavour = ModelChoiceField(queryset=Input_File_Formats.objects, empty_label=None)
 
@@ -477,6 +515,12 @@ class ComponentForm(Form):
             self.fields['component'].initial = initial['component']
         if floor_num:
             self.fields['component'].widget.forward.append(forward.Const(floor_num, 'floor'))
+        self.fields['quantity'].widget.attrs['class'] = 'normal'
+        self.fields['category'].widget.attrs['class'] = 'normal'
+        self.fields['component'].widget.attrs['class'] = 'normal'
+        self.fields['quantity'].widget.attrs['title'] = 'How many of this component are in the group?'
+        self.fields['category'].widget.attrs['title'] = 'Narrow the component search by category.'
+        self.fields['component'].widget.attrs['title'] = 'Choose the type of component.'
         
     quantity = IntegerField()
     category = ChoiceField(ListOfComponentCategories, required=False)

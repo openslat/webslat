@@ -15,16 +15,26 @@ from graphos.sources.model import SimpleDataSource
 from graphos.sources.model import ModelDataSource
 from graphos.renderers.gchart import LineChart, AreaChart
 from dal import autocomplete
+from django.template import RequestContext
 
 from  .models import *
 from .component_models import *
 from slat.constants import *
+from django.contrib.auth.decorators import login_required
+from registration.backends.simple.views import RegistrationView
 
+@login_required
 def index(request):
+    if request.user.is_authenticated:
+        user = "User is authenticated"
+    else:
+        user = "User is NOT authenticated"
+        
     project_list = Project.objects.all()
-    context = { 'project_list': project_list }
+    context = { 'project_list': project_list, 'user': user }
     return render(request, 'slat/index.html', context)
 
+@login_required
 def project(request, project_id=None):
     chart = None
     if request.method == 'POST':
@@ -69,6 +79,12 @@ def project(request, project_id=None):
             project = Project.objects.get(pk=project_id)
             form = ProjectForm(instance=project, initial=model_to_dict(project))
             form.fields['floors'].widget = HiddenInput()
+            print(form.fields['floors'].label)
+            form.fields['floors'].label = "Number of Floors"
+            print(form.fields['floors'].widget.attrs)
+            print(dir(form.fields['floors'].widget.attrs))
+            form.fields['floors'].widget.attrs['title'] = 'Enter the number of floors';
+            
             if project.IM and len(project.model().ComponentsByEDP()) > 0:
                 building = project.model()
                 im_func = project.IM.model()
@@ -107,6 +123,7 @@ def project(request, project_id=None):
     return render(request, 'slat/project.html', {'form': form, 'chart': chart})
 
 
+@login_required
 def hazard(request, project_id):
     # If the project doesn't exist, generate a 404:
     project = get_object_or_404(Project, pk=project_id)
@@ -133,6 +150,7 @@ def hazard(request, project_id):
         else:
             raise ValueError("UNKNOWN HAZARD TYPE")
         
+@login_required
 def hazard_choose(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     hazard = project.IM
@@ -198,10 +216,12 @@ def hazard_choose(request, project_id):
             form = HazardForm(instance=hazard)
         else:
             form = HazardForm(initial={'flavour': IM_TYPE_NZS})
+
         return render(request, 'slat/hazard_choose.html', {'form': form, 
                                                            'project_id': project_id,
                                                            'title': project.title_text })
 
+@login_required
 def _plot_hazard(h):
     if h.model():
         im_func = h.model()
@@ -226,6 +246,7 @@ def _plot_hazard(h):
         return chart
     
         
+@login_required
 def nlh(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     hazard = project.IM
@@ -240,6 +261,7 @@ def nlh(request, project_id):
             raise ValueError("SHOULDN'T REACH THIS")
             
 
+@login_required
 def nlh_edit(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     hazard = project.IM
@@ -278,6 +300,7 @@ def nlh_edit(request, project_id):
     return render(request, 'slat/nlh_edit.html', {'form': form, 'project_id': project_id,
                                                   'title': project.title_text})
 
+@login_required
 def im_interp(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     hazard = project.IM
@@ -341,6 +364,7 @@ def im_interp(request, project_id):
                                                    'project_id': project_id,
                                                    'title': project.title_text})
 
+@login_required
 def im_interp_edit(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     hazard = project.IM
@@ -410,6 +434,7 @@ def im_interp_edit(request, project_id):
                                                         'project_id': project_id,
                                                         'title': project.title_text})
 
+@login_required
 def im_file(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     hazard = project.IM
@@ -477,12 +502,16 @@ def im_file(request, project_id):
             interp_form = Interpolation_Method_Form(initial={'method': hazard.interp_method.id})
         else:
             interp_form = Interpolation_Method_Form()
+        form.fields['path'].widget.attrs['class'] = 'normal'
+        form.fields['path'].widget.attrs['title'] = 'Choose the input file'
+        
         return render(request, 'slat/im_file.html', {'form': form, 
                                                      'interp_form': interp_form,
                                                      'project_id': project_id,
                                                      'title': project.title_text})
     
 
+@login_required
 def im_nzs(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     hazard = project.IM
@@ -515,6 +544,7 @@ def im_nzs(request, project_id):
             raise ValueError("SHOULDN'T REACH THIS")
             
 
+@login_required
 def im_nzs_edit(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     hazard = project.IM
@@ -557,6 +587,7 @@ def im_nzs_edit(request, project_id):
     return render(request, 'slat/nzs_edit.html', {'form': form, 'project_id': project_id,
                                                      'title': project.title_text})
     
+@login_required
 def _plot_demand(edp):
     if edp.model():
         
@@ -605,6 +636,7 @@ def _plot_demand(edp):
                                                  'legend': {'position': 'none'}})
         return [chart1, chart2]
     
+@login_required
 def edp(request, project_id):
     # If the project doesn't exist, generate a 404:
     project = get_object_or_404(Project, pk=project_id)
@@ -622,6 +654,7 @@ def edp(request, project_id):
     else:
         return HttpResponseRedirect(reverse('slat:edp_init', args=(project_id)))
     
+@login_required
 def edp_view(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)
     edp = get_object_or_404(EDP, pk=edp_id)
@@ -639,6 +672,7 @@ def edp_view(request, project_id, edp_id):
         else:
             raise ValueError("edp_view not implemented")
     
+@login_required
 def edp_init(request, project_id):
     # If the project doesn't exist, generate a 404:
     project = get_object_or_404(Project, pk=project_id)
@@ -657,6 +691,7 @@ def edp_init(request, project_id):
     else:
         return render(request, 'slat/edp_init.html', {'project': project, 'form': FloorsForm()})
     
+@login_required
 def edp_choose(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)
     edp = get_object_or_404(EDP, pk=edp_id)
@@ -681,12 +716,14 @@ def edp_choose(request, project_id, edp_id):
                                                         'edp': edp})
     raise ValueError("EDP_CHOOSE not implemented")
 
+@login_required
 def edp_power(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)
     edp = get_object_or_404(EDP, pk=edp_id)
     charts = _plot_demand(edp)
     return render(request, 'slat/edp_power.html', {'project': project, 'edp': edp, 'charts': charts})
 
+@login_required
 def edp_power_edit(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)
     edp = get_object_or_404(EDP, pk=edp_id)
@@ -717,6 +754,7 @@ def edp_power_edit(request, project_id, edp_id):
                                                             'project': project,
                                                             'edp': edp})
 
+@login_required
 def edp_userdef(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)
     edp = get_object_or_404(EDP, pk=edp_id)
@@ -728,6 +766,7 @@ def edp_userdef(request, project_id, edp_id):
                     'charts': charts,
                     'points': EDP_Point.objects.filter(demand=edp).order_by('im')})
 
+@login_required
 def edp_userdef_edit(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)
     edp = get_object_or_404(EDP, pk=edp_id)
@@ -773,6 +812,7 @@ def edp_userdef_edit(request, project_id, edp_id):
                       {'form': form, 'points': formset,
                        'project': project, 'edp': edp})
 
+@login_required
 def edp_userdef_import(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)
     edp = get_object_or_404(EDP, pk=edp_id)
@@ -853,6 +893,7 @@ def edp_userdef_import(request, project_id, edp_id):
                                                                 'edp':edp})
     raise ValueError("EDP_USERDEF_IMPORT not implemented")
 
+@login_required
 def cgroup(request, project_id, floor_num, cg_id=None):
      project = get_object_or_404(Project, pk=project_id)
      if request.method == 'POST':
@@ -877,6 +918,7 @@ def cgroup(request, project_id, floor_num, cg_id=None):
                                                      'cg_id': cg_id,
                                                      'cg_form': cg_form})
 
+@login_required
 def floor_cgroup(request, project_id, floor_num, cg_id=None):
      print(" > floor_cgroup()")
      print(request)
@@ -931,6 +973,7 @@ def floor_cgroup(request, project_id, floor_num, cg_id=None):
                                                            'demand_form': demand_form})
      
 
+@login_required
 def edp_cgroups(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)
     edp = get_object_or_404(EDP, pk=edp_id)
@@ -943,6 +986,7 @@ def edp_cgroups(request, project_id, edp_id):
                        'edp': edp,
                        'cgs': Component_Group.objects.filter(demand=edp)})
 
+@login_required
 def edp_cgroup(request, project_id, edp_id, cg_id=None):
     project = get_object_or_404(Project, pk=project_id)
     edp = get_object_or_404(EDP, pk=edp_id)
@@ -987,13 +1031,14 @@ def edp_cgroup(request, project_id, edp_id, cg_id=None):
                        'edp': edp,
                        'cg_form': cg_form})
     
+@login_required
 def cgroups(request, project_id):
      project = get_object_or_404(Project, pk=project_id)
      return render(request, 'slat/cgroups.html', {'project': project,
                                                   'cgs': Component_Group.objects.filter(demand__project=project)})
  
+@login_required
 def floor_cgroups(request, project_id, floor_num):
-    print(" --> floor_cgroups(", project_id, ", ", floor_num, ")")
     project = get_object_or_404(Project, pk=project_id)
     edps = EDP.objects.filter(project=project).filter(floor=floor_num)
     cgs = []
@@ -1010,11 +1055,13 @@ def floor_cgroups(request, project_id, floor_num):
                        'floor_num': floor_num,
                        'cgs': cgs})
 
+@login_required
 def floors(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     print(project.floors)
     return render(request, 'slat/floors.html', {'project': project, 
                                                 'floors': range(project.floors + 1)})
+@login_required
 def demand(request, project_id, floor_num, type):
     project = get_object_or_404(Project, pk=project_id)
     if type == 'drift':
@@ -1041,6 +1088,7 @@ def demand(request, project_id, floor_num, type):
         raise ValueError("demand view not implemented")
 
     
+@login_required
 def analysis(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     chart = None
@@ -1203,6 +1251,7 @@ class ComponentAutocomplete(autocomplete.Select2QuerySetView):
             
         return qs
 
+@login_required
 def ComponentDescription(request, component_key):
     component = ComponentsTab.objects.get(pk=component_key)
     result = render(request, 'slat/component-description.html', 
@@ -1210,3 +1259,10 @@ def ComponentDescription(request, component_key):
                      'fragility': FragilityTab.objects.filter(component = component).order_by('state'),
                      'costs': CostTab.objects.filter(component = component).order_by('state')})
     return(result)
+
+def register(request):
+    return render(request, 'registration/register.html')
+    
+class SLATRegistrationView(RegistrationView):
+    def get_success_url(self, activateduser):
+        return(reverse('slat:index'))

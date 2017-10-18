@@ -1,10 +1,20 @@
+{% extends "base_site.html" %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
+{{ form.media }}
+
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 <script type="text/javascript">
     google.load("visualization", "1", {packages:["corechart"]});
 </script>
-<p>User-defined Seismic Hazard</P>
-
-<p><b>Project: </b>{{ title }}</p>
+{% endblock %}
+{% block bodyclass %}{{ block.super }} slat {% endblock %}
+{% block title %}WebSLAT: {{ title }}{% endblock %}
+{% block content_title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="project_title">
+<b>Project: </b>{{ title }}
+</div>
 
 {% if chart %} 
     {{ chart.as_html }}
@@ -14,7 +24,7 @@
     <br />
     <details>
     <summary>Supplied points</summary>
-    <table border='1'><tr><td>IM</td><td>Rate</td></tr>
+    <table border='1' style="margin-left:5em"><tr><th>IM</th><th>Rate</th></tr>
     {% for point in points %}
       <tr><td align='right'>{{ point.im_value | floatformat:3 }}</td>
 	  <td align='right'>{{ point.rate | floatformat:3 }}</td></tr>
@@ -22,10 +32,10 @@
       </table>
     </details>
 </form>
-<form action="{% url 'slat:im_interp_edit' project_id %}" method="get">
-    {% csrf_token %}
-    <input type="submit" value="Edit" />
-</form><b/r>
+<br/>
+<a href="{% url 'slat:im_interp_edit' project_id %}" class="link_button">Edit Points</a>
+<br/><br/>
 <a href="{% url 'slat:hazard_choose' project_id %}">Change Hazard Type</a><br/>
 <a href="{% url 'slat:project' project_id %}">Return to Project</a><br /><br/>
 <a href="{% url 'slat:index' %}">Return to Project List</a>
+{% endblock %}

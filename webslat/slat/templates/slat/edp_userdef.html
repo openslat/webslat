@@ -1,8 +1,21 @@
+{% extends "base_site.html" %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
+{{ form.media }}
+
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 <script type="text/javascript">
     google.load("visualization", "1", {packages:["corechart"]});
 </script>
-<p><b>Project:</b> {{ project.title_text }}</p>
+{% endblock %}
+{% block bodyclass %}{{ block.super }} slat {% endblock %}
+{% block title %}WebSLAT Project {{ form.instance.title_text }}{% endblock %}
+{% block content_title %}WebSLAT Project {{ form.instance.title_text }}{% endblock %}
+{% block content %}
+<div class="project_title">
+<b>Project:</b>{{ project.title_text }}
+</div>
+
 <p><b>Demand: </b>Floor #{{ edp.floor }}
     {% if edp.type == 'A' %}
         Acceleration
@@ -18,7 +31,8 @@
 
     <details>
     <summary>Supplied Points</summary>
-    <table border='1'><tr><td>IM</td><td>Median(x)</td><td>SD(ln(x))</td></tr>
+    <br/>
+    <table border='1'><tr><th>IM</th><th>Median(x)</th><th>SD(ln(x))</th></tr>
     {% for point in points %}
       <tr><td align='right'>{{ point.im | floatformat:3 }}</td>
 	  <td align='right'>{{ point.median_x | floatformat:3 }}</td>
@@ -26,14 +40,12 @@
     {% endfor %}
     </table>
     </details>
-<form action="{% url 'slat:edp_userdef_edit' project.id edp.id %}" method="get">
-    {% csrf_token %}
-    <input type="submit" value="Edit" />
-</form>
-<form action="{% url 'slat:edp_userdef_import' project.id edp.id %}" method="get">
-    {% csrf_token %}
-    <input type="submit" value="Import" />
-</form>
+    <br/>
+
+<a href="{% url 'slat:edp_userdef_edit' project.id edp.id %}" class="link_button">Edit Points</a>
+<br/><br/>
+<a href="{% url 'slat:edp_userdef_import' project.id edp.id %}" class="link_button">Import</a>
+<br/><br/>
 <a href="{% url 'slat:edp_choose' project.id edp.id %}">Change Demand Type</a><br/>
 <br/>
 <a href="{% url 'slat:floors' project.id %}">Return to Floors</a><br />
@@ -46,4 +58,4 @@
     {% endfor %}
 {% endif %}
 </td></tr></table>
-
+{% endblock %}

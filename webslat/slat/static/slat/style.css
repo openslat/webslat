@@ -1,5 +1,32 @@
 body {
+  background: #C80000; /* For browsers that do not support gradients */
+  background: -webkit-linear-gradient(left, #C80000, #F70000, #C80000);  /* For Safari 5.1 to 6.0 */
+  background: -o-linear-gradient(right, #C80000, #F70000, #C80000);  /* For Opera 11.1 to 12.0 */
+  background: -moz-linear-gradient(right, #C80000, #F70000, #C80000);  /* For Firefox 3.6 to 15 */
+  background: linear-gradient(to right, #C80000, #F70000, #C80000);  /* Standard syntax */
+ }
+
+div.header_strip {
+  color: white;
+  background: #C80000; /* For browsers that do not support gradients */
+  background: -webkit-linear-gradient(left, #C80000, #F70000, #C80000); /* For Safari 5.1 to 6.0 */
+  background: -o-linear-gradient(right, #C80000, #F70000, #C80000); /* For Opera 11.1 to 12.0 */
+  background: -moz-linear-gradient(right, #C80000, #F70000, #C80000); /* For Firefox 3.6 to 15 */
+  background: linear-gradient(to right, #C80000, #F70000, #C80000); /* Standard syntax */
+}
+
+table.loose{
+    display: table;
     background: white;
+    border-collapse: collapse;
+    border-spacing: 2px;
+    border-color: black;
+    padding: 1em;
+}
+th.loose, td.loose {
+   padding-right: 1em;
+   padding-left: 1em;
+   padding-bottom: 1em;
 }
 
 table {
@@ -13,18 +40,290 @@ th, td {
     padding-right: 15px;
     padding-left: 15px;
 }
+
+th {
+   background: lightgray;
+}
+
 label {
-   color: blue;
+   font-size: large;
+   color: black;
    vertical-align:top;
+}
+
+select {
+   font-size: large;
+   margin-left: 10px;
+}
+
+input.normal[type="file"] {
+  background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #ededed), color-stop(1, #c4c0c4) );
+  background:-moz-linear-gradient( center top, #ededed 5%, #c4cd0c4 100% );
+  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#ededed', endColorstr='#c4c0c4');
+  background-color:#ededed;
+  border:1px solid #000000;
+  color: #000000;
+  font-family:Arial;
+  font-size:large;
+  font-style:normal;
+  width:auto;
+}
+
+input.table[type="submit"] {
+  background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #ededed), color-stop(1, #c4c0c4) );
+  background:-moz-linear-gradient( center top, #ededed 5%, #c4cd0c4 100% );
+  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#ededed', endColorstr='#c4c0c4');
+  background-color:#ededed;
+  border:1px solid #000000;
+  color: #000000;
+  font-family:Arial;
+  font-size:medium;
+  font-style:normal;
+  width:auto;
+  height: 1.5em;
+  margin: 0.25em;
+  padding-top: 0.25em;
+  padding-bottom: 0.25em;
+  padding-left: 0.5em;;
+  padding-right: 0.5em;
+  text-decoration:none;
+  text-align:center;
+}
+
+input.normal[type="submit"] {
+  background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #ededed), color-stop(1, #c4c0c4) );
+  background:-moz-linear-gradient( center top, #ededed 5%, #c4cd0c4 100% );
+  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#ededed', endColorstr='#c4c0c4');
+  background-color:#ededed;
+  border:1px solid #000000;
+  color: #000000;
+  font-family:Arial;
+  font-size:large;
+  font-style:normal;
+  width:auto;
+  height: 2.10em;
+  padding-left: 0.5em;;
+  padding-right: 0.5em;
+  text-decoration:none;
+  text-align:center;
+}
+
+input.normal[type="submit"]:hover, input.table[type="submit"]:hover {
+   background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #c4c0c4), color-stop(1, #ededed) );
+   background:-moz-linear-gradient( center top, #c4c0c4 5%, #ededed 100% );
+   filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#c4c0c4', endColorstr='#ededed');
+   background-color:#c4c0c4;
+}
+input.normal[type="submit"]:active, input.table[type="submit"]:active {
+   position:relative;
+   top:1px;
+}
+
+input[type="text"] {
+   font-size: x-large;
+   background: white;
+}
+
+
+input[type="password"], 
+input#id_username[type="text"], 
+input[type="email"]  
+{
+   font-size: x-large;
 }
 
 input[type="submit"] {
   vertical-align: middle;
   display: block;
-  margin-top: 10px;
+  font-size: large;
+  margin-top: 5px;
+  padding: 10px;
+  background: lightgray;
+   border: 1px solid black;
+}
+
+input.login[type="submit"] {
+  vertical-align: middle;
+  display: block;
+  font-size: x-large;
+  margin-top: 5px;
+  padding: 10px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 input[type="number"] {
+   font-size: large;
   vertical-align: middle;
   display: block;
+}
+
+.flex-container {
+    align: left;
+    display: -webkit-flex;
+    display: flex;
+    height: 60px;
+   color: black;
+   background: white;
+   position: relative;
+}
+
+.flex-item {
+   margin: 5px;
+   position: absolute;
+   position-top:50%; 
+   height:46px;
+   margin-top:7px;
+}
+
+.flex-item2 {
+   position: absolute;
+   position-top:50%;
+   height:40px;
+   /*margin-left:250px;*/
+   margin-top: -30px;
+   font-size: x-large;
+   text-align: center;
+   width:100%;
+}
+
+.flex-item3 {
+   position: absolute;
+   position-top:50%;
+   height:44px;
+   width:202px;
+   right:40px;
+   margin-top: 7px;
+}
+
+.intro {
+   background: white;
+   text-align: center;
+   font-size: xx-large;
+}
+
+.slat #content {
+   background: white;
+   margin-left: auto;
+   margin-right: auto;
+   margin-top: 50px;
+   padding: 1em;
+   width: 90%;
+   text-align: left;
+   font-size: x-large;
+   border: 5px solid black;
+   margin-top: 50px;
+   padding: 1em;
+   text-align: left;
+   font-size: large;
+   border: 5px solid black;
+}
+
+.project_title {
+   font-size: x-large;
+   color: black;
+   padding-bottom: 1em;
+   }
+
+.registration #content {
+   background: white;
+   margin-left: auto;
+   margin-right: auto;
+   margin-top: 50px;
+   padding: 1em;
+   text-align: left;
+   font-size: x-large;
+   border: 5px solid black;
+   width: 50%;
+}
+
+.login #content, .welcome #content {
+   background: white;
+   margin-left: auto;
+   margin-right: auto;
+   margin-top: 50px;
+   padding: 1em;
+   font-size: x-large;
+   border: 5px solid black;
+   width: 50%;
+   text-align: center;
+}
+
+.login #content-main {
+   width: 100%;
+   background: white;
+}
+
+
+.login .form-row {
+    padding: 4px 0;
+    float: left;
+    width: 100%;
+    border-bottom: none;
+}
+
+.login .form-row label {
+    padding-right: 0.5em;
+    line-height: 2em;
+    font-size: 1em;
+    clear: both;
+    color: #333;
+}
+
+.login .form-row #id_username, .login .form-row #id_password {
+    clear: both;
+    padding: 8px;
+    width: 80%;
+    font-size: x-large;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.login span.help {
+    font-size: 10px;
+    display: block;
+}
+
+.login .submit-row {
+    clear: both;
+    padding: 0 5px 5px 0;
+    margin: 10px;
+    border: none;
+    background: none;
+    text-align: center;
+}
+
+.login .password-reset-link {
+    text-align: center;
+}
+
+.link_button {
+   background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #ededed), color-stop(1, #c4c0c4) );
+   background:-moz-linear-gradient( center top, #ededed 5%, #c4cd0c4 100% );
+   filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#ededed', endColorstr='#c4c0c4');
+   background-color:#ededed;
+   border:1px solid #000000;
+   display:inline-block;
+   color: #000000;
+   font-family:Arial;
+   font-size:large;
+   font-style:normal;
+   /*height:2em;*/
+   line-height:2em;
+   width:auto;
+   padding-left: 0.5em;;
+   padding-right: 0.5em;
+   text-decoration:none;
+   text-align:center;
+}
+
+.link_button:hover {
+	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #c4c0c4), color-stop(1, #ededed) );
+	background:-moz-linear-gradient( center top, #c4c0c4 5%, #ededed 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#c4c0c4', endColorstr='#ededed');
+	background-color:#c4c0c4;
+}.link_button:active {
+	position:relative;
+	top:1px;
 }

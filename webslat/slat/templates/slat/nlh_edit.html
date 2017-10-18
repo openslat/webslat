@@ -1,16 +1,31 @@
+{% extends "base_site.html" %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
+{{ form.media }}
+{% endblock %}
+{% block bodyclass %}{{ block.super }} slat {% endblock %}
+{% block title %}WebSLAT: {{ title }} Hazard{% endblock %}
+{% block content_title %}{{ title }}: Hazard{% endblock %}
+{% block content %}
+<div class="project_title">
+<b>Project: </b>{{ title }}
+</div>
 <p>Non-Linear Hyperbolic Seismic Hazard</P>
 
-<p><b>Project:</b> {{ title }}</p>
-
 <form action="{% url 'slat:nlh_edit' project_id %}" method="post">
     {% csrf_token %}
-    {{ form }}
+    <table class="loose"><tr class="loose"><td class="loose"> <label for="id_v_assy_float"> V<sub>assy</sub> </label></td><td class="loose"> {{ form.v_assy_float }}</td></tr>
+    <tr><td><label for="id_im_asy_float"> IM<sub>assy</sub> </label></td><td class="loose"> {{ form.im_asy_float }}</td></tr>
+    <tr><td><label for="id_alpha_float"> Alpha </label></td><td class="loose"> {{ form.alpha_float }}</td></tr>
+    </table>
     <br />
-    <input type="submit" value="Submit" />
+    <table><tr><td style="vertical-align:middle">
+    <input type="submit" value="Submit" class="normal"/>
+    </td><td style="vertical-align:bottom">
+    <a href="{% url 'slat:hazard' project_id %}"  class="link_button">Cancel</a>
+    </td></tr></table>
 </form>
-<form action="{% url 'slat:nlh_edit' project_id %}" method="post">
-    {% csrf_token %}
-    <input type="submit" name="cancel" value="Cancel" />
-</form>
+<br/>
 <a href="{% url 'slat:project' project_id %}">Return to Project</a><br />
 <a href="{% url 'slat:index' %}">Return to Project List</a>
+{% endblock %}

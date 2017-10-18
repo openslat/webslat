@@ -1,38 +1,48 @@
-{% load static %}
-<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}" />
+{% extends "base_site.html" %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
+{{ form.media }}
 
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 <script type="text/javascript">
     google.load("visualization", "1", {packages:["corechart"]});
 </script>
+{% endblock %}
 
-<p>PROJECT.HTML</p>
+{% block bodyclass %}{{ block.super }} slat {% endblock %}
+{% block title %}WebSLAT Project {{ form.instance.title_text }}{% endblock %}
+{% block content_title %}{{ form.instance.title_text }}{% endblock %}
+{% block content %}
 {% if form.instance.id %}
-<p><b>Project:</b> {{ form.instance.title_text }}</P>
 <form action="{% url 'slat:project' form.instance.id %}" method="post">
 {% else %}
 <p>Create a Project</P>
 <form action="{% url 'slat:project' %}" method="post">
 {% endif %} 
     {% csrf_token %}
-    {{ form.title_text.label }} {{ form.title_text }} <br/>
-    {{ form.description_text.label }} {{ form.description_text }} <br/>
-    {{ form.rarity.label }} {{form.rarity }} <br/>
+    <table class="loose"><tr class="loose"><td class="loose"> <label for="id_title_text"> Title </label></td><td class="loose"> {{ form.title_text }}</td></tr>
+      <tr class="loose"><td class="loose"><label for="id_description_text"> Description </label></td><td class="loose">{{ form.description_text }}</td></tr>
+      <tr class="loose"><td class="loose"><label for="id_rarity"> Rarity</td><td class="loose"> {{form.rarity }} </td></tr>
     {% if form.instance.floors %}
-         <p>Floors: {{ form.instance.floors }}</p>
-	 {{ form.floors }}
+      <tr class="loose"><td class="loose"><label for="id_floors"> Floors </label></td><td class="loose">{{ form.instance.floors }}</td></tr>
     {% else %}
-        {{ form.floors.label }} {{ form.floors }} <br/>
+      <tr class="loose"><td class="loose"><label for="id_floors"> Floors </label></td><td class="loose">{{ form.floors }}</td></tr>
     {% endif %}
+      </table>
     {{ form.IM }}
-    <table border="1"><tr><td><b>Event</b></td><td><b>mean(IM)</b></td><td><b>sd(ln(IM))</b></td><td><b>mean(Cost)</b></td><td><b/>sd(ln(Cost))</b></td></tr>
-    <tr><td><b>Collapse</b></td><td> {{ form.mean_im_collapse }} </td><td> {{ form.sd_ln_im_collapse }} </td><td> {{ form.mean_cost_collapse }} </td><td> {{ form.sd_ln_cost_collapse }} </td></tr>
-    <tr><td><b>Demolition</b></td><td> {{ form.mean_im_demolition }} </td><td> {{ form.sd_ln_im_demolition }} </td><td> {{ form.mean_cost_demolition }} </td><td> {{ form.sd_ln_cost_demolition }} </td></tr>
+    <table border="1"><tr><th>Event</th><th>mean(IM)</th><th>sd(ln(IM))</th><th>mean(Cost)</th><th>sd(ln(Cost))</th></tr>
+    <tr><th>Collapse</th><td> {{ form.mean_im_collapse }} </td><td> {{ form.sd_ln_im_collapse }} </td><td> {{ form.mean_cost_collapse }} </td><td> {{ form.sd_ln_cost_collapse }} </td></tr>
+    <tr><th>Demolition</th><td> {{ form.mean_im_demolition }} </td><td> {{ form.sd_ln_im_demolition }} </td><td> {{ form.mean_cost_demolition }} </td><td> {{ form.sd_ln_cost_demolition }} </td></tr>
     </table>
+    <br/>
    {% if form.instance.id %}
-    <input type="submit" value="Submit Changes" />
+    <input type="submit" value="Submit Changes" class="normal"/>
    {% else %}
-    <input type="submit" value="Create Project" />
+    <table><tr><td style="vertical-align:middle">
+    	      <input type="submit" value="Create Project" class="normal"/>
+	  </td><td style="vertical-align:bottom">
+	      <a href="{% url 'slat:index' %}"  class="link_button">Cancel</a>
+	  </td></tr></table>
    {% endif %}    
 </form>
 
@@ -43,25 +53,26 @@
 
 {% if form.instance.id %}
     <hr/>
+    <table><tr><td>
     <form action="{% url 'slat:hazard' form.instance.id %}" method="get">
       {% csrf_token %}
-      <input type="submit" value="Site Hazard" />
-    </form>
+      <input type="submit" value="Site Hazard" class="normal"/>
+    </form></td>
     {% if form.instance.IM %}
-        <form action="{% url 'slat:floors' form.instance.id %}" method="get">
+	<td><form action="{% url 'slat:floors' form.instance.id %}" method="get">
           {% csrf_token %}
-          <input type="submit" value="Engineering Demands" />
-        </form>
+          <input type="submit" value="Engineering Demands" class="normal"/>
+        </form></td>
      {% endif %}
-    <form action="{% url 'slat:analysis' form.instance.id %}" method="get">
+    <td><form action="{% url 'slat:analysis' form.instance.id %}" method="get">
       {% csrf_token %}
-      <input type="submit" value="Analysis" />
-    </form>
+      <input type="submit" value="Analysis" class="normal"/>
+    </form></td>
+    </tr></table>
 {% endif %}
-    
+
+<br/>    
 {% if form.instance.id %}
 <a href="{% url 'slat:index' %}">Return to Project List</a>
-{% else %}
-<a href="{% url 'slat:index' %}">Cancel</a>
-{% endif %} 
-
+{% endif %}
+{% endblock %}

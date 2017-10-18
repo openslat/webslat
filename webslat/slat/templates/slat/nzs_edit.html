@@ -1,13 +1,33 @@
-<p>Seismic Hazard Page</P>
-
-<p><b>Project:</b> {{ title }}</p>
-
+{% extends "base_site.html" %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
+{{ form.media }}
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript">
+    google.load("visualization", "1", {packages:["corechart"]});
+</script>
+{% endblock %}
+{% block bodyclass %}{{ block.super }} slat {% endblock %}
+{% block title %}WebSLAT: {{ title }} Hazard{% endblock %}
+{% block content_title %}{{ title }}: Hazard{% endblock %}
+{% block content %}
+<div class="project_title">
+<b>Project: </b>{{ title }}
+</div>
+<h1>NZ Standard Hazard</h1>
 <form action="{% url 'slat:im_nzs_edit' project_id %}" method="post">
     {% csrf_token %}
-    {{ form }}
-    <br />
-    <input type="submit" value="Submit" />
-    <input type="submit" name="cancel" value="Cancel" />
+    <table class="loose"><tr class="loose"><td class="loose"> <label for="id_location">Location</sub> </label></td><td class="loose"> {{ form.location }}</td></tr>
+    <tr><td><label for="id_soil_class">Soil Class</label></td><td class="loose"> {{ form.soil_class }}</td></tr>
+    <tr><td><label for="id_period">Period</label></td><td class="loose"> {{ form.period }}</td></tr>
+    </table>
+    <table><tr><td style="vertical-align:middle">
+    <input type="submit" value="Submit" class="normal"/>
+    </td><td style="vertical-align:bottom">
+    <a href="{% url 'slat:hazard' project_id %}"  class="link_button">Cancel</a>
+    </td></tr></table>
 </form>
+<br/>
 <a href="{% url 'slat:project' project_id %}">Return to Project</a><br />
 <a href="{% url 'slat:index' %}">Return to Project List</a>
+{% endblock %}
