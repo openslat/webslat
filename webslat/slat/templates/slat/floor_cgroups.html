@@ -8,8 +8,8 @@
 {% endblock %}
 
 {% block bodyclass %}{{ block.super }} slat {% endblock %}
-{% block title %}WebSLAT: {{ title }}{% endblock %}
-{% block content_title %}{{ title }}{% endblock %}
+{% block title %}WebSLAT: {{ project.title_text }}; Floor #{{ floor_num }} Component Groups{% endblock %}
+{% block content_title %}{{ project.title_text }}; Floor #{{ floor_num }} Component Groups{% endblock %}
 {% block content %}
 <div class="project_title">
 Component Groups for <b>Floor #{{ floor_num }}</b>
@@ -17,10 +17,8 @@ Component Groups for <b>Floor #{{ floor_num }}</b>
 
 {{ form.errors }}
 
-<P><B>Project:</B> {{ project.title_text }}</P>
-
 <b>Structural Components</b>
-<table border="1"><tr><td><b>Component</b></td><td><b>Quantity</b></td><td><b>E annual cost</b></td><td></td><td></td></tr>
+<table border="1"><tr><th><b>Component</b></th><th><b>Quantity</b></th><th><b>E annual cost</b></th><th></th><th></th></tr>
 {% for cg in cgs %}
   {% if cg.component.structural %}
 <tr><td><a href="{% url 'slat:component' cg.component.ident %}">{{ cg.component }}</a></td>
@@ -29,12 +27,12 @@ Component Groups for <b>Floor #{{ floor_num }}</b>
     <td>
     <form action="{% url 'slat:floor_compgroup' project.id floor_num cg.id  %}" method="get">
         {% csrf_token %}
-    <input type="submit" name='edit' value="Edit" />
+    <input type="submit" name='edit' value="Edit" class="normal"/>
     </form>
     </td><td>
     <form action="{% url 'slat:floor_compgroup' project.id floor_num cg.id  %}" method="post">
         {% csrf_token %}
-      <input type="submit" name='delete' value="Delete" />
+      <input type="submit" name='delete' value="Delete" class="normal"/>
     </form>
     </td></tr>
   {% endif %}
@@ -43,7 +41,7 @@ Component Groups for <b>Floor #{{ floor_num }}</b>
 
 <br/>
 <b>Non-Structural Components</b>
-<table border="1"><tr><td><b>Component</b></td><td><b>Quantity</b></td><td><b>E annual cost</b></td><td></td><td></td></tr>
+<table border="1"><tr><th><b>Component</b></th><th><b>Quantity</b></th><th><b>E annual cost</b></th><th></th><th></th></tr>
 {% for cg in cgs %}
   {% if not cg.component.structural %}
 <tr><td><a href="{% url 'slat:component' cg.component.ident %}">{{ cg.component }}</a></td>
@@ -52,19 +50,19 @@ Component Groups for <b>Floor #{{ floor_num }}</b>
     <td>
     <form action="{% url 'slat:floor_compgroup' project.id floor_num cg.id  %}" method="get">
         {% csrf_token %}
-    <input type="submit" name='edit' value="Edit" />
+    <input type="submit" name='edit' value="Edit" class="normal"/>
     </form>
     </td><td>
     <form action="{% url 'slat:floor_compgroup' project.id floor_num cg.id  %}" method="post">
         {% csrf_token %}
-      <input type="submit" name='delete' value="Delete" />
+      <input type="submit" name='delete' value="Delete" class="normal"/>
     </form>
     </td></tr>
   {% endif %}
 {% endfor %}
 </table>
 
-<p><a href="{% url 'slat:floor_compgroup' project.id floor_num %}">New Component Group</a></p>
+<p><a href="{% url 'slat:floor_compgroup' project.id floor_num %}" class="link_button">New Component Group</a></p>
 
 </br>
 <a href="{% url 'slat:floors' project.id %}">Return to Floors</a><br /><br/>

@@ -214,6 +214,7 @@ def hazard_choose(request, project_id):
             form = HazardForm(instance=hazard)
         else:
             form = HazardForm(initial={'flavour': IM_TYPE_NZS})
+
         return render(request, 'slat/hazard_choose.html', {'form': form, 
                                                            'project_id': project_id,
                                                            'title': project.title_text })
@@ -1012,7 +1013,6 @@ def cgroups(request, project_id):
                                                   'cgs': Component_Group.objects.filter(demand__project=project)})
  
 def floor_cgroups(request, project_id, floor_num):
-    print(" --> floor_cgroups(", project_id, ", ", floor_num, ")")
     project = get_object_or_404(Project, pk=project_id)
     edps = EDP.objects.filter(project=project).filter(floor=floor_num)
     cgs = []

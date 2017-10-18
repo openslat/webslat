@@ -428,9 +428,9 @@ class HazardForm(ModelForm):
 class NLHForm(ModelForm):
     def __init__(self, request=None, instance=None):
         super(NLHForm, self).__init__(request, instance=instance)
-        self.fields['v_assy_float'].widget.attrs['class'] = 'v_assy'
-        self.fields['im_asy_float'].widget.attrs['class'] = 'im_asy'
-        self.fields['alpha_float'].widget.attrs['class'] = 'alpha'
+        self.fields['v_assy_float'].widget.attrs['class'] = 'normal'
+        self.fields['im_asy_float'].widget.attrs['class'] = 'normal'
+        self.fields['alpha_float'].widget.attrs['class'] = 'normal'
         self.fields['v_assy_float'].widget.attrs['title'] = "v_assy"
         self.fields['im_asy_float'].widget.attrs['title'] = 'im_asy'
         self.fields['alpha_float'].widget.attrs['title'] = 'alpha'
@@ -440,6 +440,11 @@ class NLHForm(ModelForm):
         fields = '__all__'
 
 class Interpolation_Method_Form(Form):
+    def __init__(self, request=None, initial=None):
+        super(Interpolation_Method_Form, self).__init__(request, initial=initial)
+        self.fields['method'].widget.attrs['class'] = 'normal'
+        self.fields['method'].widget.attrs['title'] = 'Choose the interpolation method.'
+
     def choices():
         objects = []
         for method in Interpolation_Method.objects.all():
@@ -465,6 +470,7 @@ class Input_File_Form(Form):
         self.fields['path'].widget.attrs['title'] = 'Choose the data file to read.'
         self.fields['flavour'].widget.attrs['class'] = 'normal'
         self.fields['flavour'].widget.attrs['title'] = 'Select the file format.'
+        self.fields['flavour'].label = 'File Format'
 
     path = FileField()
     flavour = ModelChoiceField(queryset=Input_File_Formats.objects, empty_label=None)
@@ -509,6 +515,12 @@ class ComponentForm(Form):
             self.fields['component'].initial = initial['component']
         if floor_num:
             self.fields['component'].widget.forward.append(forward.Const(floor_num, 'floor'))
+        self.fields['quantity'].widget.attrs['class'] = 'normal'
+        self.fields['category'].widget.attrs['class'] = 'normal'
+        self.fields['component'].widget.attrs['class'] = 'normal'
+        self.fields['quantity'].widget.attrs['title'] = 'How many of this component are in the group?'
+        self.fields['category'].widget.attrs['title'] = 'Narrow the component search by category.'
+        self.fields['component'].widget.attrs['title'] = 'Choose the type of component.'
         
     quantity = IntegerField()
     category = ChoiceField(ListOfComponentCategories, required=False)

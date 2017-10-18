@@ -47,7 +47,7 @@ th {
 
 label {
    font-size: large;
-   color: blue;
+   color: black;
    vertical-align:top;
 }
 
@@ -199,8 +199,8 @@ input[type="number"] {
 }
 
 .project_title {
-   font-size: x-large
-   color: blue;
+   font-size: x-large;
+   color: black;
    padding-bottom: 1em;
    }
 

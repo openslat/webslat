@@ -16,7 +16,7 @@
     <p>Submit the form to confirm changes and add more empty cells.</p>
     {% csrf_token %}
     {{ form }}
-    <br />
+    <br /><br />
     {{ points.management_form }}
     <table border='1'><tr><th>IM</th><th>Rate</th><th>Delete?</th></tr>
     {% for point in points %}

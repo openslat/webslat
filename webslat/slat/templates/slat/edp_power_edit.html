@@ -1,7 +1,20 @@
-<p>Engineering Demand: Power Curve</P>
+{% extends "base_site.html" %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
+{{ form.media }}
 
-<p><b>Project:</b> {{ project.title_text }}</p>
-<p><b>Demand: </b>Floor #{{ edp.floor }}
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript">
+    google.load("visualization", "1", {packages:["corechart"]});
+</script>
+{% endblock %}
+{% block bodyclass %}{{ block.super }} slat {% endblock %}
+{% block title %}WebSLAT Project {{ form.instance.title_text }}{% endblock %}
+{% block content_title %}WebSLAT Project {{ form.instance.title_text }}{% endblock %}
+{% block content %}
+<div class="project_title">
+<b>Project:</b>{{ project.title_text }}<br/>
+<b>Demand: </b>Floor #{{ edp.floor }}
     {% if edp.type == 'A' %}
         Acceleration
     {% elif edp.type == 'D' %}
@@ -9,18 +22,24 @@
     {% else %}
         <i>Unknown Demand</i>
     {% endif %}
-</p>
+</div>
 
 <form action="{% url 'slat:edp_power_edit' project.id edp.id %}" method="post">
     {% csrf_token %}
     <table border="1">
-      <tr><td><b>Attribute</b></td><td><b>a</b></td><td><b>b</b></td></tr>
-      <tr><td>Median(x)</td><td>{{ form.median_x_a }}</td><td> {{ form.median_x_b }}</td></tr>
-      <tr><td>Sd_Ln(x)</td><td>{{ form.sd_ln_x_a }}</td><td> {{ form.sd_ln_x_b }}</td></tr>
+      <tr><th><b>Attribute</b></th><th><b>a</b></th><th><b>b</b></th></tr>
+      <tr><th>Median(x)</th><td>{{ form.median_x_a }}</td><td> {{ form.median_x_b }}</td></tr>
+      <tr><th>Sd_Ln(x)</th><td>{{ form.sd_ln_x_a }}</td><td> {{ form.sd_ln_x_b }}</td></tr>
       </table>
     <br />
-    <input type="submit" value="Submit" />
-    <input type="submit" name="cancel" value="Cancel" />
+
+    <table><tr><td style="vertical-align:middle">
+    <input type="submit" value="Submit" class="normal"/>
+    </td><td style="vertical-align:bottom">
+    <a href="{% url 'slat:edp_view' project.id edp.id %}" class="link_button">Cancel</a>
+    </td></tr></table>
 </form>
+<br/>
 <a href="{% url 'slat:project' project.id %}">Return to Project</a><br />
 <a href="{% url 'slat:index' %}">Return to Project List</a>
+{% endblock %}
