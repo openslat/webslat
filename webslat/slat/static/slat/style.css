@@ -69,6 +69,27 @@ input.normal[type="file"] {
   width:auto;
 }
 
+input.table[type="submit"] {
+  background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #ededed), color-stop(1, #c4c0c4) );
+  background:-moz-linear-gradient( center top, #ededed 5%, #c4cd0c4 100% );
+  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#ededed', endColorstr='#c4c0c4');
+  background-color:#ededed;
+  border:1px solid #000000;
+  color: #000000;
+  font-family:Arial;
+  font-size:medium;
+  font-style:normal;
+  width:auto;
+  height: 1.5em;
+  margin: 0.25em;
+  padding-top: 0.25em;
+  padding-bottom: 0.25em;
+  padding-left: 0.5em;;
+  padding-right: 0.5em;
+  text-decoration:none;
+  text-align:center;
+}
+
 input.normal[type="submit"] {
   background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #ededed), color-stop(1, #c4c0c4) );
   background:-moz-linear-gradient( center top, #ededed 5%, #c4cd0c4 100% );
@@ -87,13 +108,13 @@ input.normal[type="submit"] {
   text-align:center;
 }
 
-input.normal[type="submit"]:hover {
+input.normal[type="submit"]:hover, input.table[type="submit"]:hover {
    background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #c4c0c4), color-stop(1, #ededed) );
    background:-moz-linear-gradient( center top, #c4c0c4 5%, #ededed 100% );
    filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#c4c0c4', endColorstr='#ededed');
    background-color:#c4c0c4;
 }
-input.normal[type="submit"]:active {
+input.normal[type="submit"]:active, input.table[type="submit"]:active {
    position:relative;
    top:1px;
 }
