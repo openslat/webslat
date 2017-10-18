@@ -24,7 +24,7 @@
     <br />
     <details>
     <summary>Supplied points</summary>
-    <table border='1'><tr><td>IM</td><td>Rate</td></tr>
+    <table border='1' style="margin-left:5em"><tr><th>IM</th><th>Rate</th></tr>
     {% for point in points %}
       <tr><td align='right'>{{ point.im_value | floatformat:3 }}</td>
 	  <td align='right'>{{ point.rate | floatformat:3 }}</td></tr>

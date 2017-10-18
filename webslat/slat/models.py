@@ -411,6 +411,11 @@ class ProjectForm(ModelForm):
             }
         
 class HazardForm(ModelForm):
+    def __init__(self, instance=None, initial=None):
+        super(HazardForm, self).__init__(instance=instance, initial=initial)
+        self.fields['flavour'].label='Hazard Definition Type'
+        self.fields['flavour'].widget.attrs['title'] ='Choose how to specify the hazard curve.'
+        
     class Meta:
         model = IM
         fields = '__all__'
@@ -421,6 +426,15 @@ class HazardForm(ModelForm):
             }
 
 class NLHForm(ModelForm):
+    def __init__(self, request=None, instance=None):
+        super(NLHForm, self).__init__(request, instance=instance)
+        self.fields['v_assy_float'].widget.attrs['class'] = 'v_assy'
+        self.fields['im_asy_float'].widget.attrs['class'] = 'im_asy'
+        self.fields['alpha_float'].widget.attrs['class'] = 'alpha'
+        self.fields['v_assy_float'].widget.attrs['title'] = "v_assy"
+        self.fields['im_asy_float'].widget.attrs['title'] = 'im_asy'
+        self.fields['alpha_float'].widget.attrs['title'] = 'alpha'
+
     class Meta:
         model = NonLinearHyperbolic
         fields = '__all__'

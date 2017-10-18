@@ -25,12 +25,12 @@
           <td>{{ point.DELETE }}</td></tr>
     {% endfor %}
     </table>
-    <table><tr><td>
+    <table><tr><td style="vertical-align:middle">
     <input type="submit" value="Submit Changes and Continue Editing" class="normal"/>
-    </td><td>
+    </td><td style="vertical-align:middle">
     <input type="submit" name="done" value="Submit Changes and Return to Project" class="normal"/>
-    </td><td>
-    <input type="submit" name="cancel" value="Cancel" class="normal"/>
+    </td><td style="vertical-align:bottom">
+    <a href="{% url 'slat:project' project_id %}"  class="link_button">Cancel</a>
     </td></tr></table>
 </form>
 {% endblock %}
