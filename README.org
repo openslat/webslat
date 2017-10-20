@@ -243,6 +243,7 @@ served via Apache.
 		   django-graphos \
 		   django-autocomplete-light \
 		   django-registration
+		pip3 install --upgrade confusable-homoglyphs
 	       deactivate
       " | ssh -i ~/.ssh/vm -p 3022 \
 	      webslat-user@127.0.0.1 2>&1 | tail -10
@@ -250,16 +251,16 @@ served via Apache.
 
     #+RESULTS:
     #+begin_example
+      Downloading django_registration-2.3-py2.py3-none-any.whl (115kB)
+    Requirement already satisfied: pytz in ./webslat-env/lib/python3.5/site-packages (from matplotlib)
+    Requirement already satisfied: python-dateutil in ./webslat-env/lib/python3.5/site-packages (from matplotlib)
     Requirement already satisfied: pyparsing!=2.0.0,!=2.0.4,!=2.1.2,!=2.1.6,>=1.5.6 in ./webslat-env/lib/python3.5/site-packages (from matplotlib)
     Requirement already satisfied: cycler>=0.10 in ./webslat-env/lib/python3.5/site-packages (from matplotlib)
-    Requirement already satisfied: python-dateutil in ./webslat-env/lib/python3.5/site-packages (from matplotlib)
-    Building wheels for collected packages: django-autocomplete-light
-      Running setup.py bdist_wheel for django-autocomplete-light: started
-      Running setup.py bdist_wheel for django-autocomplete-light: finished with status 'done'
-      Stored in directory: /home/webslat-user/.cache/pip/wheels/94/64/d7/12d21242805908a6da61b3b198bfe9d9a5c65500a9b0b3834e
-    Successfully built django-autocomplete-light
-    Installing collected packages: django-autocomplete-light
-    Successfully installed django-autocomplete-light-3.2.10
+    Requirement already satisfied: six>=1.10 in ./webslat-env/lib/python3.5/site-packages (from matplotlib)
+    Collecting confusable-homoglyphs~=2.0 (from django-registration)
+      Downloading confusable_homoglyphs-2.0.2-py2.py3-none-any.whl
+    Installing collected packages: confusable-homoglyphs, django-registration
+    Successfully installed confusable-homoglyphs-2.0.2 django-registration-2.3
 #+end_example
 
 
@@ -288,7 +289,7 @@ served via Apache.
 17. Copy the ~graphos~ templates to the ~slat~ directory:
    #+ATTR_LATEX: :options language=bash-remote
     #+BEGIN_SRC bash :results output :eval ask
-      echo "cd .local/lib/python3.5/site-packages/graphos/templates
+      echo "cd ~/webslat-env/lib/python3.5/site-packages/graphos/templates
             cp -r graphos/ ~/webslat/webslat/slat/templates
       " | ssh -i ~/.ssh/vm -p 3022 \
 	      webslat-user@127.0.0.1 2>&1 | tail -10
@@ -357,6 +358,7 @@ served via Apache.
        #+BEGIN_SRC bash :results output
            chown :www-data /home/webslat-user/webslat/webslat/db.sqlite3
            chown :www-data /home/webslat-user/webslat/webslat
+           chown :www-data -R /home/webslat-user/webslat/webslat/slat/static
        #+END_SRC
 21. Edit ~webslat/webslat/webslat/settings.py~
     1. Set:
@@ -461,11 +463,11 @@ To update OpenSLAT and WebSLAT without creating a new image:
    #+END_SRC   
 
    #+RESULTS:
-   :  webslat/slat/templates/slat/floor_cgroup.html |  19 ++++++++--
-   :  webslat/slat/urls.py                          |   3 +-
-   :  webslat/slat/views.py                         |  48 ++++++++++++++++++--------
-   :  webslat/webslat/settings.py                   |   2 ++
-   :  8 files changed, 96 insertions(+), 21 deletions(-)
+   :  create mode 100644 webslat/slat/static/slat/qclogo-small.png
+   :  create mode 100644 webslat/slat/templates/base.html
+   :  create mode 100644 webslat/slat/templates/base_site.html
+   :  create mode 100644 webslat/slat/templates/registration/login.html
+   :  create mode 100644 webslat/slat/templates/registration/registration_form.html
 
 3. Run migrations:
    #+ATTR_LATEX: :options language=bash-remote
@@ -478,6 +480,8 @@ To update OpenSLAT and WebSLAT without creating a new image:
 
     #+RESULTS:
     #+begin_example
+    The programs included with the Debian GNU/Linux system are free software;
+    the exact distribution terms for each program are described in the
     individual files in /usr/share/doc/*/copyright.
 
     Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
@@ -486,8 +490,6 @@ To update OpenSLAT and WebSLAT without creating a new image:
       Apply all migrations: admin, auth, contenttypes, sessions, slat
     Running migrations:
       No migrations to apply.
-      Your models have changes that are not yet reflected in a migration, and so won't be applied.
-      Run 'manage.py makemigrations' to make new migrations, and then re-run 'manage.py migrate' to apply them.
 #+end_example
 
 4. Update the static files:
@@ -501,16 +503,16 @@ To update OpenSLAT and WebSLAT without creating a new image:
 
     #+RESULTS:
     #+begin_example
-    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/dal_select2/static/autocomplete_light/vendor/select2/tests/selection/containerCss-tests.js'
-    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/dal_select2/static/autocomplete_light/vendor/select2/tests/results/focusing-tests.js'
-    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/dal_select2/static/autocomplete_light/vendor/select2/tests/options/deprecated-tests.js'
-    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/dal_select2/static/autocomplete_light/vendor/select2/tests/options/data-tests.js'
-    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/dal_select2/static/autocomplete_light/vendor/select2/tests/options/ajax-tests.js'
-    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/dal_select2/static/autocomplete_light/vendor/select2/tests/options/translation-tests.js'
-    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/dal_select2/static/autocomplete_light/vendor/select2/tests/options/width-tests.js'
+    Are you sure you want to do this?
+
+    Type 'yes' to continue, or 'no' to cancel: Copying '/home/webslat-user/webslat/webslat/slat/static/slat/qclogo-small.png'
+    Copying '/home/webslat-user/webslat/webslat/slat/static/slat/openslat-logo.png'
+    Copying '/home/webslat-user/webslat/webslat/slat/static/slat/style.css'
+    Copying '/home/webslat-user/webslat/webslat/slat/static/slat/login.css'
+    Copying '/home/webslat-user/webslat/webslat/slat/static/slat/qclogo-medium.png'
     Found another file with the destination path 'admin/js/jquery.init.js'. It will be ignored since only the first encountered file is collected. If this is not what you want, make sure every static file has a unique path.
 
-    204 static files copied to '/home/webslat-user/webslat/webslat/static', 62 unmodified.
+    5 static files copied to '/home/webslat-user/webslat/webslat/static', 1017 unmodified.
 #+end_example
 
 5. Restart the server. As ~root~, on the VM, run:
