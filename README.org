@@ -63,7 +63,7 @@ served via Apache.
 
      # If we've used the key with an earlier VM,
      # remove it:
-     ssh-keygen -f "/home/mag109/.ssh/known_hosts" \
+     ssh-keygen -f "/home/mike/.ssh/known_hosts" \
 		-R [127.0.0.1]:3022
 
      # Install the key in the VM:
@@ -71,6 +71,8 @@ served via Apache.
 		 -i ~/.ssh/vm \
 		 -p 3022 webslat-user@127.0.0.1 
    #+END_SRC
+
+   #+RESULTS:
 
 8. Run these commands on the VM as root. (I can't figure out how to do this from
    a script on the host machine).
@@ -120,11 +122,11 @@ served via Apache.
     #+END_SRC
 
     #+RESULTS:
-    : cd ../src && java -jar /usr/local/lib/antlr-4.7-complete.jar -Dlanguage=Python3 -o /home/webslat-user/SLAT/linux/lib slatLexer.g4
-    : cd ../src &&	java -jar /usr/local/lib/antlr-4.7-complete.jar -Dlanguage=Python3 -o /home/webslat-user/SLAT/linux/lib slatParser.g4
-    : cp ../src/SlatInterpreter.py scripts
-    : cp ../src/pyslat.py lib
-    : cp obj/pyslatcore.py lib
+    : 
+    : Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+    : permitted by applicable law.
+    : Already up-to-date.
+    : make: Nothing to be done for 'all'.
 10. Add the search paths to ~.bashrc~, if they aren't already there;
    #+ATTR_LATEX: :options language=bash-remote
    #+BEGIN_SRC bash :results output :eval ask
@@ -153,11 +155,11 @@ served via Apache.
     #+END_SRC
 
     #+RESULTS:
-    : Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
-    : permitted by applicable law.
-    : Running 39 test cases...
+    : fa is NAN
+    : ../src/structure_test.cpp(355): error: in "structure_cg_replace": difference{nan} between s.AnnualCost().get_mean_X(){nan} and 0.00545{0.00545} exceeds 0.1%
+    : ../src/structure_test.cpp(356): error: in "structure_cg_replace": difference{nan} between s.AnnualCost().get_sigma_lnX(){nan} and 2.826{2.8260000000000001} exceeds 0.1%
     : 
-    : *** No errors detected
+    : *** 15 failures are detected in the test module "Master Test Suite"
 
 
 
@@ -171,11 +173,12 @@ served via Apache.
     #+END_SRC
 
     #+RESULTS:
-    : Total Search Evals: 1097206
-    : Number of Calls: 275268
-    : Successes: 275038
+    : Total Search Evals: 1220940
+    : Number of Calls: 276816
+    : Successes: 276552
     : NANs: 0
-    : Elapsed time: 20.4083
+    : Elapsed time: 22.5208
+
 13. Run the example2 Python script:
    #+ATTR_LATEX: :options language=bash-remote
     #+BEGIN_SRC bash :results output :eval ask
@@ -186,11 +189,12 @@ served via Apache.
     #+END_SRC
 
     #+RESULTS:
-    : Total Search Evals: 1120332
-    : Number of Calls: 272733
-    : Successes: 272503
+    : Total Search Evals: 1657705
+    : Number of Calls: 274581
+    : Successes: 274351
     : NANs: 0
     : 
+
 
 
 14. Run the example2 SLAT script:
@@ -205,17 +209,18 @@ served via Apache.
 
     #+RESULTS:
     #+begin_example
-    Max Integration Evals: 124
-    Integration Failures: 0
-    Total Integration Evals: 8632362
+    Max Integration Evals: 257
+    Integration Failures: 6
+    Total Integration Evals: 8818217
     Max Search Evals: 256
     Number Search Fails: 230
-    Total Search Evals: 1120332
-    Number of Calls: 272733
-    Successes: 272503
+    Total Search Evals: 1245545
+    Number of Calls: 274581
+    Successes: 274345
     NANs: 0
 
-#+end_example
+    #+end_example
+
 
 15. Run these commands on the VM as root. (I can't figure out how to do this from
    a script on the host machine).
@@ -243,7 +248,7 @@ served via Apache.
 		   django-graphos \
 		   django-autocomplete-light \
 		   django-registration
-		pip3 install --upgrade confusable-homoglyphs
+	       pip3 install --upgrade confusable-homoglyphs
 	       deactivate
       " | ssh -i ~/.ssh/vm -p 3022 \
 	      webslat-user@127.0.0.1 2>&1 | tail -10
@@ -276,7 +281,7 @@ served via Apache.
     #+RESULTS:
     #+begin_example
     Pseudo-terminal will not be allocated because stdin is not a terminal.
-    Linux webslat-32 4.9.0-3-686 #1 SMP Debian 4.9.30-2+deb9u2 (2017-06-26) i686
+    Linux webslat 4.9.0-4-amd64 #1 SMP Debian 4.9.51-1 (2017-09-28) x86_64
 
     The programs included with the Debian GNU/Linux system are free software;
     the exact distribution terms for each program are described in the
@@ -285,7 +290,7 @@ served via Apache.
     Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
     permitted by applicable law.
     Cloning into 'webslat'...
-#+end_example
+    #+end_example
 17. Copy the ~graphos~ templates to the ~slat~ directory:
    #+ATTR_LATEX: :options language=bash-remote
     #+BEGIN_SRC bash :results output :eval ask
@@ -297,7 +302,7 @@ served via Apache.
 
     #+RESULTS:
     : Pseudo-terminal will not be allocated because stdin is not a terminal.
-    : Linux webslat 4.9.0-3-amd64 #1 SMP Debian 4.9.30-2+deb9u2 (2017-06-26) x86_64
+    : Linux webslat 4.9.0-4-amd64 #1 SMP Debian 4.9.51-1 (2017-09-28) x86_64
     : 
     : The programs included with the Debian GNU/Linux system are free software;
     : the exact distribution terms for each program are described in the
@@ -337,12 +342,13 @@ served via Apache.
        #+BEGIN_SRC bash :results output :eval ask
 	 echo "chmod 664 webslat/webslat/db.sqlite3
 	       chmod 775 webslat/webslat
+	       chmod --recursive 744 webslat/webslat/slat/static
 	 " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 2>&1 | tail -10 
        #+END_SRC
 
        #+RESULTS:
        : Pseudo-terminal will not be allocated because stdin is not a terminal.
-       : Linux webslat-32 4.9.0-3-686 #1 SMP Debian 4.9.30-2+deb9u2 (2017-06-26) i686
+       : Linux webslat 4.9.0-4-amd64 #1 SMP Debian 4.9.51-1 (2017-09-28) x86_64
        : 
        : The programs included with the Debian GNU/Linux system are free software;
        : the exact distribution terms for each program are described in the
@@ -358,7 +364,7 @@ served via Apache.
        #+BEGIN_SRC bash :results output
            chown :www-data /home/webslat-user/webslat/webslat/db.sqlite3
            chown :www-data /home/webslat-user/webslat/webslat
-           chown :www-data -R /home/webslat-user/webslat/webslat/slat/static
+           chown --recursive :www-data /home/webslat-user/webslat/webslat/slat/static
        #+END_SRC
 21. Edit ~webslat/webslat/webslat/settings.py~
     1. Set:
@@ -380,17 +386,17 @@ served via Apache.
 
     #+RESULTS:
     #+begin_example
+    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/js/admin/DateTimeShortcuts.js'
+    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/js/admin/RelatedObjectLookups.js'
+    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/js/vendor/jquery/jquery.min.js'
+    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/js/vendor/jquery/LICENSE-JQUERY.txt'
+    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/js/vendor/jquery/jquery.js'
+    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/js/vendor/xregexp/xregexp.min.js'
+    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/js/vendor/xregexp/xregexp.js'
+    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/js/vendor/xregexp/LICENSE-XREGEXP.txt'
 
-    You have requested to collect static files at the destination
-    location as specified in your settings:
-
-	/home/webslat-user/webslat/webslat/static
-
-    This will overwrite existing files!
-    Are you sure you want to do this?
-
-    Type 'yes' to continue, or 'no' to cancel: CommandError: Collecting static files cancelled.
-#+end_example
+    1023 static files copied to '/home/webslat-user/webslat/webslat/static'.
+    #+end_example
 
 23. As ~root~ on the VM, edit ~/etc/apache2/sites-available/000-default.conf~, by
     adding, inside the ~<VirtualHost...>~ tag:
