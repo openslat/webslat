@@ -17,7 +17,7 @@ def make_page_label(url, title, comment, content)
            '<TABLE BORDER="0"><TR><TD ALIGN="LEFT">' + url + '</TD></TR><TR><TD>' +
 	   '<TABLE BORDER="1" CELLSPACING="4" CELLBORDER="0">' +
 	   '<TR><TD><B>' + title + '</B><BR ALIGN="CENTER"/>' +
-	   '<I>' + wrap(comment) + '</I>' + 
+           (comment ? '<I>' + wrap(comment) + '</I>' : '') +
 	   '</TD></TR><TR><TD>' + content +
 	   '</TD></TR></TABLE>' + 
 	   '</TD></TR></TABLE>' +
@@ -49,6 +49,10 @@ end
 
 def make_edge_label(label)
   return("<<I>" + wrap(label, 10) + "</I>>")
+end
+
+def make_edge_box_label(label)
+  return("<<TABLE BORDER=\"0\"><TR><TD BORDER=\"1\">" + wrap(label, 10) + "</TD></TR></TABLE>>")
 end
 
 welcome = g.add_nodes("welcome")
@@ -86,11 +90,62 @@ project_editor[:label] = make_page_label(
                  "<TR><TD></TD><TD>" + make_button("Calculations") + "</TD></TR>" +
                  "</TABLE>"))
 
+new_project = g.add_nodes("new_project")
+new_project[:label] = make_page_label(
+  '/slat/project',
+  'New Project', 
+  NIL,
+  make_mock_page("Create a Project", 
+                 "<TABLE BORDER=\"0\" CELLSPACING=\"0\" CELLBORDER=\"0\">" +
+                 "<TR><TD><B>Title</B></TD><TD>" + make_text_box("<I>Enter the project's title</I>") + "</TD></TR>"  +
+                 "<TR><TD><B>Description</B></TD><TD ALIGN=\"LEFT\">" + 
+                 make_text_box("<I>Describe the project</I>") + 
+                 "</TD></TR>"  +
+                 "<TR><TD></TD><TD>" + make_button("Create") + "</TD></TR>" +
+                 "<TR><TD></TD><TD>" + make_button("Cancel") + "</TD></TR>" +
+                 "</TABLE>"))
+
+save = g.add_nodes("save")
+save[:label] = "<<I>" + wrap("Save the Project To the Database", 20) + "</I>>"
+save[:shape] = :folder
+save[:fillcolor] = :cornflowerblue
+save[:style] = :filled
+
+def make_page_ref(graph, name, title)
+  node = graph.add_nodes(name)
+  node[:label] = "<" + wrap(title, 10) + ">"
+  node[:shape] = :box
+  node[:fillcolor] = "cyan:darkslategray3"
+  node[:style] = :filled
+  return(node)
+end
+
+hazard_editor = make_page_ref(g, "hazard_editor", "Hazard Editor")
+edp_editor = make_page_ref(g, "edp_editor", "EDP  Editor")
+component_library = make_page_ref(g, "Component_library", "Component Library")
+component_groups = make_page_ref(g, "Component_groups", "Component Groups")
+calculations = make_page_ref(g, "calculations_", "Calculations")
 
 g.add_edges( welcome, project_editor )[:label] = make_edge_label("Existing Project")
+g.add_edges( welcome, new_project )[:label] = make_edge_label("Create a New Project")
+g.add_edges( new_project, welcome )[:label] = make_edge_label("Cancel")
+g.add_edges( new_project, save )[:label] = make_edge_label("Create")
+g.add_edges( save, project_editor )
+g.add_edges( project_editor, save )[:label] = make_edge_label("Submit Changes")
+g.add_edges( project_editor, hazard_editor )[:label] = make_edge_box_label("Seismic Hazard")
+g.add_edges( hazard_editor, project_editor )[:label] = make_edge_label("done")
+g.add_edges( project_editor, edp_editor )[:label] = make_edge_box_label("Demand Parameters")
+g.add_edges( edp_editor, project_editor )[:label] = make_edge_label("done")
+g.add_edges( project_editor, component_library )[:label] = make_edge_box_label("Components")
+g.add_edges( component_library, project_editor )[:label] = make_edge_label("done")
+g.add_edges( project_editor, component_groups )[:label] = make_edge_box_label("Component Groups")
+g.add_edges( component_groups, project_editor )[:label] = make_edge_label("done")
+g.add_edges( project_editor, calculations )[:label] = make_edge_box_label("Calculations")
+g.add_edges( calculations, project_editor )[:label] = make_edge_label("done")
 
 # Generate output image
 puts g.output( :none => String )
 g.output( :png => "pages-test.png")
 g.output( :pdf => "pages-test.pdf")
 
+puts(wrap("EDP Editor", 10))
