@@ -42,8 +42,17 @@ end
 def make_mock_page(title, content)
   result = "<TABLE BGCOLOR=\"YELLOW\" BORDER=\"1\" CELLSPACING=\"1\" CELLBORDER=\"0\">" +
 	   "<TR><TD><B>" + title + "</B><BR ALIGN=\"LEFT\"/></TD></TR>" +
-	   "<TR><TD>" + content + "</TD></TR>" +
-	   "</TABLE>"
+	   "<TR><TD>"
+  if content.respond_to?("each") then
+    result = result + "<TABLE BORDER=\"0\">"
+    content.each {|c|
+      result = result + "<TR><TD>" + c + "</TD></TR>"
+    }
+    result = result + "</TABLE>"
+  else
+    resutl = result + content
+  end
+   result = result + "</TD></TR></TABLE>"
   return result
 end
 
@@ -55,20 +64,32 @@ def make_edge_box_label(label)
   return("<<TABLE BORDER=\"0\"><TR><TD BORDER=\"1\">" + wrap(label, 10) + "</TD></TR></TABLE>>")
 end
 
+def make_list(label, items)
+  result = "<TABLE BORDER=\"0\">" +
+           "<TR><TD COLSPAN=\"2\">label</TD></TR>"
+  items.each {|i|
+    result = result + "<TR><TD></TD><TD ALIGN=\"LEFT\"><U>#{i}<BR ALIGN=\"LEFT\"/></U></TD></TR>"
+  }
+  result = result + "</TABLE>"
+  return result
+end
+
 welcome = g.add_nodes("welcome")
 welcome[:label] = make_page_label(
   '/slat',
   'Welcome Page', 
   'In a cloud deployment, you would need to log in before getting here.',
   make_mock_page("Welcome to WebSLAT", 
-                 "<TABLE BORDER=\"0\">" +
-                 "<TR><TD COLSPAN=\"2\">Choose an existing project:</TD></TR>" +
-                 "<TR><TD></TD><TD ALIGN=\"LEFT\"><U>Redbook example<BR ALIGN=\"LEFT\"/></U></TD></TR>" +
-                 "<TR><TD></TD><TD ALIGN=\"LEFT\"><U>Project #1</U><BR ALIGN=\"LEFT\"/></TD></TR>" +
-                 "<TR><TD></TD><TD ALIGN=\"LEFT\"><U>Project #2</U><BR ALIGN=\"LEFT\"/></TD></TR>" +
-	         "<TR><TD COLSPAN=\"2\" ALIGN=\"CENTER\">Or</TD><TD></TD></TR>" +
-                 "<TR><TD COLSPAN=\"2\">" + make_button("Create a new project", false) +
-                 "</TD></TR></TABLE>"))
+                 [ make_list("Choose an existing project:",
+                             ["Redbook Example", "Project #1", "Project #2"]),
+                   "Or",
+                   make_button("Create a new project", false)]))
+
+def make_text_field(label, text)
+  return "<TABLE BORDER=\"0\" CELLSPACING=\"0\" CELLBORDER=\"0\">" +
+         "<TR><TD><B>#{label}</B></TD>" + 
+         "<TD BGCOLOR=\"GRAY90\">#{wrap(text)}</TD></TR></TABLE>"
+end
 
 project_editor = g.add_nodes("project_editor")
 project_editor[:label] = make_page_label(
@@ -76,19 +97,15 @@ project_editor[:label] = make_page_label(
   'Project Editor', 
   'This is the main page for the Redbook Example Project.',
   make_mock_page("Redbook Example", 
-                 "<TABLE BORDER=\"0\" CELLSPACING=\"0\" CELLBORDER=\"0\">" +
-                 "<TR><TD><B>Title</B></TD><TD>" + make_text_box("Redbook Project") + "</TD></TR>"  +
-                 "<TR><TD><B>Description</B></TD><TD ALIGN=\"LEFT\">" + 
-                 make_text_box("This project is based on the Redbook reference project") + 
-                 "</TD></TR>"  +
-                 "<TR><TD></TD><TD>" + make_button("Submit Changes") + "</TD></TR>" +
-                 "<TR><TD HEIGHT=\"10\" COLSPAN=\"2\"></TD></TR>" +
-                 "<TR><TD></TD><TD>" + make_button("Seismic Hazard") + "</TD></TR>" +
-                 "<TR><TD></TD><TD>" + make_button("Engineering Demands") + "</TD></TR>" +
-                 "<TR><TD></TD><TD>" + make_button("Component Library") + "</TD></TR>" +
-                 "<TR><TD></TD><TD>" + make_button("Component Groups") + "</TD></TR>" +
-                 "<TR><TD></TD><TD>" + make_button("Calculations") + "</TD></TR>" +
-                 "</TABLE>"))
+                 [ make_text_field("Title", "Redbook Project"),
+                   make_text_field("Description", 
+                                   "This project is based on the Redbook reference project"),
+                   make_button("Submit Changes"),
+                   make_button("Seismic Hazard"),
+                   make_button("Engineering Demands"),
+                   make_button("Component Library"),
+                   make_button("Component Groups"),
+                   make_button("Calculations")]))
 
 new_project = g.add_nodes("new_project")
 new_project[:label] = make_page_label(
@@ -149,3 +166,50 @@ g.output( :png => "pages-test.png")
 g.output( :pdf => "pages-test.pdf")
 
 puts(wrap("EDP Editor", 10))
+
+
+g2 = GraphViz.new( :G, :type => :digraph )
+g2[:size] = "8.27x11.7" #A4
+#g[:size] = "11.7x16.5" #A3
+g2.node[:shape] = :plaintext
+
+def make_dropdown(field, choices)
+  result = "<TABLE BORDER=\"0\"><TR><TD>" + 
+           wrap(field) + "</TD><TD>" +
+           "<TABLE BORDER=\"1\" CELLPADDING=\"0\">"
+  choices.each {|choice|
+    result = result + "<TR><TD>" + make_button(choice) + "</TD></TR>"
+  }
+  result = result + "</TABLE></TD></TR></TABLE>"
+  return result
+end
+
+def make_button_row(buttons)
+  result = "<TABLE BORDER=\"0\"><TR>"
+  buttons.each {|button|
+    result = result + "<TD BORDER=\"0\">" + make_button(button) + "</TD>"
+  }
+  result = result + "</TR></TABLE>"
+  return result;
+end
+
+choose_hazard = g2.add_nodes("choose_hazard")
+choose_hazard[:label] = make_page_label(
+  '/slat//project/id#/hazard/choose',
+  'Hazard Type', 
+  NIL,
+  make_mock_page("Hazard Type", 
+                 [ make_dropdown("Choose tghe hazard type:", 
+                                 ["Non-Linear Hyperbolic",
+                                  "User-Defined Hazard Curve",
+                                  "NZ Standard Curve"]),
+                   make_button_row(["Cancel", "Commit"])]))
+
+interp = g2.add_nodes("interp")
+nzs = g2.add_nodes("nzs")
+nlh = g2.add_nodes("nlh")
+enter = g2.add_nodes("enter")
+subgraph = g2.subgraph()
+puts(subgraph.class())
+g2.output(:png => "pages-test2.png")
+
