@@ -26,11 +26,12 @@ class PageLayout < GraphViz
                    "<TABLE BORDER=\"0\">" +
                    "<TR><TD ALIGN=\"LEFT\">#{url}</TD></TR>" +
                    "<TR><TD><TABLE BORDER=\"1\" CELLSPACING=\"4\" CELLBORDER=\"0\">" +
-                   "<TR><TD><B>#{title}</B><BR ALIGN=\"CENTER\"/>" +
+                   "<TR><TD ALIGN=\"CENTER\"><B>#{title}</B><BR/>" +
                    (comment ? "<I>#{comment.wrap()}</I>" : "") +
                    "</TD></TR>" +
                    "<TR><TD>#{page}</TD></TR>" +
                    "</TABLE>" +
+
                    "</TD></TR></TABLE>" +
                    ">"
     return node
@@ -68,7 +69,7 @@ end
 
 class String
   def wrap(width=35)
-    self.gsub(/(.{1,#{width}})(\s+|\Z)/, "\\1<BR/>")    
+    self.gsub(/(.{1,#{width}})(\s+|\Z)/, "\\1<BR ALIGN=\"LEFT\"/>")    
   end
 end
 
@@ -297,7 +298,7 @@ nzs = g.add_page(
   "nzs",
   "/slat/project/#/hazard/nzs",
   "Seismic Hazard: NZ Standard Curve",
-  "Possible include a plot, or an option to plot",
+  "Possibly include a plot, or an option to plot",
   Mock_Page.new("Seismic Hazard") {|m|
     m.add_text_box("Type:", "NZ Standard Curve")
     m.add_subtable("Parameters:",
@@ -314,13 +315,13 @@ nlh = g.add_page(
   "nlh",
   "/slat/project/#/hazard/nlh",
   "Seismic Hazard: Non-Linear Hyperbolic",
-  "Possible include a plot, or an option to plot",
+  "Possibly include a plot, or an option to plot",
   Mock_Page.new("Seismic Hazard") {|m|
     m.add_text_box("Type:", "Non-Linear Hyperbolic")
     m.add_subtable("Parameters:",
                    [[Bold.new("V<SUB>asy</SUB>"), 1221],
                     [Bold.new("IM<SUB>asy</SUB>"), 29.8],
-                    [Bold.new("alpha<SUB>asy</SUB>"), 62.2]], true)
+                    [Bold.new("alpha<SUB>asy</SUB>"), 62.2]])
     m.add_space()
     m.add_button("Edit")
     m.add_button("Change Hazard Type")
@@ -333,10 +334,10 @@ user_def_edit = g.add_page(
   "Hazard Point Editor",
   "There will be extra cells at the end of the list; " +
   "more can be added by commiting the form (for now; " +
-  "should be a button to to this).<BR/>" +
+  "should be a button to to this)." +
   "For now, points can be deleted by setting them " +
-  "to 0,0, but there should be a button for this. " +
-  "for this as well.",
+  "to 0,0, but there should be a button for this " +
+  "as well.",
   Mock_Page.new("Hazard Point Editor") {|m|
     m.add_choices("Interpolation Method:", ["Log-log", "Linear"])
     m.add_subtable("Parameters:",
@@ -348,5 +349,55 @@ user_def_edit = g.add_page(
     m.add_button("Cancel")
   })
 
+user_def_import = g.add_page(
+  "user_def_import",
+  "/slat/project/#/hazard/interp/import",
+  "Hazard Point Import",
+  "Import points from a file, for interpolation",
+  Mock_Page.new("Hazard Point Import") {|m|
+    m.add_choices("Interpolation Method:", ["Log-log", "Linear"])
+    m.add_choices("File Format:", ["Original SLAT", "CSV"])
+    m.add_text_box("Path:", "<I>path/to/imfunc.csv</I>")
+    m.add_space()
+    m.add_button("Browse")
+    m.add_button("Import")
+    m.add_button("Cancel")
+  })
+
+nzs_edit = g.add_page(
+  "nzs_edit",
+  "/slat/project/#/hazard/nzs/edit",
+  "Seismic Hazard: NZ Standard Curve",
+  "Possibly inlcude a plot, or an option to plot",
+  Mock_Page.new("Seisimic Hazard") {|m|
+    m.add_text_box("Type:", "NZ Standard Curve")
+    m.add_subtable("Parameters:",
+                   [[Bold.new("Location"), "Christchurch"],
+                    [Bold.new("Soil Class"), "C"],
+                    [Bold.new("Period"), "1.5"]], true)
+    m.add_space()
+    m.add_button("Commit")
+    m.add_button("Cancel")
+  })
+
+nlh_edit = g.add_page(
+  "nlh_edit",
+  "/slat/project/#/hazard/nlh",
+  "Non-Linear Hyperbolic Editor",
+  "Possibly include a plot, or an option to plot",
+  Mock_Page.new("Seismic Hazard") {|m|
+    m.add_text_box("Type:", "Non-Linear Hyperbolic")
+    m.add_subtable("Parameters:",
+                   [[Bold.new("V<SUB>asy</SUB>"), 1221],
+                    [Bold.new("IM<SUB>asy</SUB>"), 29.8],
+                    [Bold.new("alpha<SUB>asy</SUB>"), 62.2]], true)
+    m.add_space()
+    m.add_button("Edit")
+    m.add_button("Change Hazard Type")
+    m.add_line(Link.new("Return to Project"))
+  })
+
+
 puts(g.output( :none => String))
 g.output( :png => "pages-test2.png")
+g.output( :pdf => "pages-test2.pdf")
