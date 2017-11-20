@@ -1,5 +1,19 @@
 require 'graphviz'
 
+class PageLayout GraphViz
+  def add_bubble(text, dotted=NIL, color=:white)
+    node = _nodes(text)
+    node[:label] = text
+    node[:shape] = :ellipse
+    node[:style] = "filled"
+    if dotted then
+      node[:style] = node[:style] + ", dashed"
+    end
+    node[:color] = color
+    node[:penwidth] = 3
+    return node
+  end
+
 # Create a new graph
 g = GraphViz.new( :G, :type => :digraph )
 g[:size] = "8.27x11.7" #A4
@@ -32,13 +46,6 @@ def make_button(text, default=false)
   return result
 end
 
-def make_text_box(text)
-  result = "<TABLE BORDER=\"0\" CELLSPACING=\"0\"><TR>" +
-           "<TD BORDER=\"1\" BGCOLOR=\"GRAY90\">" +
-           wrap(text) + "</TD></TR></TABLE>"
-  return result
-end
-
 def make_mock_page(title, content)
   result = "<TABLE BGCOLOR=\"YELLOW\" BORDER=\"1\" CELLSPACING=\"1\" CELLBORDER=\"0\">" +
 	   "<TR><TD><B>" + title + "</B><BR ALIGN=\"LEFT\"/></TD></TR>" +
@@ -66,7 +73,7 @@ end
 
 def make_list(label, items)
   result = "<TABLE BORDER=\"0\">" +
-           "<TR><TD COLSPAN=\"2\">label</TD></TR>"
+           "<TR><TD COLSPAN=\"2\">#{label}</TD></TR>"
   items.each {|i|
     result = result + "<TR><TD></TD><TD ALIGN=\"LEFT\"><U>#{i}<BR ALIGN=\"LEFT\"/></U></TD></TR>"
   }
@@ -83,12 +90,33 @@ welcome[:label] = make_page_label(
                  [ make_list("Choose an existing project:",
                              ["Redbook Example", "Project #1", "Project #2"]),
                    "Or",
-                   make_button("Create a new project", false)]))
+                    make_button("Create a new project", false)]))
 
 def make_text_field(label, text)
   return "<TABLE BORDER=\"0\" CELLSPACING=\"0\" CELLBORDER=\"0\">" +
          "<TR><TD><B>#{label}</B></TD>" + 
          "<TD BGCOLOR=\"GRAY90\">#{wrap(text)}</TD></TR></TABLE>"
+end
+
+def make_text_box_row(label, text)
+  result = "<TD>#{wrap(label)}</TD>" +
+           "<TD BORDER=\"1\" BGCOLOR=\"GRAY80\">#{wrap(text)}</TD>"
+  return(result)
+end
+
+def make_text_row(label, text)
+  result = "<TD>#{wrap(label)}</TD>" +
+           "<TD BORDER=\"1\">#{wrap(text)}</TD>"
+  return(result)
+end
+
+def make_table(rows)
+  result = "<TABLE BORDER=\"0\" CELLSPACING=\"0\" CELLBORDER=\"0\">"
+  rows.each {|row|
+    result = result + "<TR>#{row}</TR>"
+  }
+  result = result + "</TABLE>"
+  return result
 end
 
 project_editor = g.add_nodes("project_editor")
@@ -97,15 +125,16 @@ project_editor[:label] = make_page_label(
   'Project Editor', 
   'This is the main page for the Redbook Example Project.',
   make_mock_page("Redbook Example", 
-                 [ make_text_field("Title", "Redbook Project"),
-                   make_text_field("Description", 
-                                   "This project is based on the Redbook reference project"),
-                   make_button("Submit Changes"),
-                   make_button("Seismic Hazard"),
-                   make_button("Engineering Demands"),
-                   make_button("Component Library"),
-                   make_button("Component Groups"),
-                   make_button("Calculations")]))
+                 [make_table([ make_text_box_row("Title", "Redbook Project"),
+                               make_text_box_row("Description", 
+                                             "This project is based on the Redbook reference project")]),
+                  make_button("Submit Changes"),
+                  make_button("Seismic Hazard"),
+                  make_button("Engineering Demands"),
+                  make_button("Component Library"),
+                  make_button("Component Groups"),
+                  make_button("Calculations")]))
+
 
 new_project = g.add_nodes("new_project")
 new_project[:label] = make_page_label(
@@ -113,14 +142,10 @@ new_project[:label] = make_page_label(
   'New Project', 
   NIL,
   make_mock_page("Create a Project", 
-                 "<TABLE BORDER=\"0\" CELLSPACING=\"0\" CELLBORDER=\"0\">" +
-                 "<TR><TD><B>Title</B></TD><TD>" + make_text_box("<I>Enter the project's title</I>") + "</TD></TR>"  +
-                 "<TR><TD><B>Description</B></TD><TD ALIGN=\"LEFT\">" + 
-                 make_text_box("<I>Describe the project</I>") + 
-                 "</TD></TR>"  +
-                 "<TR><TD></TD><TD>" + make_button("Create") + "</TD></TR>" +
-                 "<TR><TD></TD><TD>" + make_button("Cancel") + "</TD></TR>" +
-                 "</TABLE>"))
+                 [make_table([make_text_box_row("Title", "<I>Enter the project's title</I>"),
+                              make_text_box_row("Description", "<I>Describe the project</I>")]),
+                  make_button("Create"),
+                  make_button("Cancel")]))
 
 save = g.add_nodes("save")
 save[:label] = "<<I>" + wrap("Save the Project To the Database", 20) + "</I>>"
@@ -204,6 +229,17 @@ choose_hazard[:label] = make_page_label(
                                   "User-Defined Hazard Curve",
                                   "NZ Standard Curve"]),
                    make_button_row(["Cancel", "Commit"])]))
+
+user_def = g.add_nodes("user_def")
+user_def[:label] = make_page_label(
+  '/slat/project/#/hazard/interp',
+  "Seismic Hazard: User-defined Hazard Curve",
+  "Possibly include a plot, or an option to plot",
+  make_mock_page("Seismic Hazard",
+                 [make_table([make_text_row("Type", "User-defined Hazard Curve")
+                              make_text_row("Method", "Log-log <I>or</I> Linear"],
+                              make(table
+
 
 interp = g2.add_nodes("interp")
 nzs = g2.add_nodes("nzs")
