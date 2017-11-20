@@ -11,7 +11,7 @@ class PageLayout < GraphViz
     super(xGraphName, hopts)
     self[:size] = "8.27x11.7"
     node[:shape] = :plaintext
-    @next_link_colour = 0
+    @nextlink_colour = 0
     @links = Hash.new()
     block.call(self) if block
   end
@@ -50,11 +50,11 @@ class PageLayout < GraphViz
     name = root
     short_text = long_text if not short_text
     if not @links[root] then
-      @links[root] = {'color' =>@@link_colours[@next_link_colour],
+      @links[root] = {'color' =>@@link_colours[@nextlink_colour],
                       'long_text' => long_text,
                       'short_text' => short_text,
                      }
-      @next_link_colour = @next_link_colour + 1
+      @nextlink_colour = @nextlink_colour + 1
     else
       raise "Duplicate Link"
     end
@@ -63,7 +63,9 @@ class PageLayout < GraphViz
 
   def add_ref(root)
     name = root
-    if not @links[root] then
+    referent = find_node(root).pg.links[root]
+
+    if not referent then
       raise "Undefined link"
     end
 
@@ -74,10 +76,10 @@ class PageLayout < GraphViz
     name = "#{root}#{k}"
 
     return add_bubble(name, 
-                      @links[root]['short_text'],
+                      referent['short_text'],
                       true,
                       :antiquewhite,
-                      @links[root]['color'])
+                      referent['color'])
   end
 
   def add_page(name, url, title, comment, page)
@@ -133,6 +135,7 @@ class PageLayout < GraphViz
   end
   
   def connect(a, b, label=NIL, style=NIL)
+    #puts("> connect(#{a}, #{b}")
     edge = add_edges(a, b)
     if label then
       case style
@@ -340,12 +343,14 @@ g.output( :png => "pages-test.png")
 
 
 seismic_hazard_pages = PageLayout.new()
-seismic_hazard_pages["rankdir"] = :TB
+seismic_hazard_pages[:rankdir] = :TB
+seismic_hazard_pages[:rank] = :same
 
 node_seismic_hazard = seismic_hazard_pages.add_link("seismic_hazard", "Seismic Hazard")
 link_exit = seismic_hazard_pages.add_link("exit", "Back to Project")
 main_graph = PageLayout.new("cluster_main")
-main_graph[:rankdir] = :TB
+main_graph[:rankdir] = :BT 
+main_graph[:rank] = :min
 seismic_hazard_pages.add_graph(main_graph)
 
 start_link = main_graph.add_link("start", "Start /slat/project/#/hazard", "Start")
@@ -356,7 +361,14 @@ start_ref_3 = main_graph.add_ref("start")
 exists = main_graph.add_decision("exists", "Does the hazard exist?")               
 type = main_graph.add_decision("type", "What is the hazard type?")
 
-hazard_type = main_graph.add_page(
+viewers_graph = PageLayout.new("viewers")
+viewers_graph[:rankdir] = :LR
+viewers_graph[:rank] = :same
+
+main_graph.add_graph(viewers_graph)
+
+#hazard_type = viewers_graph.add_nodes("hazard_typexxx")
+hazard_type = viewers_graph.add_page(
   "hazard_type",
   "/slat/project/#/hazard/choose",
   "Hazard Type",
@@ -371,7 +383,7 @@ hazard_type = main_graph.add_page(
     m.add_button("Cancel")
   })
 
-user_def = main_graph.add_page(
+user_def = viewers_graph.add_page(
   "user_def",
   "/slat/project/#/hazard/interp",
   "Seismic Hazard: User-defined Hazard Curve",
@@ -391,7 +403,7 @@ user_def = main_graph.add_page(
     m.add_line(Link.new("Return to Project"))
   })
 
-nzs = main_graph.add_page(
+nzs = viewers_graph.add_page(
   "nzs",
   "/slat/project/#/hazard/nzs",
   "Seismic Hazard: NZ Standard Curve",
@@ -408,7 +420,7 @@ nzs = main_graph.add_page(
     m.add_line(Link.new("Return to Project"))
   })
 
-nlh = main_graph.add_page(
+nlh = viewers_graph.add_page(
   "nlh",
   "/slat/project/#/hazard/nlh",
   "Seismic Hazard: Non-Linear Hyperbolic",
@@ -517,7 +529,13 @@ main_graph.connect(nzs_viewer_link, nzs)
 nlh_viewer_link = main_graph.add_link('nlh_viewer_link', "NLH Viewer")
 main_graph.connect(nlh_viewer_link, nlh)
 
-done_link = main_graph.add_link("done", "Done") # 
+done_subgraph = PageLayout.new("done_subgraph")
+done_subgraph[:rankdir] = :TB
+done_subgraph[:rank] = :same
+main_graph.add_graph(done_subgraph)
+
+done_link = done_subgraph.add_link("done", "Done") # 
+#one_link = main_graph.add_link("done", "Done") # 
 done_ref_1 = main_graph.add_ref("done")
 done_ref_2 = main_graph.add_ref("done")
 done_ref_3 = main_graph.add_ref("done")
@@ -580,7 +598,12 @@ main_graph.connect(nzs_edit, start_ref_2, "Cancel", :BOXED)
 main_graph.connect(nlh_edit, start_ref_3, "Cancel", :BOXED)
 
 seismic_hazard_pages.connect(node_seismic_hazard, main_graph.get_node("start"))
-seismic_hazard_pages.connect(main_graph.get_node("done"), link_exit)
+begin 
+  temp = main_graph.connect(user_def_viewer_ref, main_graph.find_node("done"))
+  temp[:penwidth] = 0
+  temp[:arrowhead] = :none
+end
+seismic_hazard_pages.connect(main_graph.find_node("done"), link_exit)
 seismic_hazard_pages.output( :png => "gmain.png")
 seismic_hazard_pages.output( :pdf => "gmain.pdf")
 puts(seismic_hazard_pages.output( :none => String))
