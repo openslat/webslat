@@ -1118,106 +1118,114 @@ def analysis(request, project_id):
                                                 'pointsVisible': False,
                                                 'curveType': 'function',
                                                 'legend': {'position': 'none'}})
-        im_func = project.IM.model()
-        columns = ['IM', 'Repair Costs']
-        if im_func.DemolitionRate() or im_func.CollapseRate():
-            columns.append('Total Costs')
-                
-        data = [columns]
-        xlimit = im_func.plot_max()
-        for i in range(10):
-            im = i/10 * xlimit
-            new_data = [im]
-            costs = building.CostsByFate(im)
-            new_data.append(costs[0].mean())
-            
-            
+        if False:
+            im_func = project.IM.model()
+            columns = ['IM', 'Repair Costs']
             if im_func.DemolitionRate() or im_func.CollapseRate():
-                non_repair_cost = new_data[1]
-                if im_func.DemolitionRate():
-                    non_repair_cost = non_repair_cost + costs[1].mean()
-                if im_func.CollapseRate():
-                    non_repair_cost = non_repair_cost + costs[2].mean()
-                new_data.append(non_repair_cost)
-            data.append(new_data)
-                   
-        data_source = SimpleDataSource(data=data)
-        by_fate_chart = AreaChart(data_source, options={'title': 'Cost | IM',
-                                                        'hAxis': {'logScale': True, 'title': 'Intensity Measure (g)'},
-                                                        'vAxis': {'logScale': True, 'format': 'decimal',
-                                                                  'title': 'Cost ($)'},
-                                                        'pointSize': 5})
+                columns.append('Total Costs')
+
+            data = [columns]
+            xlimit = im_func.plot_max()
+            for i in range(10):
+                im = i/10 * xlimit
+                new_data = [im]
+                costs = building.CostsByFate(im)
+                new_data.append(costs[0].mean())
+
+
+                if im_func.DemolitionRate() or im_func.CollapseRate():
+                    non_repair_cost = new_data[1]
+                    if im_func.DemolitionRate():
+                        non_repair_cost = non_repair_cost + costs[1].mean()
+                    if im_func.CollapseRate():
+                        non_repair_cost = non_repair_cost + costs[2].mean()
+                    new_data.append(non_repair_cost)
+                data.append(new_data)
+
+            data_source = SimpleDataSource(data=data)
+            by_fate_chart = AreaChart(data_source, options={'title': 'Cost | IM',
+                                                            'hAxis': {'logScale': True, 'title': 'Intensity Measure (g)'},
+                                                            'vAxis': {'logScale': True, 'format': 'decimal',
+                                                                      'title': 'Cost ($)'},
+                                                            'pointSize': 5})
+            
         floors = []
         for f in range(project.floors + 1):
             floors.append([])
-            
-        # Split repair costs by Structural and Non-Structural Components
-        im_func = project.IM.model()
-        columns = ['IM', 'Structural', 'Non-Structural', 'Total']
-
-        structural_components = []
-        non_structural_components = []
         demands = EDP.objects.filter(project=project)
         for edp in demands:
             for c in Component_Group.objects.filter(demand=edp):
                 floors[edp.floor].append(c)
-                if c.component.structural != 0:
-                    structural_components.append(c)
-                else:
-                    non_structural_components.append(c)
 
-        data = [columns]
-        xlimit = im_func.plot_max()
-        for i in range(10):
-            im = i/10 * xlimit
-            new_data = [im]
-            
-            costs = 0
-            for cg in structural_components:
-                costs = costs + cg.model().E_Cost_IM(im)
-            new_data.append(costs)
+        if False:
+            # Split repair costs by Structural and Non-Structural Components
+            im_func = project.IM.model()
+            columns = ['IM', 'Structural', 'Non-Structural', 'Total']
 
-            costs = 0
-            for cg in non_structural_components:
-                costs = costs + cg.model().E_Cost_IM(im)
-            new_data.append(costs)
-                   
-            total_cost = building.Cost(im, False)
-            new_data.append(total_cost.mean())
-            data.append(new_data)
+            structural_components = []
+            non_structural_components = []
+            demands = EDP.objects.filter(project=project)
+            for edp in demands:
+                for c in Component_Group.objects.filter(demand=edp):
+                    floors[edp.floor].append(c)
+                    if c.component.structural != 0:
+                        structural_components.append(c)
+                    else:
+                        non_structural_components.append(c)
 
-        data_source = SimpleDataSource(data=data)
-        s_ns_chart = AreaChart(data_source, options={'title': 'Cost | IM',
-                                                     'hAxis': {'logScale': True, 'title': 'Intensity Measure (g)'},
-                                                     'vAxis': {'logScale': True, 'format': 'decimal',
-                                                               'title': 'Cost ($)' ,
-                                                               'viewWindow': {'min': 1}},
-                                                     'pointSize': 5})
+            data = [columns]
+            xlimit = im_func.plot_max()
+            for i in range(10):
+                im = i/10 * xlimit
+                new_data = [im]
 
-        columns = ['IM']
-        for f in range(project.floors + 1):
-            columns.append("Floor #{}".format(f))
-        #columns.append('Total')
-        data = [columns]
-        
-        xlimit = im_func.plot_max()
-        for i in range(10):
-            im = i/10 * xlimit
-            new_data = [im]
-
-            for f in range(project.floors + 1):
                 costs = 0
-                for c in floors[f]:
-                    costs = costs + c.model().E_Cost_IM(im)
+                for cg in structural_components:
+                    costs = costs + cg.model().E_Cost_IM(im)
                 new_data.append(costs)
-            data.append(new_data)
 
-        data_source = SimpleDataSource(data=data)
-        by_floor_chart = LineChart(data_source, options={'title': 'Cost | IM',
-                                                         'hAxis': {'logScale': False, 'title': 'Intensity Measure (g)'},
-                                                         'vAxis': {'logScale': False, 'format': 'decimal',
-                                                                   'title': 'Cost ($)'},
+                costs = 0
+                for cg in non_structural_components:
+                    costs = costs + cg.model().E_Cost_IM(im)
+                new_data.append(costs)
+
+                total_cost = building.Cost(im, False)
+                new_data.append(total_cost.mean())
+                data.append(new_data)
+
+            data_source = SimpleDataSource(data=data)
+            s_ns_chart = AreaChart(data_source, options={'title': 'Cost | IM',
+                                                         'hAxis': {'logScale': True, 'title': 'Intensity Measure (g)'},
+                                                         'vAxis': {'logScale': True, 'format': 'decimal',
+                                                                   'title': 'Cost ($)' ,
+                                                                   'viewWindow': {'min': 1}},
                                                          'pointSize': 5})
+
+        if False:
+            columns = ['IM']
+            for f in range(project.floors + 1):
+                columns.append("Floor #{}".format(f))
+            #columns.append('Total')
+            data = [columns]
+
+            xlimit = im_func.plot_max()
+            for i in range(10):
+                im = i/10 * xlimit
+                new_data = [im]
+
+                for f in range(project.floors + 1):
+                    costs = 0
+                    for c in floors[f]:
+                        costs = costs + c.model().E_Cost_IM(im)
+                    new_data.append(costs)
+                data.append(new_data)
+
+            data_source = SimpleDataSource(data=data)
+            by_floor_chart = LineChart(data_source, options={'title': 'Cost | IM',
+                                                             'hAxis': {'logScale': False, 'title': 'Intensity Measure (g)'},
+                                                             'vAxis': {'logScale': False, 'format': 'decimal',
+                                                                       'title': 'Cost ($)'},
+                                                             'pointSize': 5})
 
         columns = ['Floor', 'Cost']
         data = []
@@ -1263,9 +1271,9 @@ def analysis(request, project_id):
     return render(request, 'slat/analysis.html', {'project': project, 
                                                   'structure': project.model(),
                                                   'chart': chart,
-                                                  'by_fate_chart': by_fate_chart,
-                                                  's_ns_chart': s_ns_chart,
-                                                  'by_floor_chart': by_floor_chart,
+                                                  #'by_fate_chart': by_fate_chart,
+                                                  #'s_ns_chart': s_ns_chart,
+                                                  #'by_floor_chart': by_floor_chart,
                                                   'by_floor_bar_chart': by_floor_bar_chart,
                                                   'by_comp_pie_chart': by_comp_pie_chart})
 
