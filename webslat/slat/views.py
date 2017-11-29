@@ -13,7 +13,7 @@ from .nzs import *
 from math import *
 from graphos.sources.model import SimpleDataSource
 from graphos.sources.model import ModelDataSource
-from graphos.renderers.gchart import LineChart, AreaChart
+from graphos.renderers.gchart import LineChart, AreaChart, BarChart, PieChart
 from dal import autocomplete
 from django.template import RequestContext
 
@@ -1190,7 +1190,8 @@ def analysis(request, project_id):
         s_ns_chart = AreaChart(data_source, options={'title': 'Cost | IM',
                                                      'hAxis': {'logScale': True, 'title': 'Intensity Measure (g)'},
                                                      'vAxis': {'logScale': True, 'format': 'decimal',
-                                                               'title': 'Cost ($)'},
+                                                               'title': 'Cost ($)' ,
+                                                               'viewWindow': {'min': 1}},
                                                      'pointSize': 5})
 
         columns = ['IM']
@@ -1217,14 +1218,56 @@ def analysis(request, project_id):
                                                          'vAxis': {'logScale': False, 'format': 'decimal',
                                                                    'title': 'Cost ($)'},
                                                          'pointSize': 5})
-        
 
+        columns = ['Floor', 'Cost']
+        data = []
+        
+        xlimit = im_func.plot_max()
+        for f in range(project.floors + 1):
+            costs = 0
+            for c in floors[f]:
+                costs = costs + c.model().E_annual_cost()
+            if f == 0:
+                label = 'Ground'
+            elif f == project.floors:
+                label = 'Roof'
+            else:
+                label = str(f)
+            data.append([label, costs])
+
+        data.append(columns)
+        data.reverse()
+        data_source = SimpleDataSource(data=data)
+        by_floor_bar_chart = BarChart(data_source, options={'title': 'Mean Annual Repair Cost By Floor',
+                                                            'hAxis': {'title': 'Cost ($)'},
+                                                            'vAxis': {'title': 'Floor'}})
+
+        columns = ['Component Type', 'Cost']
+        data = [columns]
+        groups = {}
+        demands = EDP.objects.filter(project=project)
+        for edp in demands:
+            for c in Component_Group.objects.filter(demand=edp):
+                type = c.component.name
+                if not groups.get(type):
+                    groups[type] = 0
+                groups[type] = groups[type] + c.model().E_annual_cost()
+
+        
+        for key in groups.keys():
+            data.append([key, groups[key]])
+
+        data_source = SimpleDataSource(data=data)
+        by_comp_pie_chart = PieChart(data_source, options={'title': 'Mean Annual Repair Cost By Component Type'})
+        
     return render(request, 'slat/analysis.html', {'project': project, 
                                                   'structure': project.model(),
                                                   'chart': chart,
                                                   'by_fate_chart': by_fate_chart,
                                                   's_ns_chart': s_ns_chart,
-                                                  'by_floor_chart': by_floor_chart})
+                                                  'by_floor_chart': by_floor_chart,
+                                                  'by_floor_bar_chart': by_floor_bar_chart,
+                                                  'by_comp_pie_chart': by_comp_pie_chart})
 
 class ComponentAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
