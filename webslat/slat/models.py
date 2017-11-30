@@ -83,7 +83,7 @@ class Project(models.Model):
     def floor_label(self,floor):
         floor = int(floor)
         if floor == 0:
-            return 'Ground'
+            return 'Ground Floor'
         elif floor == self.floors:
             return 'Roof'
         else:
