@@ -81,6 +81,7 @@ class Project(models.Model):
                                               self.rarity)
 
     def floor_label(self,floor):
+        floor = int(floor)
         if floor == 0:
             return 'Ground'
         elif floor == self.floors:

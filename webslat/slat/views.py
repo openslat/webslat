@@ -979,6 +979,7 @@ def floor_cgroup(request, project_id, floor_num, cg_id=None):
 
          return render(request, 'slat/floor_cgroup.html', {'project': project,
                                                            'floor_num': floor_num, 
+                                                           'floor_label': project.floor_label(floor_num),
                                                            'cg_id': cg_id,
                                                            'demand_form': demand_form})
      
@@ -1063,6 +1064,7 @@ def floor_cgroups(request, project_id, floor_num):
         return render(request, 'slat/floor_cgroups.html',
                       {'project': project,
                        'floor_num': floor_num,
+                       'floor_label': project.floor_label(floor_num),
                        'cgs': cgs})
 
 @login_required

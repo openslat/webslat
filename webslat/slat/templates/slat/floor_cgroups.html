@@ -8,11 +8,11 @@
 {% endblock %}
 
 {% block bodyclass %}{{ block.super }} slat {% endblock %}
-{% block title %}WebSLAT: {{ project.title_text }}: Floor #{{ floor_num }} Component Groups{% endblock %}
-{% block content_title %}{{ project.title_text }}: Floor #{{ floor_num }} Component Groups{% endblock %}
+{% block title %}WebSLAT: {{ project.title_text }}: {{ floor_label }} Component Groups{% endblock %}
+{% block content_title %}{{ project.title_text }}: {{ floor_label }} Component Groups{% endblock %}
 {% block content %}
 <div class="project_title">
-Component Groups for Floor #{{ floor_num }}
+Component Groups for {{ floor_label }}
 </div>
 
 {{ form.errors }}
