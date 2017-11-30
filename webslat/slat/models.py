@@ -3,7 +3,7 @@ import sys
 import time
 from scipy.optimize import fsolve, newton
 from django.db import models
-from django.forms import  ModelForm, BaseModelFormSet, NumberInput, Textarea, TextInput, FloatField, FileInput, FileField, Form, ModelChoiceField, IntegerField, HiddenInput, CharField
+from django.forms import  ModelForm, BaseModelFormSet, Select, NumberInput, Textarea, TextInput, FloatField, FileInput, FileField, Form, ModelChoiceField, IntegerField, HiddenInput, CharField
 from django.forms import Form, ChoiceField, Select
 from slat.constants import *
 from .nzs import *
@@ -15,11 +15,23 @@ from dal import forward
 
 # Create your models here.
 class Project(models.Model):
+    FREQUENCY_CHOICES = (
+        (1./20, u'20'),
+        (1./25, u'25'),
+        (1./50, u'50'),
+        (1./100, u'100'),
+        (1./250, u'250'),
+        (1./500, u'500'),
+        (1./1000, u'1000'),
+        (1./2500, u'2000'),
+        (1./2500, u'2500'),
+    )
+
     title_text = models.CharField(max_length=50)
     description_text = models.CharField(max_length=200, blank=True)
     IM = models.ForeignKey('IM', null=True, blank=True)
     floors = models.IntegerField(null=False, blank=False)
-    rarity = models.FloatField(null=False, default=1E-4)
+    rarity = models.FloatField(null=False, choices=FREQUENCY_CHOICES)
     mean_im_collapse = models.FloatField(null=True, blank=True)
     sd_ln_im_collapse = models.FloatField(null=True, blank=True)
     mean_cost_collapse = models.FloatField(null=True, blank=True)
@@ -67,6 +79,14 @@ class Project(models.Model):
                                               im,
                                               floors,
                                               self.rarity)
+
+    def floor_label(self,floor):
+        if floor == 0:
+            return 'Ground'
+        elif floor == self.floors:
+            return 'Roof'
+        else:
+            return "Floor #{}".format(floor)
     
     
 class IM_Types(models.Model):
@@ -398,7 +418,7 @@ class ProjectForm(ModelForm):
             'description_text': Textarea(attrs={'cols': 50, 'rows': 4, 'title': "Enter the description"}),
             'IM': HiddenInput,
             'title_text': TextInput(attrs={'title': 'Enter the title text here.'}),
-            'rarity': NumberInput(attrs={'title': "The rate-of-exceedence of the rarest event we are interested in displaying."}),
+            'rarity': Select(attrs={'title': "The rate-of-exceedence of the rarest event we are interested in displaying."}),
             'floors': NumberInput(attrs={'title': "The number of floors in the structure."}),
             'mean_im_collapse': NumberInput(attrs={'title': 'The mean IM value at which collapse occurs.'}),
             'sd_ln_im_collapse': NumberInput(attrs={'title': 'The standard deviation of log(IM) at which collapse occurs.'}),

@@ -38,14 +38,26 @@ def index(request):
 def project(request, project_id=None):
     chart = None
     if request.method == 'POST':
+        print(request.POST)
+        print("project_id: {}".format(project_id))
+        
         if project_id:
             project = Project.objects.get(pk=project_id)
             form = ProjectForm(request.POST, Project.objects.get(pk=project_id), initial=model_to_dict(project))
             form.instance.id = project_id
             form.instance.floors = project.floors
+            print("Floors: {}".format(project.floors))
+            print("Floors: {}".format(form.instance.floors))
+            print("Form: {}".format(form))
         else:
             project = None
             form = ProjectForm(request.POST)
+
+        print("***************")
+        if not form.is_valid():
+            print("INVALID")
+            print(form.errors)
+        #print(project.rarity)
 
         if form.is_valid():
             if project:
@@ -233,10 +245,13 @@ def _plot_hazard(h):
             
         data_source = SimpleDataSource(data=data)
         chart = LineChart(data_source, options={'title': 'Intensity Measure Rate of Exceedance', 
-                                                'hAxis': {'logScale': True, 'title': 'Intensity Measure (g)'},
+                                                'hAxis': {'logScale': True, 'title': 'Intensity Measure (g)',
+                                                          'minorGridlines': {'count': 3}},
                                                 'vAxis': {'logScale': True, 
                                                           'title': 'Rate of Exceedance',
-                                                          'format': 'scientific'},
+                                                          'format': 'decimal',
+                                                          'gridlines': {'count': 3},
+                                                          'minorGridlines': {'count': 5}},
                                                 'pointSize': 5,
                                                 'legend': {'position': 'none'}})
         return chart
@@ -1053,9 +1068,11 @@ def floor_cgroups(request, project_id, floor_num):
 @login_required
 def floors(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
-    print(project.floors)
-    return render(request, 'slat/floors.html', {'project': project, 
-                                                'floors': range(project.floors + 1)})
+    floors = list(map(lambda f: [f, project.floor_label(f)], range(project.floors + 1)))
+    floors.reverse()
+    return render(request, 'slat/floors.html', 
+                  {'project': project, 
+                   'floors': floors})
 @login_required
 def demand(request, project_id, floor_num, type):
     project = get_object_or_404(Project, pk=project_id)
@@ -1235,13 +1252,7 @@ def analysis(request, project_id):
             costs = 0
             for c in floors[f]:
                 costs = costs + c.model().E_annual_cost()
-            if f == 0:
-                label = 'Ground'
-            elif f == project.floors:
-                label = 'Roof'
-            else:
-                label = str(f)
-            data.append([label, costs])
+            data.append([project.floor_label(f), costs])
 
         data.append(columns)
         data.reverse()

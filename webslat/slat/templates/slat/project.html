@@ -22,9 +22,10 @@
     {% csrf_token %}
     <table class="loose"><tr class="loose"><td class="loose"> <label for="id_title_text"> Title </label></td><td class="loose"> {{ form.title_text }}</td></tr>
       <tr class="loose"><td class="loose"><label for="id_description_text"> Description </label></td><td class="loose">{{ form.description_text }}</td></tr>
-      <tr class="loose"><td class="loose"><label for="id_rarity"> Rarity</td><td class="loose"> {{form.rarity }} </td></tr>
+      <tr class="loose"><td class="loose"><label for="id_rarity"> Frequency: </td><td class="loose"> 1 in {{form.rarity }} years.</td></tr>
     {% if form.instance.floors %}
-      <tr class="loose"><td class="loose"><label for="id_floors"> Floors </label></td><td class="loose">{{ form.instance.floors }}</td></tr>
+      <tr class="loose"><td class="loose"><label for="id_floors"> Floors </label></td><td class="loose">{{ form.instance.floors }}      {{ form.floors }}
+</td></tr>
     {% else %}
       <tr class="loose"><td class="loose"><label for="id_floors"> Floors </label></td><td class="loose">{{ form.floors }}</td></tr>
     {% endif %}
