@@ -260,14 +260,8 @@ class EDP(models.Model):
     interpolation_method = models.ForeignKey(Interpolation_Method, null=True, blank=False)
 
     def __str__(self):
-        if self.floor == 0:
-            floor = "Ground Floor"
-        else:
-            floor = "Floor #" + str(self.floor)
-        for c in self.EDP_TYPE_CHOICES:
-            if c[0] == self.type:
-                return floor + ' ' + c[1]
-        return floor + "????"
+        return "{} {}".format(self.project.floor_label(self.floor),
+                              dict(EDP.EDP_TYPE_CHOICES)[self.type])
 
     def _make_model(self):
         if not self.flavour:

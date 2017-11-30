@@ -14,15 +14,7 @@
 {% block content %}
 <div class="project_title">
 <b>Project:</b>{{ project.title_text }}
-<p><b>Demand: </b>Floor #{{ edp.floor }}
-    {% if edp.type == 'A' %}
-        Acceleration
-    {% elif edp.type == 'D' %}
-        Drift
-    {% else %}
-        <i>Unknown Demand</i>
-    {% endif %}
-</p>
+<p><b>Demand: </b>{{ edp }}</p>
 </div>
 
 <form action="{% url 'slat:edp_userdef_edit' project.id edp.id %}" method="post">

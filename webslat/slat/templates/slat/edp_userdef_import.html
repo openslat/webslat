@@ -16,15 +16,7 @@
 <b>Project:</b>{{ project.title_text }}
 </div>
 <p>Import demand data from a file</P>
-<p><b>Demand: </b>Floor #{{ edp.floor }}
-    {% if edp.type == 'A' %}
-        Acceleration
-    {% elif edp.type == 'D' %}
-        Drift
-    {% else %}
-        <i>Unknown Demand</i>
-    {% endif %}
-</p>
+<p><b>Demand: </b>{{ edp }}</p>
 
 
 <form enctype="multipart/form-data" action="{% url 'slat:edp_userdef_import' project.id edp.id %}" method="post">

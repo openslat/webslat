@@ -5,14 +5,7 @@
 {% for e in edps %}
 <p><a href="{% url 'slat:edp_view' project.id e.id %}">
     {% if e.flavour is None %}<i>{% else %}<b>{% endif %}
-    Floor # {{ e.floor }}
-    {% if e.type == 'A' %}
-        Acceleration
-    {% elif e.type == 'D' %}
-        Drift
-    {% else %}
-        <i>Unknown Demand</i>
-    {% endif %}
+        {{ ed }}
     {% if e.flavour is None %}</i>{% else %}</b>{% endif %}
     </a></p>
 {% endfor %}
