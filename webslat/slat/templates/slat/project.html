@@ -30,6 +30,7 @@
     {% endif %}
       </table>
     {{ form.IM }}
+    <details>
     <table border="1"><tr><th>Event</th><th>mean(IM)</th><th>sd(ln(IM))</th><th>mean(Cost)</th><th>sd(ln(Cost))</th></tr>
     <tr><th>Collapse</th><td> {{ form.mean_im_collapse }} </td><td> {{ form.sd_ln_im_collapse }} </td><td> {{ form.mean_cost_collapse }} </td><td> {{ form.sd_ln_cost_collapse }} </td></tr>
     <tr><th>Demolition</th><td> {{ form.mean_im_demolition }} </td><td> {{ form.sd_ln_im_demolition }} </td><td> {{ form.mean_cost_demolition }} </td><td> {{ form.sd_ln_cost_demolition }} </td></tr>
@@ -44,11 +45,14 @@
 	      <a href="{% url 'slat:index' %}"  class="link_button">Cancel</a>
 	  </td></tr></table>
    {% endif %}    
+    </details>
 </form>
 
-{% if chart %} 
-    {{ chart.as_html }}
-{% endif %}
+{% comment %}
+    {% if chart %} 
+        {{ chart.as_html }}
+    {% endif %}
+{% endcomment %}
 
 
 {% if form.instance.id %}
