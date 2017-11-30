@@ -16,7 +16,7 @@ Component Groups for {{ floor_label }}
 </div>
 
 {{ form.errors }}
-
+{% comment %}
 <b>Structural Components</b>
 <table border="1"><tr><th><b>Component</b></th><th><b>Quantity</b></th><th><b>E annual cost</b></th><th></th><th></th></tr>
 {% for cg in cgs %}
@@ -63,6 +63,28 @@ Component Groups for {{ floor_label }}
   {% endif %}
 {% endfor %}
 </table>
+{% endcomment %}
+
+<table border="1"><tr><th><b>Component</b></th><th><b>Quantity</b></th><th><b>E annual cost</b></th><th></th><th></th></tr>
+{% for cg in cgs %}
+<tr><td>
+    <!-- <a href="{% url 'slat:component' cg.component.ident %}"> -->{{ cg.component }}<!--</a>--></td>
+    <td align="RIGHT">{{ cg.quantity }}</td>
+   <td align="RIGHT">{{ cg.model.E_annual_cost|floatformat:2 }}</td>
+    <td>
+    <form action="{% url 'slat:floor_compgroup' project.id floor_num cg.id  %}" method="get">
+        {% csrf_token %}
+    <input type="submit" name='edit' value="Edit" class="table"/>
+    </form>
+    </td><td>
+    <form action="{% url 'slat:floor_compgroup' project.id floor_num cg.id  %}" method="post">
+        {% csrf_token %}
+      <input type="submit" name='delete' value="Delete" class="table"/>
+    </form>
+    </td></tr>
+{% endfor %}
+</table>
+
 
 <p><a href="{% url 'slat:floor_compgroup' project.id floor_num %}" class="link_button">New Component Group</a></p>
 
