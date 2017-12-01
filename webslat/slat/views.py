@@ -1124,11 +1124,14 @@ def analysis(request, project_id):
         
         data_source = SimpleDataSource(data=data)
         
-        title = "EAL=${}\n({} % of rebuild cost)\nDiscount rate = {}%".format(round(building.AnnualCost().mean()),
-                                                          round(10000 * 
-                                                                building.AnnualCost().mean()/building.getRebuildCost().mean()) /
-                                                          100,
-                                                          100 * rate)
+        if isnan(building.getRebuildCost().mean()):
+            title = "EAL=${}\nDiscount rate = {}%".format(building.AnnualCost().mean(), 100 * rate)
+        else:
+            title = "EAL=${}\n({} % of rebuild cost)\nDiscount rate = {}%".format(round(building.AnnualCost().mean()),
+                                                                                  round(10000 * 
+                                                                                        building.AnnualCost().mean()/building.getRebuildCost().mean()) /
+                                                                                  100,
+                                                                                  100 * rate)
         chart = LineChart(data_source, options={'title': title,
                                                 'hAxis': {'logScale': False, 'title': 'Time from present (years)'},
                                                 'vAxis': {'logScale': False, 'format': 'decimal',
