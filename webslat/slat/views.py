@@ -1124,7 +1124,7 @@ def analysis(request, project_id):
         data_source = SimpleDataSource(data=data)
         
         if isnan(building.getRebuildCost().mean()):
-            title = "EAL=${}\nDiscount rate = {}%".format(building.AnnualCost().mean(), 100 * rate)
+            title = "EAL=${}\nDiscount rate = {}%".format(round(building.AnnualCost().mean()), 100 * rate)
         else:
             title = "EAL=${}\n({} % of rebuild cost)\nDiscount rate = {}%".format(round(building.AnnualCost().mean()),
                                                                                   round(10000 * 
