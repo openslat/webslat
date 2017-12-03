@@ -87,7 +87,7 @@ class Project(models.Model):
         elif floor == self.floors:
             return 'Roof'
         else:
-            return "Floor #{}".format(floor)
+            return "Floor #{}".format(floor + 1)
     
     
 class IM_Types(models.Model):
