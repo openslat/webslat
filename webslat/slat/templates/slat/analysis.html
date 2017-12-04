@@ -25,26 +25,32 @@
 
 {% if chart %} 
     {{ chart.as_html }}
+    <hr />
 {% endif %}
 
 {% if by_fate_chart %} 
     {{ by_fate_chart.as_html }}
+    <hr />
 {% endif %}
 
 {% if s_ns_chart %} 
     {{ s_ns_chart.as_html }}
+    <hr />
 {% endif %}
 
 {% if by_floor_chart %} 
     {{ by_floor_chart.as_html }}
+    <hr />
 {% endif %}
 
 {% if by_floor_bar_chart %} 
     {{ by_floor_bar_chart.as_html }}
+    <hr />
 {% endif %}
 
 {% if by_comp_pie_chart %} 
     {{ by_comp_pie_chart.as_html }}
+    <hr />
 {% endif %}
 </hr>
 <a href="{% url 'slat:project' project.id %}">Return to Project</a><br /><br/>
