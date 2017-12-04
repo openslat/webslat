@@ -80,6 +80,9 @@ class Project(models.Model):
                                               floors,
                                               self.rarity)
 
+    def im_label(self):
+        return self.IM.label()
+
     def floor_label(self,floor):
         floor = int(floor)
         if floor == 0:
@@ -157,6 +160,9 @@ class IM(models.Model):
     nlh = models.ForeignKey(NonLinearHyperbolic, null=True, blank=True)
     interp_method = models.ForeignKey(Interpolation_Method, null=True, blank=True)
     nzs = models.ForeignKey(NZ_Standard_Curve, null=True, blank=True)
+
+    def label(self):
+        return "Spectral Acceleration (g)"
     
     def _make_model(self):
         try:

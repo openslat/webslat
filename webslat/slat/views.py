@@ -245,7 +245,7 @@ def _plot_hazard(h):
             
         data_source = SimpleDataSource(data=data)
         chart = LineChart(data_source, options={'title': 'Intensity Measure Rate of Exceedance', 
-                                                'hAxis': {'logScale': True, 'title': 'Intensity Measure (g)',
+                                                'hAxis': {'logScale': True, 'title': h.label(),
                                                           'minorGridlines': {'count': 3}},
                                                 'vAxis': {'logScale': True, 
                                                           'title': 'Rate of Exceedance',
@@ -624,7 +624,7 @@ def _plot_demand(edp):
             
         data_source = SimpleDataSource(data=data)
         chart1 = LineChart(data_source, options={'title': '{} | Intensity Measure'.format(demand), 
-                                                 'hAxis': {'title': 'Intensity Measure (g)'},
+                                                 'hAxis': {'title': edp.project.im_label()},
                                                  'vAxis': {'title': demand},
                                                 'pointSize': 5})
         
@@ -1165,7 +1165,7 @@ def analysis(request, project_id):
 
             data_source = SimpleDataSource(data=data)
             by_fate_chart = AreaChart(data_source, options={'title': 'Cost | IM',
-                                                            'hAxis': {'logScale': True, 'title': 'Intensity Measure (g)'},
+                                                            'hAxis': {'logScale': True, 'title': project.im_label()},
                                                             'vAxis': {'logScale': True, 'format': 'decimal',
                                                                       'title': 'Cost ($)'},
                                                             'pointSize': 5})
@@ -1216,7 +1216,7 @@ def analysis(request, project_id):
 
             data_source = SimpleDataSource(data=data)
             s_ns_chart = AreaChart(data_source, options={'title': 'Cost | IM',
-                                                         'hAxis': {'logScale': True, 'title': 'Intensity Measure (g)'},
+                                                         'hAxis': {'logScale': True, 'title': project.im_label()},
                                                          'vAxis': {'logScale': True, 'format': 'decimal',
                                                                    'title': 'Cost ($)' ,
                                                                    'viewWindow': {'min': 1}},
@@ -1243,7 +1243,7 @@ def analysis(request, project_id):
 
             data_source = SimpleDataSource(data=data)
             by_floor_chart = LineChart(data_source, options={'title': 'Cost | IM',
-                                                             'hAxis': {'logScale': False, 'title': 'Intensity Measure (g)'},
+                                                             'hAxis': {'logScale': False, 'title': project.im_label()},
                                                              'vAxis': {'logScale': False, 'format': 'decimal',
                                                                        'title': 'Cost ($)'},
                                                              'pointSize': 5})
