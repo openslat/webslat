@@ -64,7 +64,7 @@
       <input type="submit" value="Site Hazard" class="normal"/>
     </form></td>
     {% if form.instance.IM %}
-	<td><form action="{% url 'slat:floors' form.instance.id %}" method="get">
+	<td><form action="{% url 'slat:levels' form.instance.id %}" method="get">
           {% csrf_token %}
           <input type="submit" value="Engineering Demands" class="normal"/>
         </form></td>

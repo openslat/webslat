@@ -30,7 +30,6 @@ class Project(models.Model):
     title_text = models.CharField(max_length=50)
     description_text = models.CharField(max_length=200, blank=True)
     IM = models.ForeignKey('IM', null=True, blank=True)
-    floors = models.IntegerField(null=False, blank=False)
     rarity = models.FloatField(null=False, choices=FREQUENCY_CHOICES)
     mean_im_collapse = models.FloatField(null=True, blank=True)
     sd_ln_im_collapse = models.FloatField(null=True, blank=True)
@@ -62,6 +61,12 @@ class Project(models.Model):
         if not pyslat.structure.lookup(self.id):
             self._make_model()
         return pyslat.structure.lookup(self.id)
+
+    def levels(self):
+        return list(Level.objects.filter(project=self).order_by('-level'))
+
+    def num_levels(self):
+        return length(self.levels())
             
     def __str__(self):
         if self.IM:
@@ -69,30 +74,24 @@ class Project(models.Model):
         else:
             im = "<no IM>"
 
-        if self.floors:
-            floors = self.floors
-        else:
-            floors = "<no floors>"
-
         return "{}. {}: {}; {} {} {} ".format(self.id, self.title_text, 
                                               self.description_text,
                                               im,
-                                              floors,
+                                              self.num_levels(),
                                               self.rarity)
 
     def im_label(self):
         return self.IM.label()
 
     def floor_label(self,floor):
-        floor = int(floor)
-        if floor == 0:
-            return 'Ground Floor'
-        elif floor == self.floors:
-            return 'Roof'
-        else:
-            return "Floor #{}".format(floor + 1)
+        level = Level.objects.get(project=self, level=floor)
+        return level.label
     
-    
+class Level(models.Model):
+    project = models.ForeignKey(Project, blank=False, null=False)
+    level = models.IntegerField(blank=False, null=False)
+    label = models.CharField(max_length=50, blank=False, null=False)
+
 class IM_Types(models.Model):
     name_text = models.CharField(max_length=25)
 
@@ -253,7 +252,7 @@ class EDP_PowerCurve(models.Model):
 
 class EDP(models.Model):
     project = models.ForeignKey(Project, blank=False, null=False)
-    floor = models.IntegerField()
+    level = models.ForeignKey(Level, blank=False, null=False)
     EDP_TYPE_DRIFT = 'D'
     EDP_TYPE_ACCEL = 'A'
     EDP_TYPE_CHOICES = (
@@ -266,7 +265,7 @@ class EDP(models.Model):
     interpolation_method = models.ForeignKey(Interpolation_Method, null=True, blank=False)
 
     def __str__(self):
-        return "{} {}".format(self.project.floor_label(self.floor),
+        return "{} {}".format(self.level.label,
                               dict(EDP.EDP_TYPE_CHOICES)[self.type])
 
     def _make_model(self):
@@ -530,12 +529,11 @@ def ListOfComponentCategories():
     
 
 class ComponentForm(Form):
-    def __init__(self, initial=None, floor_num=None):
+    def __init__(self, initial=None, level=None):
         super(ComponentForm, self).__init__(initial)
         if initial:
             self.fields['component'].initial = initial['component']
-        if floor_num:
-            self.fields['component'].widget.forward.append(forward.Const(floor_num, 'floor'))
+        self.fields['component'].widget.forward.append(forward.Const(level, 'level'))
         self.fields['quantity'].widget.attrs['class'] = 'normal'
         self.fields['category'].widget.attrs['class'] = 'normal'
         self.fields['component'].widget.attrs['class'] = 'normal'

@@ -38,36 +38,28 @@ def index(request):
 def project(request, project_id=None):
     chart = None
     if request.method == 'POST':
-        print(request.POST)
-        print("project_id: {}".format(project_id))
-        
         if project_id:
             project = Project.objects.get(pk=project_id)
             form = ProjectForm(request.POST, Project.objects.get(pk=project_id), initial=model_to_dict(project))
             form.instance.id = project_id
-            form.instance.floors = project.floors
-            print("Floors: {}".format(project.floors))
-            print("Floors: {}".format(form.instance.floors))
-            print("Form: {}".format(form))
+            form.instance.floors = project.num_levels()
         else:
             project = None
             form = ProjectForm(request.POST)
 
-        print("***************")
         if not form.is_valid():
             print("INVALID")
             print(form.errors)
-        #print(project.rarity)
 
         if form.is_valid():
             if project:
-                form.instance.floors = project.floors
+                form.instance.floors = project.num_levels()
             form.save()
 
             if not project_id:
                 project = form.instance
                 
-                for f in range(int(project.floors) + 1):
+                for f in range(int(project.num_levels()) + 1):
                     EDP(project=project,
                         floor=f,
                         type=EDP.EDP_TYPE_ACCEL).save()
@@ -90,9 +82,6 @@ def project(request, project_id=None):
         if project_id:
             project = Project.objects.get(pk=project_id)
             form = ProjectForm(instance=project, initial=model_to_dict(project))
-            form.fields['floors'].widget = HiddenInput()
-            form.fields['floors'].label = "Number of Floors"
-            form.fields['floors'].widget.attrs['title'] = 'Enter the number of floors';
             
             if project.IM and len(project.model().ComponentsByEDP()) > 0:
                 building = project.model()
@@ -608,7 +597,7 @@ def _plot_demand(edp):
         else:
             demand_type = 'Unknown'
             
-        demand = "Floor {} {}".format(edp.floor, demand_type)
+        demand = "{} {}".format(edp.level.label, demand_type)
                                     
         edp_func = edp.model()
         xlimit = edp.project.IM.model().plot_max()
@@ -929,11 +918,9 @@ def cgroup(request, project_id, floor_num, cg_id=None):
                                                      'cg_form': cg_form})
 
 @login_required
-def floor_cgroup(request, project_id, floor_num, cg_id=None):
-     print(request)
+def level_cgroup(request, project_id, level_id, cg_id=None):
      project = get_object_or_404(Project, pk=project_id)
      if request.method == 'POST':
-         print("POST")
          if request.POST.get('cancel'):
              return HttpResponseRedirect(reverse('slat:floor_cgroups', args=(project_id, floor_num)))
 
@@ -941,7 +928,7 @@ def floor_cgroup(request, project_id, floor_num, cg_id=None):
              cg = Component_Group.objects.get(pk=cg_id)
              project.model().RemoveCompGroup(cg.model())
              cg.delete()
-             return HttpResponseRedirect(reverse('slat:floor_cgroups', args=(project_id, floor_num)))
+             return HttpResponseRedirect(reverse('slat:level_cgroups', args=(project_id, level_id)))
 
          if cg_id:
              cg = Component_Group.objects.get(pk=cg_id)
@@ -953,7 +940,7 @@ def floor_cgroup(request, project_id, floor_num, cg_id=None):
          cg_form.is_valid()
          component = cg_form.cleaned_data['component']
          
-         edp = EDP.objects.filter(project=project).filter(floor=floor_num)
+         edp = EDP.objects.filter(project=project, level=Level.objects.get(pk=level_id))
 
          if re.search('^Accel(?i)', component.demand.name):
              edp = edp.filter(type='A')
@@ -968,17 +955,16 @@ def floor_cgroup(request, project_id, floor_num, cg_id=None):
              cg._make_model()
          cg_id = cg.id
          
-         return HttpResponseRedirect(reverse('slat:floor_cgroups', args=(project_id, floor_num)))
+         return HttpResponseRedirect(reverse('slat:level_cgroups', args=(project_id, level_id)))
      else:
          if cg_id:
              cg = get_object_or_404(Component_Group, pk=cg_id)
-             demand_form = ComponentForm(initial=model_to_dict(cg), floor_num=floor_num)
+             demand_form = ComponentForm(initial=model_to_dict(cg), level=level_id)
          else:
-             demand_form = ComponentForm(floor_num=floor_num)
-
-         return render(request, 'slat/floor_cgroup.html', {'project': project,
-                                                           'floor_num': floor_num, 
-                                                           'floor_label': project.floor_label(floor_num),
+             demand_form = ComponentForm(level=level_id)
+             
+         return render(request, 'slat/level_cgroup.html', {'project': project,
+                                                           'level': Level.objects.get(pk=level_id),
                                                            'cg_id': cg_id,
                                                            'demand_form': demand_form})
      
@@ -1048,9 +1034,9 @@ def cgroups(request, project_id):
                                                   'cgs': Component_Group.objects.filter(demand__project=project)})
  
 @login_required
-def floor_cgroups(request, project_id, floor_num):
+def level_cgroups(request, project_id, level_id):
     project = get_object_or_404(Project, pk=project_id)
-    edps = EDP.objects.filter(project=project).filter(floor=floor_num)
+    edps = EDP.objects.filter(project=project, level=Level.objects.get(pk=level_id))
     cgs = []
     for edp in edps:
         groups = Component_Group.objects.filter(demand=edp)
@@ -1060,22 +1046,20 @@ def floor_cgroups(request, project_id, floor_num):
     if request.method == 'POST':
          raise ValueError("SHOULD NOT GET HERE")
     else:
-        return render(request, 'slat/floor_cgroups.html',
+        return render(request, 'slat/level_cgroups.html',
                       {'project': project,
-                       'floor_num': floor_num,
-                       'floor_label': project.floor_label(floor_num),
+                       'level': Level.objects.get(pk=level_id),
                        'cgs': cgs})
 
 @login_required
-def floors(request, project_id):
+def levels(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
-    floors = list(map(lambda f: [f, project.floor_label(f)], range(project.floors + 1)))
-    floors.reverse()
-    return render(request, 'slat/floors.html', 
+    levels = project.levels()
+    return render(request, 'slat/levels.html', 
                   {'project': project, 
-                   'floors': floors})
+                   'levels': levels})
 @login_required
-def demand(request, project_id, floor_num, type):
+def demand(request, project_id, level_id, type):
     project = get_object_or_404(Project, pk=project_id)
     if type == 'drift':
         type = 'D'
@@ -1084,7 +1068,7 @@ def demand(request, project_id, floor_num, type):
     else:
         raise ValueError("UNKNOWN DEMAND TYPE")
         
-    demand = EDP.objects.filter(project=project).filter(floor=floor_num).filter(type=type)
+    demand = EDP.objects.filter(project=project, level=Level.objects.get(pk=level_id), type=type)
     if len(demand) != 1:
         raise ValueError("Demand does not exist")
 

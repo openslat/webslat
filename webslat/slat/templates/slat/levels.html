@@ -12,18 +12,18 @@
 <p><b>Project: </b>{{ project.title_text }}</p>
 </div>
 
-<p><b>Demands by Floor</b></p>
+<p><b>Demands by Level</b></p>
 <table cellpadding='3'>
 <tr><th style="background:white"></th><th colspan='2' style="background:lightgray" align='center'>Demands</th><th style="background:white"></th></tr>
-{% for f in floors %}
-   <tr><td><b>{{ f.1 }}</b></td>
-      <td border='3px' style="background:lightgray"><a href="{% url 'slat:demand' project.id f.0 'acceleration' %}">Acceleration</a></td>
-      <td style="background:lightgray" >{% if f.0 %}
-	<a href="{% url 'slat:demand' project.id f.0 'drift' %}">Drift</a>
+{% for level in levels %}
+   <tr><td><b>{{ level.label }}</b></td>
+      <td border='3px' style="background:lightgray"><a href="{% url 'slat:demand' project.id level.id 'acceleration' %}">Acceleration</a></td>
+      <td style="background:lightgray" >{% if level.level %}
+	<a href="{% url 'slat:demand' project.id level.id 'drift' %}">Drift</a>
 	{% else %}&nbsp;
 	{% endif %}
       </td>
-      <td><a href="{% url 'slat:floor_cgroups' project.id f.0 %}">Components</a></td>
+      <td><a href="{% url 'slat:level_cgroups' project.id level.id %}">Components</a></td>
       </tr>
 {% endfor %}
 </table>
