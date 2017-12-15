@@ -45,6 +45,7 @@ urlpatterns = [
     url(r'^project/(?P<project_id>[0-9]+)/level$', views.levels, name='levels'),
     url(r'^project/(?P<project_id>[0-9]+)/level/(?P<level_id>[0-9]+)/(?P<type>(acceleration)|(drift))$', views.demand, name='demand'),
     url(r'^project/(?P<project_id>[0-9]+)/shift-level/(?P<level_id>[0-9]+)/(?P<shift>-?[0-9]+)/$', views.shift_level, name='shift_level'),
+    url(r'^project/(?P<project_id>[0-9]+)/rename-level/(?P<level_id>[0-9]+)/$', views.rename_level, name='rename_level'),
     url(r'^component-autocomplete/$', views.ComponentAutocomplete.as_view(), name='component-autocomplete'),
     url(r'^component-description/(?P<component_key>[0-9]+)$', views.ComponentDescription, name='component-description'),
 ]

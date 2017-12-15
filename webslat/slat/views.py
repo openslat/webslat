@@ -1153,14 +1153,14 @@ def analysis(request, project_id):
                                                             'vAxis': {'logScale': True, 'format': 'decimal',
                                                                       'title': 'Cost ($)'},
                                                             'pointSize': 5})
-            
-        floors = []
-        for f in range(project.floors + 1):
-            floors.append([])
+
+        levels = {}
+        for l in project.levels():
+            levels[l] = []
         demands = EDP.objects.filter(project=project)
         for edp in demands:
             for c in Component_Group.objects.filter(demand=edp):
-                floors[edp.floor].append(c)
+                levels[edp.level].append(c)
 
         if False:
             # Split repair costs by Structural and Non-Structural Components
@@ -1233,17 +1233,17 @@ def analysis(request, project_id):
                                                              'pointSize': 5})
 
         columns = ['Floor', 'Cost']
-        data = []
+        data = [columns]
         
         xlimit = im_func.plot_max()
-        for f in range(project.floors + 1):
+        ordered_levels = project.levels()
+        ordered_levels.sort(key=lambda x: x.level, reverse=True)
+        for l in ordered_levels:
             costs = 0
-            for c in floors[f]:
+            for c in levels[l]:
                 costs = costs + c.model().E_annual_cost()
-            data.append([project.floor_label(f), costs])
+            data.append([l.label, costs])
 
-        data.append(columns)
-        data.reverse()
         data_source = SimpleDataSource(data=data)
         by_floor_bar_chart = BarChart(data_source, options={'title': 'Mean Annual Repair Cost By Floor',
                                                             'hAxis': {'title': 'Cost ($)'},
@@ -1349,3 +1349,22 @@ def shift_level(request, project_id, level_id, shift):
         print("??????")
     return HttpResponseRedirect(reverse('slat:levels', args=(project_id)))
 
+@login_required
+def rename_level(request, project_id, level_id):
+    project = Project.objects.get(pk=project_id)
+    level = Level.objects.get(pk=level_id)
+    print("> rename_level: {} {} [{}]".format(project_id, level_id, level.label))
+    if request.method == 'POST':
+        form = LevelLabelForm(request.POST)
+        if form.is_valid():
+            level.label = form.cleaned_data['label']
+            level.save()
+        return HttpResponseRedirect(reverse('slat:levels', args=(project_id)))
+        
+    else:
+        form = LevelLabelForm(initial={'label': level.label})
+        return render(request, 'slat/rename_label.html', {'project': project,
+                                                          'level': level,
+                                                          'form': form})
+
+    

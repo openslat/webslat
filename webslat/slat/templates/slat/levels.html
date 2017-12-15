@@ -17,6 +17,7 @@
 <tr><th style="background:white"></th><th colspan='2' style="background:lightgray" align='center'>Demands</th><th style="background:white"></th></tr>
 {% for level in levels %}
 <tr><td>
+      <a href="{% url 'slat:rename_level' project.id level.id %}" class="link_button" style="font-size:x-small">rename</a>
       <a href="{% url 'slat:shift_level' project.id level.id 1 %}" class="link_button" style="font-size:x-small">▲</a>
       <a href="{% url 'slat:shift_level' project.id level.id -1 %}" class="link_button" style="font-size:x-small">▼</a>
     <b>{{ level.label }}</b></td>

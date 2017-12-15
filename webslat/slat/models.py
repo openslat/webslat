@@ -548,3 +548,10 @@ class ComponentForm(Form):
         widget=autocomplete.Select2(url='/slat/component-autocomplete/',
                                     forward=['category']))
 
+class LevelLabelForm(Form):
+    def __init__(self, request=None, initial=None):
+        super(Form, self).__init__(request, initial=initial)
+        self.fields['label'].widget.attrs['class'] = 'normal'
+        self.fields['label'].widget.attrs['title'] = 'Set the label for the level.'
+        
+    label = CharField()
