@@ -1311,3 +1311,41 @@ def register(request):
 class SLATRegistrationView(RegistrationView):
     def get_success_url(self, activateduser):
         return(reverse('slat:index'))
+
+@login_required
+def shift_level(request, project_id, level_id, shift):
+    shift = int(shift)
+    print("> shift_level(..., {}, {}, {})".format(project_id, level_id, shift))
+    project = Project.objects.get(pk=project_id)
+    level_to_move = Level.objects.get(pk=level_id)
+    if project != level_to_move.project:
+        print("HEY--WRONG PROJECT!")
+    else:
+        print("Project number is correct")
+        
+    if shift > 0:
+        print("> 0: Shifting Up")
+        try:
+            other_level = Level.objects.get(project=project, level=level_to_move.level + 1)
+            print(other_level.id)
+            level_to_move.level = level_to_move.level + 1
+            other_level.level = other_level.level - 1
+            level_to_move.save()
+            other_level.save()
+        except Level.DoesNotExist:
+            print("Nowhere to go")
+    elif shift < 0:
+        print("< 0: Shifting Down")
+        try:
+            other_level = Level.objects.get(project=project, level=level_to_move.level - 1)
+            print(other_level.id)
+            level_to_move.level = level_to_move.level - 1
+            other_level.level = other_level.level + 1
+            level_to_move.save()
+            other_level.save()
+        except Level.DoesNotExist:
+            print("Nowhere to go")
+    else:
+        print("??????")
+    return HttpResponseRedirect(reverse('slat:levels', args=(project_id)))
+

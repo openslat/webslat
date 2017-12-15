@@ -16,7 +16,10 @@
 <table cellpadding='3'>
 <tr><th style="background:white"></th><th colspan='2' style="background:lightgray" align='center'>Demands</th><th style="background:white"></th></tr>
 {% for level in levels %}
-   <tr><td><b>{{ level.label }}</b></td>
+<tr><td>
+      <a href="{% url 'slat:shift_level' project.id level.id 1 %}" class="link_button" style="font-size:x-small">▲</a>
+      <a href="{% url 'slat:shift_level' project.id level.id -1 %}" class="link_button" style="font-size:x-small">▼</a>
+    <b>{{ level.label }}</b></td>
       <td border='3px' style="background:lightgray"><a href="{% url 'slat:demand' project.id level.id 'acceleration' %}">Acceleration</a></td>
       <td style="background:lightgray" >{% if level.level %}
 	<a href="{% url 'slat:demand' project.id level.id 'drift' %}">Drift</a>
