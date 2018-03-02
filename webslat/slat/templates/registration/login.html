@@ -1,4 +1,4 @@
-o{% extends "base_site.html" %}
+{% extends "base_site.html" %}
 {% load i18n static %}
 {% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}" />
 
@@ -66,7 +66,7 @@ Log in to WebSLAT, or
 </form>
 </div>
 <div style="font-size:small">
-<i>If you forgot your password, contact <a href="mailto:michael.gauland@canterbury.ac.nz">Michael Gauland</a> to request a password reset.</i>
+<i>If you forgot your password, <a href="{% url 'password_reset' %}">request a reset</a>.</i>
 </div>
 </div>
 {% endblock %}
