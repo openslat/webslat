@@ -22,6 +22,9 @@ from .component_models import *
 from slat.constants import *
 from django.contrib.auth.decorators import login_required
 from registration.backends.simple.views import RegistrationView
+from registration.forms import RegistrationForm
+from django.forms import ModelForm
+
 
 @login_required
 def index(request):
@@ -1305,13 +1308,6 @@ def ComponentDescription(request, component_key):
                      'costs': CostTab.objects.filter(component = component).order_by('state')})
     return(result)
 
-def register(request):
-    return render(request, 'registration/register.html')
-    
-class SLATRegistrationView(RegistrationView):
-    def get_success_url(self, activateduser):
-        return(reverse('slat:index'))
-
 @login_required
 def shift_level(request, project_id, level_id, shift):
     shift = int(shift)
@@ -1366,5 +1362,28 @@ def rename_level(request, project_id, level_id):
         return render(request, 'slat/rename_label.html', {'project': project,
                                                           'level': level,
                                                           'form': form})
-
     
+class SLATRegistrationView(RegistrationView):
+    def __init__(self, *args, **kwargs):
+        self.form_class = SLATRegistrationForm
+        super(SLATRegistrationView, self).__init__(*args, **kwargs)
+        
+    def get_success_url(self, activateduser):
+        return reverse('slat:index')
+
+class SLATRegistrationForm(RegistrationForm):
+    organization = CharField()
+    first_name = CharField()
+    last_name = CharField()
+    
+    def save(self, *args, **kwargs):
+        user = super(SLATRegistrationForm, self).save(*args, **kwargs)
+        if user:
+            user.first_name = self.cleaned_data['first_name']
+            user.last_name = self.cleaned_data['last_name']
+            user.save()
+
+            profile = Profile.objects.get(user=user)
+            profile.organization = self.cleaned_data['organization']
+            profile.save()
+        return user

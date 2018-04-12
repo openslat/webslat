@@ -18,7 +18,11 @@
     <tr><td>&nbsp;</td><td>{{ form.password1.help_text|safe }}</td></tr>
     <tr><td>{{ form.password2.label }}</td><td>{{ form.password2 }}</td></tr>
     <tr><td>&nbsp;</td><td>{{ form.password2.help_text }}</td></tr>
+    <tr><td>{{ form.organization.label }}</td><td>{{ form.organization }}</td></tr>
+    <tr><td>{{ form.first_name.label }}</td><td>{{ form.first_name }}</td></tr>
+    <tr><td>{{ form.last_name.label }}</td><td>{{ form.last_name }}</td></tr>
   </table>
   <input type="submit" name="submit" class="normal" value="Submit" />
 </form>
+
 {% endblock %}
