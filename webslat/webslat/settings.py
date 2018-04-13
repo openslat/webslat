@@ -85,10 +85,14 @@ DATABASES = {
     'components_db': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'components.sqlite3')
+    },
+    'constants_db': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'slat_constants.sqlite3')
     }    
 }
 
-DATABASE_ROUTERS = ['slat.component_models.CompRouter']
+DATABASE_ROUTERS = ['slat.models.SLAT_db_Router']
 
 # Password validation
 # https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators

@@ -98,6 +98,10 @@ class Level(models.Model):
 class IM_Types(models.Model):
     name_text = models.CharField(max_length=25)
 
+    class Meta:
+        managed = False
+        db_table = 'slat_im_types'
+
     def __str__(self):
         return self.name_text
 
@@ -114,6 +118,10 @@ class NonLinearHyperbolic(models.Model):
 class Input_File_Formats(models.Model):
     format_text = models.CharField(max_length=20)
 
+    class Meta:
+        managed = False
+        db_table = 'slat_input_file_formats'
+        
     def __str__(self):
         return self.format_text
 
@@ -121,6 +129,10 @@ class Input_File_Formats(models.Model):
 class Interpolation_Method(models.Model):
     method_text = models.CharField(max_length=20)
 
+    class Meta:
+        managed = False
+        db_table = 'slat_interpolation_method'
+        
     def __str__(self):
         return self.method_text
 
@@ -134,10 +146,14 @@ class Location(models.Model):
     z = models.FloatField()
     min_distance = models.FloatField(null = True)
     max_disstance = models.FloatField(null = True)
+    
+    class Meta:
+        managed = False
+        db_table = 'slat_location'
 
     def __str__(self):
         return(self.location)
-    
+
 class NZ_Standard_Curve(models.Model):
     SOIL_CLASS_A = 'A'
     SOIL_CLASS_B = 'B'
@@ -243,6 +259,10 @@ class IM(models.Model):
 
 class EDP_Flavours(models.Model):
     name_text = models.CharField(max_length=25)
+
+    class Meta:
+        managed = False
+        db_table = 'slat_edp_flavours'
 
     def __str__(self):
         return self.name_text
@@ -579,3 +599,59 @@ class ProfileForm(ModelForm):
     class Meta:
         model = Profile
         fields = ('organization',)    
+
+
+class SLAT_db_Router(object):
+    """
+    A router to control all database operations on models in the WebSLAT application.
+    """
+    def __init__(self):
+        self.component_db_tables = [
+            'components_tab', 
+            'cost_tab', 
+            'demands_tab',
+            'fragility_tab',
+            'units_tab', 
+            'pact_cats_tab']
+
+        self.constant_db_tables = [
+            'slat_location',
+            'slat_edp_flavours',
+            'slat_im_types',
+            'slat_input_file_formats',
+            'slat_interpolatoin_method']
+
+
+    def db_for_read(self, model, **hints):
+        """
+        Attempts to read comp models go to comp_db.
+        """
+        if model._meta.db_table in self.component_db_tables:
+            return 'components_db'
+        elif model._meta.db_table in self.constant_db_tables:
+            return 'constants_db'
+        return None
+
+    def db_for_write(self, model, **hints):
+        """
+        Attempts to write comp models go to comp_db.
+        """
+        if model._meta.db_table in self.component_db_tables:
+            return 'components_db'
+        elif model._meta.db_table in self.constant_db_tables:
+            return 'constants_db'
+        return None
+
+    def allow_relation(self, obj1, obj2, **hints):
+        """
+        Allow relations if a model in the comp app is involved.
+        """
+        return True
+
+    def allow_migrate(self, db, app_label, model_name=None, **hints):
+        """
+        Make sure the comp app only appears in the 'comp_db'
+        database.
+        """
+        return None
+        
