@@ -15,7 +15,6 @@ from dal import forward
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-print("> models.py")
 
 class SLAT_db_Router(object):
     """
@@ -42,28 +41,20 @@ class SLAT_db_Router(object):
         """
         Attempts to read comp models go to comp_db.
         """
-        print("> db_for_read({})".format(model))
         if model._meta.db_table in self.component_db_tables:
-            print("--> component_db")
             return 'components_db'
         elif model._meta.db_table in self.constant_db_tables:
-            print("--> constants_db")
             return 'constants_db'
-        print("--> default")
         return 'default'
 
     def db_for_write(self, model, **hints):
         """
         Attempts to write comp models go to comp_db.
         """
-        print("> db_for_read({})".format(model))
         if model._meta.db_table in self.component_db_tables:
-            print("--> component_db")
             return 'components_db'
         elif model._meta.db_table in self.constant_db_tables:
-            print("--> constants_db")
             return 'constants_db'
-        print("--> default")
         return 'default'
 
     def allow_relation(self, obj1, obj2, **hints):
@@ -217,30 +208,7 @@ class Location(models.Model):
     def __str__(self):
         return(self.location)
 
-class Location_local(models.Model):
-    print("> Location_local")
-
-    location = models.CharField(max_length=128)
-    z = models.FloatField()
-    min_distance = models.FloatField(null = True)
-    max_disstance = models.FloatField(null = True)
-    
-    def __str__(self):
-        return(self.location)
-    
 class NZ_Standard_Curve(models.Model):
-#    print("> NZ_Standard_Curve()")
-#    if len(Location_local.objects.all()) == 0:
-#       print("no objects")
-#       for location in Location.objects.all():
-#            new_location = Location_local(location = location.location,
-#                                          z = location.z,
-#                                          min_distance = location.min_distance,
-#                                          max_disstance = location.max_disstance)
-#            new_location.save()
-#    else:
-#        print("populated")
-#        
     SOIL_CLASS_A = 'A'
     SOIL_CLASS_B = 'B'
     SOIL_CLASS_C = 'C'
@@ -254,10 +222,7 @@ class NZ_Standard_Curve(models.Model):
         (SOIL_CLASS_E, 'E')
     )
 
-    #print("> NZ_Standard_Curve()")
-    #print(Location.objects.all())
     location = models.ForeignKey(Location, null=False)
-    #location = models.ForeignKey(Location_local, null=False)
     soil_class = models.CharField(max_length=1,
                                   choices=SOIL_CLASS_CHOICES,
                                   default=SOIL_CLASS_A)
@@ -697,4 +662,3 @@ class ProfileForm(ModelForm):
     class Meta:
         model = Profile
         fields = ('organization',)    
-print("< models.py")

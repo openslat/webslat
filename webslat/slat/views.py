@@ -30,9 +30,6 @@ import sys
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
-print("> views.py")
-#print("Curve objects: {}".format(NZ_Standard_Curve.objects.all()))
-
 #@login_required
 def index(request):
     if request.user.is_authenticated:
@@ -599,31 +596,12 @@ def im_nzs_edit(request, project_id):
             form = NZSForm(request.POST)
         else:
             form = NZSForm(request.POST, instance=hazard.nzs)
-        eprint("*************************** BEFORE")
-        #eprint("Locations: {}".format(Location.objects.all()))
-        #eprint("Form: {}".format(form))
-        #eprint("Curve objects: {}".format(NZ_Standard_Curve.objects.all()))
-#        eprint("-------")
-#        if form.is_valid():
-#            eprint("VALID")
-#        else:
-#            eprint("INVALID")
-#        eprint(form.cleaned_data)
-#        eprint("ID: {}".format(form.cleaned_data['location'].id))
-#        curve = NZ_Standard_Curve(location=form.cleaned_data['location'],
-#                                  soil_class=form.cleaned_data['soil_class'],
-#                                  period=form.cleaned_data['period'])
-#        eprint(curve)
-#        curve.save()
-#        #exit()
         form.save()
-#        print("*************************** AFTER")
+
         if not hazard:
             hazard = IM()
         hazard.nzs = form.instance
-        eprint("hazard.nzs: {}".format(hazard.nzs))
         hazard.nzs.save()
-        print("NZS SAVED")
         hazard.flavour = IM_Types.objects.get(pk=IM_TYPE_NZS)
         hazard.save()
         hazard._make_model()
@@ -1438,4 +1416,3 @@ class SLATRegistrationForm(RegistrationForm):
             profile.organization = self.cleaned_data['organization']
             profile.save()
         return user
-print("< views.py")
