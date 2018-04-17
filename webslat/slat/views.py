@@ -49,6 +49,36 @@ def demo(request):
     setattr(project, 'description_text', "Describe this project...")
     setattr(project, 'rarity', 1/500)
     project.save()
+
+    # Create levels:
+    num_floors = 5
+    for l in range(num_floors + 1):
+        if l == 0:
+            label = "Ground Floor"
+        elif l == num_floors:
+            label = "Roof"
+        else:
+            label = "Floor #{}".format(l + 1)
+        level = Level(project=project, level=l, label=label)
+        level.save()
+        
+        EDP(project=project,
+            level=level,
+            type=EDP.EDP_TYPE_ACCEL).save()
+        if l > 0:
+            EDP(project=project,
+                level=level,
+                type=EDP.EDP_TYPE_DRIFT).save()
+
+    # Create an IM:
+    nzs = NZ_Standard_Curve(location=Location.objects.get(location='Christchurch'),
+                            soil_class = NZ_Standard_Curve.SOIL_CLASS_C,
+                            period = 2.0)
+    nzs.save()
+    hazard = IM(flavour = IM_Types.objects.get(pk=IM_TYPE_NZS), nzs = nzs)
+    hazard.save()
+    project.IM = hazard
+    project.save()
     print("< demo()")
     return HttpResponseRedirect(reverse('slat:index'))
     
