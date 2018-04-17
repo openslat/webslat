@@ -16,6 +16,7 @@ urlpatterns = [
         auth_views.password_reset_confirm, name='password_reset_confirm'),
      url(r'^reset/done/$', auth_views.password_reset_complete, name='password_reset_complete'),
     url(r'^$', views.index, name='index'),
+    url(r'^demo$', views.demo, name='demo'),
     url(r'^project/(?P<project_id>[0-9]+)$', views.project, name='project'),
     url(r'^project$', views.project, name='project'),
     url(r'^components$', component_views.components, name='components'),

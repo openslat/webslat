@@ -15,7 +15,70 @@ from dal import forward
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+print("> models.py")
 
+class SLAT_db_Router(object):
+    """
+    A router to control all database operations on models in the WebSLAT application.
+    """
+    def __init__(self):
+        self.component_db_tables = [
+            'components_tab', 
+            'cost_tab', 
+            'demands_tab',
+            'fragility_tab',
+            'units_tab', 
+            'pact_cats_tab']
+
+        self.constant_db_tables = [
+            'slat_location',
+            'slat_edp_flavours',
+            'slat_im_types',
+            'slat_input_file_formats',
+            'slat_interpolation_method']
+
+
+    def db_for_read(self, model, **hints):
+        """
+        Attempts to read comp models go to comp_db.
+        """
+        print("> db_for_read({})".format(model))
+        if model._meta.db_table in self.component_db_tables:
+            print("--> component_db")
+            return 'components_db'
+        elif model._meta.db_table in self.constant_db_tables:
+            print("--> constants_db")
+            return 'constants_db'
+        print("--> default")
+        return 'default'
+
+    def db_for_write(self, model, **hints):
+        """
+        Attempts to write comp models go to comp_db.
+        """
+        print("> db_for_read({})".format(model))
+        if model._meta.db_table in self.component_db_tables:
+            print("--> component_db")
+            return 'components_db'
+        elif model._meta.db_table in self.constant_db_tables:
+            print("--> constants_db")
+            return 'constants_db'
+        print("--> default")
+        return 'default'
+
+    def allow_relation(self, obj1, obj2, **hints):
+        """
+        Allow relations if a model in the comp app is involved.
+        """
+        return True
+
+    def allow_migrate(self, db, app_label, model_name=None, **hints):
+        """
+        Make sure the comp app only appears in the 'comp_db'
+        database.
+        """
+        return None
+        
 # Create your models here.
 class Project(models.Model):
     FREQUENCY_CHOICES = (
@@ -69,7 +132,7 @@ class Project(models.Model):
         return list(Level.objects.filter(project=self).order_by('-level'))
 
     def num_levels(self):
-        return length(self.levels())
+        return len(self.levels())
             
     def __str__(self):
         if self.IM:
@@ -154,7 +217,30 @@ class Location(models.Model):
     def __str__(self):
         return(self.location)
 
+class Location_local(models.Model):
+    print("> Location_local")
+
+    location = models.CharField(max_length=128)
+    z = models.FloatField()
+    min_distance = models.FloatField(null = True)
+    max_disstance = models.FloatField(null = True)
+    
+    def __str__(self):
+        return(self.location)
+    
 class NZ_Standard_Curve(models.Model):
+#    print("> NZ_Standard_Curve()")
+#    if len(Location_local.objects.all()) == 0:
+#       print("no objects")
+#       for location in Location.objects.all():
+#            new_location = Location_local(location = location.location,
+#                                          z = location.z,
+#                                          min_distance = location.min_distance,
+#                                          max_disstance = location.max_disstance)
+#            new_location.save()
+#    else:
+#        print("populated")
+#        
     SOIL_CLASS_A = 'A'
     SOIL_CLASS_B = 'B'
     SOIL_CLASS_C = 'C'
@@ -167,7 +253,11 @@ class NZ_Standard_Curve(models.Model):
         (SOIL_CLASS_D, 'D'),
         (SOIL_CLASS_E, 'E')
     )
-    location = models.ForeignKey('Location', null=False)
+
+    #print("> NZ_Standard_Curve()")
+    #print(Location.objects.all())
+    location = models.ForeignKey(Location, null=False)
+    #location = models.ForeignKey(Location_local, null=False)
     soil_class = models.CharField(max_length=1,
                                   choices=SOIL_CLASS_CHOICES,
                                   default=SOIL_CLASS_A)
@@ -176,7 +266,8 @@ class NZ_Standard_Curve(models.Model):
 class IM(models.Model):
     flavour = models.ForeignKey(IM_Types, blank=False, null=False, default=IM_TYPE_INTERP)
     nlh = models.ForeignKey(NonLinearHyperbolic, null=True, blank=True)
-    interp_method = models.ForeignKey(Interpolation_Method, null=True, blank=True)
+    #interp_method = models.ForeignKey(Interpolation_Method, null=True, blank=True)
+    interp_method = models.ForeignKey(Location, null=True, blank=True)
     nzs = models.ForeignKey(NZ_Standard_Curve, null=True, blank=True)
 
     def label(self):
@@ -226,9 +317,10 @@ class IM(models.Model):
                 y.append(1/r)
                 x.append(C(self.nzs.soil_class,
                            self.nzs.period,
-                           r,
-                           self.nzs.location.z,
-                           self.nzs.location.min_distance))
+                           r, 0.13, None
+#                           self.nzs.location.z,
+#                           self.nzs.location.min_distance))
+                ))
             im_func = pyslat.im(self.id, pyslat.detfn('<nzs>', 'loglog', [x.copy(), y.copy()]))
             if y[-1] > project.rarity:
                 im_func.set_plot_max(x[-1])
@@ -437,12 +529,12 @@ class ProjectForm(ModelForm):
     class Meta:
         model = Project
         fields = '__all__'
+        
         widgets = {
             'description_text': Textarea(attrs={'cols': 50, 'rows': 4, 'title': "Enter the description"}),
             'IM': HiddenInput,
             'title_text': TextInput(attrs={'title': 'Enter the title text here.'}),
             'rarity': Select(attrs={'title': "The rate-of-exceedence of the rarest event we are interested in displaying."}),
-            'floors': NumberInput(attrs={'title': "The number of floors in the structure."}),
             'mean_im_collapse': NumberInput(attrs={'title': 'The mean IM value at which collapse occurs.'}),
             'sd_ln_im_collapse': NumberInput(attrs={'title': 'The standard deviation of log(IM) at which collapse occurs.'}),
             'mean_cost_collapse': NumberInput(attrs={'title': 'The mean cost of collapse.'}),
@@ -452,6 +544,12 @@ class ProjectForm(ModelForm):
             'mean_cost_demolition': NumberInput(attrs={'title': 'The mean cost of demolition.'}),
             'sd_ln_cost_demolition': NumberInput(attrs={'title': 'The standard deviation of log(cost) of demolition.'}),
             }
+
+class LevelsForm(Form):
+    def __init__(self, request=None, initial=None):
+        super(Form, self).__init__(request, initial=initial)
+        self.fields['levels'] = IntegerField()
+        
         
 class HazardForm(ModelForm):
     def __init__(self, instance=None, initial=None):
@@ -599,59 +697,4 @@ class ProfileForm(ModelForm):
     class Meta:
         model = Profile
         fields = ('organization',)    
-
-
-class SLAT_db_Router(object):
-    """
-    A router to control all database operations on models in the WebSLAT application.
-    """
-    def __init__(self):
-        self.component_db_tables = [
-            'components_tab', 
-            'cost_tab', 
-            'demands_tab',
-            'fragility_tab',
-            'units_tab', 
-            'pact_cats_tab']
-
-        self.constant_db_tables = [
-            'slat_location',
-            'slat_edp_flavours',
-            'slat_im_types',
-            'slat_input_file_formats',
-            'slat_interpolatoin_method']
-
-
-    def db_for_read(self, model, **hints):
-        """
-        Attempts to read comp models go to comp_db.
-        """
-        if model._meta.db_table in self.component_db_tables:
-            return 'components_db'
-        elif model._meta.db_table in self.constant_db_tables:
-            return 'constants_db'
-        return None
-
-    def db_for_write(self, model, **hints):
-        """
-        Attempts to write comp models go to comp_db.
-        """
-        if model._meta.db_table in self.component_db_tables:
-            return 'components_db'
-        elif model._meta.db_table in self.constant_db_tables:
-            return 'constants_db'
-        return None
-
-    def allow_relation(self, obj1, obj2, **hints):
-        """
-        Allow relations if a model in the comp app is involved.
-        """
-        return True
-
-    def allow_migrate(self, db, app_label, model_name=None, **hints):
-        """
-        Make sure the comp app only appears in the 'comp_db'
-        database.
-        """
-        return None
-        
+print("< models.py")
