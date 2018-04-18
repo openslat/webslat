@@ -107,6 +107,31 @@ def demo(request):
                 flavour = EDP_Flavours.objects.get(name_text="Power Curve"),
                 powercurve = curve).save()
             
+    # Add components:
+    all_floors = range(num_floors + 1)
+    not_ground = range(1, num_floors+1)
+    components = [{'levels': all_floors, 'id': '206', 'quantity': 10},
+                  {'levels': not_ground, 'id': 'B1041.032a', 'quantity': 32},
+                  {'levels': not_ground, 'id': 'B1044.023', 'quantity': 8},
+                  {'levels': not_ground, 'id': 'C1011.001a', 'quantity': 32}]
+    for comp in components:
+        component = ComponentsTab.objects.get(ident=comp['id'])
+        for l in comp['levels']:
+            level = Level.objects.get(project=project, level=l)
+            
+            if re.compile(".*Accel").match(component.demand.name):
+                type='A'
+            elif re.compile(".*Drift").match(component.demand.name):
+                type='D'
+            else:
+                print(component.demand.name)
+                raise ValueError("UNRECOGNIZED DEMAND TYPE FOR COMPONENT")
+
+            demand = EDP.objects.get(project=project,
+                                     level=level,
+                                     type=type)
+            group = Component_Group(demand=demand, component=component, quantity=comp['quantity'])
+            group.save()
     
     print("< demo()")
     return HttpResponseRedirect(reverse('slat:index'))
