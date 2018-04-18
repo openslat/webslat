@@ -62,14 +62,6 @@ def demo(request):
         level = Level(project=project, level=l, label=label)
         level.save()
         
-        EDP(project=project,
-            level=level,
-            type=EDP.EDP_TYPE_ACCEL).save()
-        if l > 0:
-            EDP(project=project,
-                level=level,
-                type=EDP.EDP_TYPE_DRIFT).save()
-
     # Create an IM:
     nzs = NZ_Standard_Curve(location=Location.objects.get(location='Christchurch'),
                             soil_class = NZ_Standard_Curve.SOIL_CLASS_C,
@@ -79,6 +71,43 @@ def demo(request):
     hazard.save()
     project.IM = hazard
     project.save()
+
+    # Create EDPs:
+    demand_params = [{'level': 5, 'accel': {'a': 5.39, 'b': 1.5}, 'drift': {'a': 0.0202, 'b': 0.5}},
+                     {'level': 4, 'accel': {'a': 4.18, 'b': 1.5}, 'drift': {'a': 0.0380, 'b': 0.5}},
+                     {'level': 3, 'accel': {'a': 4.10, 'b': 1.5}, 'drift': {'a': 0.0506, 'b': 0.5}},
+                     {'level': 2, 'accel': {'a': 4.25, 'b': 1.5}, 'drift': {'a': 0.0633, 'b': 0.5}},
+                     {'level': 1, 'accel': {'a': 4.15, 'b': 1.5}, 'drift': {'a': 0.0557, 'b': 0.5}},
+                     {'level': 0, 'accel': {'a': 4.05, 'b': 1.5}}]
+    for demand in demand_params:
+        level = Level.objects.get(level=demand['level'], project=project)
+        if demand.get('accel'):
+            params = demand.get('accel')
+            curve = EDP_PowerCurve(median_x_a = params['a'],
+                                   median_x_b = params['b'],
+                                   sd_ln_x_a = 1.5,
+                                   sd_ln_x_b = 0.0)
+            curve.save()
+            EDP(project = project,
+                level = level,
+                type = EDP.EDP_TYPE_ACCEL,
+                flavour = EDP_Flavours.objects.get(name_text="Power Curve"),
+                powercurve = curve).save()
+
+        if demand.get('drift'):
+            params = demand.get('drift')
+            curve = EDP_PowerCurve(median_x_a = params['a'],
+                                   median_x_b = params['b'],
+                                   sd_ln_x_a = 1.5,
+                                   sd_ln_x_b = 0.0)
+            curve.save()
+            EDP(project = project,
+                level = level,
+                type = EDP.EDP_TYPE_DRIFT,
+                flavour = EDP_Flavours.objects.get(name_text="Power Curve"),
+                powercurve = curve).save()
+            
+    
     print("< demo()")
     return HttpResponseRedirect(reverse('slat:index'))
     
@@ -1170,7 +1199,7 @@ def analysis(request, project_id):
         data_source = SimpleDataSource(data=data)
         
         if isnan(building.getRebuildCost().mean()):
-            title = "EAL=${}\nDiscount rate = {}%".format(round(building.AnnualCost().mean()), 100 * rate)
+            title = "EAL=${}\nDiscount rate = {}%".format(building.AnnualCost().mean(), 100 * rate)
         else:
             title = "EAL=${}\n({} % of rebuild cost)\nDiscount rate = {}%".format(round(building.AnnualCost().mean()),
                                                                                   round(10000 * 
