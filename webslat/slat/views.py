@@ -178,10 +178,9 @@ def project(request, project_id=None):
                 
             if project_id and form.has_changed() and project.IM:
                 project.IM._make_model()
-                if project.floors:
-                    for edp in EDP.objects.filter(project=project):
-                        edp._make_model()
-                    project._make_model()
+                for edp in EDP.objects.filter(project=project):
+                    edp._make_model()
+                project._make_model()
                         
             return HttpResponseRedirect(reverse('slat:project', args=(form.instance.id,)))
 
