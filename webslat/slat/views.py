@@ -40,28 +40,24 @@ def index(request):
 
     project_list = []
     for permissions in ProjectPermissions.objects.filter(user=request.user):
-        #project_list.append(permissions.project)
         project = permissions.project
-        project_list.append({'id': project.id,
-                             'title_text': project.title_text,
-                             'role': permissions.role})
+        if project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+            #project_list.append(permissions.project)
+                project_list.append({'id': project.id,
+                                 'title_text': project.title_text,
+                                 'role': permissions.role})
                 
     context = { 'project_list': project_list, 'user': user }
     return render(request, 'slat/index.html', context)
 
-@login_required
-def demo(request):
-    print("> demo()")
-    print(request.user)
-    print(request.user.id)
-        
+def make_demo(user):
     project = Project()
     setattr(project, 'title_text', "This is a demo project")
     setattr(project, 'description_text', "Describe this project...")
     setattr(project, 'rarity', 1/500)
     project.save()
 
-    project.AssignRole(request.user, ProjectPermissions.ROLE_FULL)
+    project.AssignRole(user, ProjectPermissions.ROLE_FULL)
 
     # Create levels:
     num_floors = 5
@@ -146,7 +142,11 @@ def demo(request):
             group = Component_Group(demand=demand, component=component, quantity=comp['quantity'])
             group.save()
     
-    print("< demo()")
+    return project
+
+@login_required
+def demo(request):
+    make_demo(request.user)
     return HttpResponseRedirect(reverse('slat:index'))
     
 
@@ -1554,7 +1554,6 @@ class ProjectRemoveUserForm(Form):
     
 @login_required
 def project_remove_user(request, project_id):
-    print("> project_remove_user()")
     project = Project.objects.get(pk=project_id)
     if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
         raise PermissionDenied
