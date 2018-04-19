@@ -241,15 +241,17 @@ def project(request, project_id=None):
 
             levels = project.num_levels()
             levels_form = None
+            users = list(ProjectPermissions.objects.filter(project=project, role=ProjectPermissions.ROLE_FULL))
         else:
             form = ProjectForm()
             levels = None
             levels_form = LevelsForm()
-
+            users = None
     return render(request, 'slat/project.html', {'form': form, 
                                                  'levels': levels, 
                                                  'levels_form': levels_form, 
-                                                 'chart': chart})
+                                                 'chart': chart,
+                                                 'users': users})
 
 
 @login_required
@@ -1518,3 +1520,69 @@ class SLATRegistrationForm(RegistrationForm):
             profile.organization = self.cleaned_data['organization']
             profile.save()
         return user
+
+class ProjectAddUserForm(Form):
+    userid = CharField()
+    
+@login_required
+def project_add_user(request, project_id):
+    project = Project.objects.get(pk=project_id)
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
+    if request.method == 'POST':
+        print("POST")
+        form = ProjectAddUserForm(request.POST)
+        form.is_valid()
+        print(form.cleaned_data['userid'])
+        try:
+            user = User.objects.get(username=form.cleaned_data['userid'])
+            project.AssignRole(user, ProjectPermissions.ROLE_FULL)
+            return HttpResponseRedirect(reverse('slat:project', args=(project_id,)))
+        except:
+            print("EXCEPTION")
+            form.message = "User {} not found.".format(form.cleaned_data['userid'])
+            return render(request, 'slat/project_add_user.html', context={'project_id': project_id, 'project': project, 'form': form})
+            
+    else:
+        print("GET")
+        form = ProjectAddUserForm()
+        return render(request, 'slat/project_add_user.html', context={'project_id': project_id, 'project': project, 'form': form})
+    
+class ProjectRemoveUserForm(Form):
+    userid = ChoiceField()
+    
+@login_required
+def project_remove_user(request, project_id):
+    print("> project_remove_user()")
+    project = Project.objects.get(pk=project_id)
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
+    if request.method == 'POST':
+        form = ProjectRemoveUserForm(request.POST)
+        print(form)
+        print(form.is_valid())
+        print(form.cleaned_data)
+        print(form.cleaned_data['userid'])
+        try:
+            user = User.objects.get(username=form.cleaned_data['userid'])
+            project.AssignRole(user, ProjectPermissions.ROLE_NONE)
+            return HttpResponseRedirect(reverse('slat:project', args=(project_id,)))
+        except:
+            print("EXCEPTION")
+            form.message = "User {} not found.".format(form.cleaned_data['userid'])
+            return render(request, 'slat/project_remove_user.html', context={'project_id': project_id, 'project': project, 'form': form})
+            
+    else:
+        print("GET")
+        form = ProjectRemoveUserForm()
+        print(type(form.fields['userid'].widget))
+        print(form.fields['userid'].widget.choices)
+        users = []
+        for permissions in ProjectPermissions.objects.filter(project=project, role=ProjectPermissions.ROLE_FULL):
+            user = permissions.user
+            if user != request.user:
+                users.append([user.username, user.username])
+        form.fields['userid'].widget.choices = users
+        return render(request, 'slat/project_remove_user.html', context={'project_id': project_id, 'project': project, 'form': form})

@@ -32,11 +32,26 @@
       </table>
     {{ form.IM }}
     <details>
+    <summary>Demolition and Collapse Parameters</summary>
     <table border="1"><tr><th>Event</th><th>mean(IM)</th><th>sd(ln(IM))</th><th>mean(Cost)</th><th>sd(ln(Cost))</th></tr>
     <tr><th>Collapse</th><td> {{ form.mean_im_collapse }} </td><td> {{ form.sd_ln_im_collapse }} </td><td> {{ form.mean_cost_collapse }} </td><td> {{ form.sd_ln_cost_collapse }} </td></tr>
     <tr><th>Demolition</th><td> {{ form.mean_im_demolition }} </td><td> {{ form.sd_ln_im_demolition }} </td><td> {{ form.mean_cost_demolition }} </td><td> {{ form.sd_ln_cost_demolition }} </td></tr>
     </table>
     </details>
+    <br/>
+    {% if users %}
+    <details>
+    <summary>Allowed Users</summary>
+    <ul>
+    {% for user in users %}
+        <li>{{ user.user.username }}</li>
+    {% endfor %}
+    </ul>
+    <br/>
+    <a href="{% url 'slat:project_add_user' form.instance.id %}"  class="link_button">Add User</a>
+    <a href="{% url 'slat:project_remove_user' form.instance.id %}"  class="link_button">Remove User</a>
+    </details>
+    {% endif %}
     <br/>
     {% if form.instance.id %}
      <input type="submit" value="Submit Changes" class="normal"/>
