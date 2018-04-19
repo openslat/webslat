@@ -100,10 +100,10 @@ class Project(models.Model):
     def AssignRole(self, user, role):
         try: 
             permissions = ProjectPermissions.objects.get(project=self, user=user)
-            permissions.role = role
         except ProjectPermissions.DoesNotExist:
-            permissions = ProjectPermissions(project=self, user=user, role=role)
+            permissions = ProjectPermissions(project=self, user=user)
         finally:
+            permissions.role = role
             permissions.save()
 
     def GetRole(self, user):
@@ -117,6 +117,9 @@ class Project(models.Model):
         role = self.GetRole(user)
         return (role != ProjectPermissions.ROLE_NONE)
 
+    def CanWrite(self, user):
+        role = self.GetRole(user)
+        return role in [ProjectPermissions.ROLE_FULL]
 
     def _make_model(self):
         structure = pyslat.structure(self.id)
@@ -166,21 +169,16 @@ class Project(models.Model):
         return level.label
 
 class ProjectPermissions(models.Model):
-    ROLE_OWNER = 'O'
-    ROLE_COLLABORATOR = 'C'
-    ROLE_VIEWER = 'V'
-    ROLE_CLIENT = 'L'
+    ROLE_FULL = 'O'
     ROLE_NONE = 'N'
     ROLE_CHOICES = {
-        (ROLE_OWNER, 'Owner'),
-        (ROLE_COLLABORATOR, 'Collaborator'),
-        (ROLE_VIEWER, 'Viewer'),
-        (ROLE_CLIENT, 'Client'),
+        (ROLE_FULL, 'Full'),
+        (ROLE_NONE, 'None'),
         }
     
     project = models.ForeignKey(Project, blank=False, null=False)
     user = models.ForeignKey(User, blank=False, null=False)
-    role = models.CharField(max_length=1, choices=ROLE_CHOICES, default=ROLE_OWNER)
+    role = models.CharField(max_length=1, choices=ROLE_CHOICES, default=ROLE_NONE)
     
 class Level(models.Model):
     project = models.ForeignKey(Project, blank=False, null=False)

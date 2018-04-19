@@ -61,7 +61,7 @@ def demo(request):
     setattr(project, 'rarity', 1/500)
     project.save()
 
-    project.AssignRole(request.user, ProjectPermissions.ROLE_OWNER)
+    project.AssignRole(request.user, ProjectPermissions.ROLE_FULL)
 
     # Create levels:
     num_floors = 5
@@ -193,7 +193,7 @@ def project(request, project_id=None):
                     edp._make_model()
                 project._make_model()
                 
-            project.AssignRole(request.user, ProjectPermissions.ROLE_OWNER)
+            project.AssignRole(request.user, ProjectPermissions.ROLE_FULL)
 
             return HttpResponseRedirect(reverse('slat:project', args=(form.instance.id,)))
 
@@ -245,8 +245,11 @@ def project(request, project_id=None):
             form = ProjectForm()
             levels = None
             levels_form = LevelsForm()
-            
-    return render(request, 'slat/project.html', {'form': form, 'levels': levels, 'levels_form': levels_form, 'chart': chart})
+
+    return render(request, 'slat/project.html', {'form': form, 
+                                                 'levels': levels, 
+                                                 'levels_form': levels_form, 
+                                                 'chart': chart})
 
 
 @login_required

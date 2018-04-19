@@ -36,17 +36,17 @@
     <tr><th>Collapse</th><td> {{ form.mean_im_collapse }} </td><td> {{ form.sd_ln_im_collapse }} </td><td> {{ form.mean_cost_collapse }} </td><td> {{ form.sd_ln_cost_collapse }} </td></tr>
     <tr><th>Demolition</th><td> {{ form.mean_im_demolition }} </td><td> {{ form.sd_ln_im_demolition }} </td><td> {{ form.mean_cost_demolition }} </td><td> {{ form.sd_ln_cost_demolition }} </td></tr>
     </table>
-    <br/>
-   {% if form.instance.id %}
-    <input type="submit" value="Submit Changes" class="normal"/>
-   {% else %}
-    <table><tr><td style="vertical-align:middle">
-    	      <input type="submit" value="Create Project" class="normal"/>
-	  </td><td style="vertical-align:bottom">
-	      <a href="{% url 'slat:index' %}"  class="link_button">Cancel</a>
-	  </td></tr></table>
-   {% endif %}    
     </details>
+    <br/>
+    {% if form.instance.id %}
+     <input type="submit" value="Submit Changes" class="normal"/>
+    {% else %}
+     <table><tr><td style="vertical-align:middle">
+               <input type="submit" value="Create Project" class="normal"/>
+           </td><td style="vertical-align:bottom">
+               <a href="{% url 'slat:index' %}"  class="link_button">Cancel</a>
+           </td></tr></table>
+     {% endif %}
 </form>
 
 {% comment %}
