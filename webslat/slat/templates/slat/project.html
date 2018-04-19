@@ -49,7 +49,9 @@
     </ul>
     <br/>
     <a href="{% url 'slat:project_add_user' form.instance.id %}"  class="link_button">Add User</a>
+    {% if users|length > 1 %}
     <a href="{% url 'slat:project_remove_user' form.instance.id %}"  class="link_button">Remove User</a>
+    {% endif %}
     </details>
     {% endif %}
     <br/>

@@ -1550,7 +1550,7 @@ def project_add_user(request, project_id):
         return render(request, 'slat/project_add_user.html', context={'project_id': project_id, 'project': project, 'form': form})
     
 class ProjectRemoveUserForm(Form):
-    userid = ChoiceField()
+    userid = CharField()
     
 @login_required
 def project_remove_user(request, project_id):
@@ -1561,28 +1561,27 @@ def project_remove_user(request, project_id):
 
     if request.method == 'POST':
         form = ProjectRemoveUserForm(request.POST)
-        print(form)
-        print(form.is_valid())
-        print(form.cleaned_data)
-        print(form.cleaned_data['userid'])
+        form.is_valid()
         try:
             user = User.objects.get(username=form.cleaned_data['userid'])
             project.AssignRole(user, ProjectPermissions.ROLE_NONE)
             return HttpResponseRedirect(reverse('slat:project', args=(project_id,)))
         except:
-            print("EXCEPTION")
             form.message = "User {} not found.".format(form.cleaned_data['userid'])
-            return render(request, 'slat/project_remove_user.html', context={'project_id': project_id, 'project': project, 'form': form})
+            return render(request, 'slat/project_remove_user.html', context={'project_id': project_id, 
+                                                                             'project': project, 
+                                                                             'form': form})
             
     else:
         print("GET")
         form = ProjectRemoveUserForm()
-        print(type(form.fields['userid'].widget))
-        print(form.fields['userid'].widget.choices)
+        form.fields['userid'].widget = Select()
         users = []
         for permissions in ProjectPermissions.objects.filter(project=project, role=ProjectPermissions.ROLE_FULL):
             user = permissions.user
             if user != request.user:
                 users.append([user.username, user.username])
         form.fields['userid'].widget.choices = users
-        return render(request, 'slat/project_remove_user.html', context={'project_id': project_id, 'project': project, 'form': form})
+        return render(request, 'slat/project_remove_user.html', context={'project_id': project_id,
+                                                                         'project': project, 
+                                                                         'form': form})
