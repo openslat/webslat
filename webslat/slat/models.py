@@ -97,6 +97,27 @@ class Project(models.Model):
     mean_cost_demolition = models.FloatField(null=True, blank=True)
     sd_ln_cost_demolition = models.FloatField(null=True, blank=True)
 
+    def AssignRole(self, user, role):
+        try: 
+            permissions = ProjectPermissions.objects.get(project=self, user=user)
+            permissions.role = role
+        except ProjectPermissions.DoesNotExist:
+            permissions = ProjectPermissions(project=self, user=user, role=role)
+        finally:
+            permissions.save()
+
+    def GetRole(self, user):
+        try: 
+            permissions = ProjectPermissions.objects.get(project=self, user=user)
+            return permissions.role
+        except ProjectPermissions.DoesNotExist:
+            return ProjectPermissions.ROLE_NONE
+
+    def CanRead(self, user):
+        role = self.GetRole(user)
+        return (role != ProjectPermissions.ROLE_NONE)
+
+
     def _make_model(self):
         structure = pyslat.structure(self.id)
         if self.mean_cost_collapse and self.sd_ln_cost_collapse:
@@ -143,6 +164,23 @@ class Project(models.Model):
     def floor_label(self,floor):
         level = Level.objects.get(project=self, level=floor)
         return level.label
+
+class ProjectPermissions(models.Model):
+    ROLE_OWNER = 'O'
+    ROLE_COLLABORATOR = 'C'
+    ROLE_VIEWER = 'V'
+    ROLE_CLIENT = 'L'
+    ROLE_NONE = 'N'
+    ROLE_CHOICES = {
+        (ROLE_OWNER, 'Owner'),
+        (ROLE_COLLABORATOR, 'Collaborator'),
+        (ROLE_VIEWER, 'Viewer'),
+        (ROLE_CLIENT, 'Client'),
+        }
+    
+    project = models.ForeignKey(Project, blank=False, null=False)
+    user = models.ForeignKey(User, blank=False, null=False)
+    role = models.CharField(max_length=1, choices=ROLE_CHOICES, default=ROLE_OWNER)
     
 class Level(models.Model):
     project = models.ForeignKey(Project, blank=False, null=False)

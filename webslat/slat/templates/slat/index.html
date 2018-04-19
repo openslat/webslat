@@ -12,7 +12,11 @@
     <p>Projects:</p>
     <ul>
     {% for project in project_list %}
-        <li><a href="{% url 'slat:project' project.id %}">{{ project.title_text }}</a></li>
+        <li><a href="{% url 'slat:project' project.id %}">{{ project.title_text }}</a> 
+          {% comment %}
+          [{{ project.role }}]
+          {% endcomment %}
+        </li>
     {% endfor %}
     </ul>
 {% else %}
