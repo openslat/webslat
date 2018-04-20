@@ -259,6 +259,9 @@ def hazard(request, project_id):
     # If the project doesn't exist, generate a 404:
     project = get_object_or_404(Project, pk=project_id)
 
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
     # Otherwise:
     #    - Does the project already have a hazard defined? If so, we'll
     #      redirect to the 'view' page for that type of hazard
@@ -284,6 +287,10 @@ def hazard(request, project_id):
 @login_required
 def hazard_choose(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
+    
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+    
     hazard = project.IM
 
     if request.POST:
@@ -382,6 +389,10 @@ def _plot_hazard(h):
 @login_required
 def nlh(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
+
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+    
     hazard = project.IM
 
     if request.method == 'POST':
@@ -397,6 +408,10 @@ def nlh(request, project_id):
 @login_required
 def nlh_edit(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
+
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
     hazard = project.IM
 
     if request.method == 'POST':
@@ -436,6 +451,10 @@ def nlh_edit(request, project_id):
 @login_required
 def im_interp(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
+
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
     hazard = project.IM
 
     if request.method == 'POST':
@@ -501,6 +520,10 @@ def im_interp(request, project_id):
 @login_required
 def im_interp_edit(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
+
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
     hazard = project.IM
 
     if request.method == 'POST':
@@ -571,6 +594,10 @@ def im_interp_edit(request, project_id):
 @login_required
 def im_file(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
+
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
     hazard = project.IM
 
     if request.method == 'POST':
@@ -648,6 +675,10 @@ def im_file(request, project_id):
 @login_required
 def im_nzs(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
+
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
     hazard = project.IM
 
     if request.method == 'POST':
@@ -681,6 +712,10 @@ def im_nzs(request, project_id):
 @login_required
 def im_nzs_edit(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
+
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
     hazard = project.IM
 
     if request.method == 'POST':
@@ -776,6 +811,9 @@ def edp(request, project_id):
     # If the project doesn't exist, generate a 404:
     project = get_object_or_404(Project, pk=project_id)
 
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
     # Otherwise:
     #    - Does the project already have EDPs defined? If so, we'll
     #      redirect to the 'view' page for the EDPs
@@ -792,6 +830,10 @@ def edp(request, project_id):
 @login_required
 def edp_view(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)
+
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
     edp = get_object_or_404(EDP, pk=edp_id)
         
     if request.method == 'POST':
@@ -811,6 +853,10 @@ def edp_view(request, project_id, edp_id):
 def edp_init(request, project_id):
     # If the project doesn't exist, generate a 404:
     project = get_object_or_404(Project, pk=project_id)
+
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
     if request.method == 'POST':
         project.floors = int(request.POST.get('floors'))
         project.save()
@@ -829,6 +875,10 @@ def edp_init(request, project_id):
 @login_required
 def edp_choose(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)
+
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
     edp = get_object_or_404(EDP, pk=edp_id)
     
     if request.POST:
@@ -854,6 +904,10 @@ def edp_choose(request, project_id, edp_id):
 @login_required
 def edp_power(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)
+
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
     edp = get_object_or_404(EDP, pk=edp_id)
     charts = _plot_demand(edp)
     return render(request, 'slat/edp_power.html', {'project': project, 'edp': edp, 'charts': charts})
@@ -861,6 +915,10 @@ def edp_power(request, project_id, edp_id):
 @login_required
 def edp_power_edit(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)
+
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
     edp = get_object_or_404(EDP, pk=edp_id)
     
     if request.POST:
@@ -892,6 +950,10 @@ def edp_power_edit(request, project_id, edp_id):
 @login_required
 def edp_userdef(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)
+
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
     edp = get_object_or_404(EDP, pk=edp_id)
     charts = _plot_demand(edp)
     
@@ -904,6 +966,10 @@ def edp_userdef(request, project_id, edp_id):
 @login_required
 def edp_userdef_edit(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)
+
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
     edp = get_object_or_404(EDP, pk=edp_id)
     
     if request.method == 'POST':
@@ -950,6 +1016,10 @@ def edp_userdef_edit(request, project_id, edp_id):
 @login_required
 def edp_userdef_import(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)
+
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
     edp = get_object_or_404(EDP, pk=edp_id)
     if request.method == 'POST':
         interp_form = Interpolation_Method_Form(request.POST)
@@ -1031,6 +1101,10 @@ def edp_userdef_import(request, project_id, edp_id):
 @login_required
 def cgroup(request, project_id, floor_num, cg_id=None):
      project = get_object_or_404(Project, pk=project_id)
+
+     if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
      if request.method == 'POST':
          if request.POST.get('cancel'):
              return HttpResponseRedirect(reverse('slat:edp', args=(project_id)))
@@ -1056,6 +1130,10 @@ def cgroup(request, project_id, floor_num, cg_id=None):
 @login_required
 def level_cgroup(request, project_id, level_id, cg_id=None):
      project = get_object_or_404(Project, pk=project_id)
+
+     if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
      if request.method == 'POST':
          if request.POST.get('cancel'):
              return HttpResponseRedirect(reverse('slat:floor_cgroups', args=(project_id, floor_num)))
@@ -1121,6 +1199,10 @@ def edp_cgroups(request, project_id, edp_id):
 @login_required
 def edp_cgroup(request, project_id, edp_id, cg_id=None):
     project = get_object_or_404(Project, pk=project_id)
+
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
     edp = get_object_or_404(EDP, pk=edp_id)
     if request.method == 'POST':
         if request.POST.get('cancel'):
@@ -1172,6 +1254,10 @@ def cgroups(request, project_id):
 @login_required
 def level_cgroups(request, project_id, level_id):
     project = get_object_or_404(Project, pk=project_id)
+
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
     edps = EDP.objects.filter(project=project, level=Level.objects.get(pk=level_id))
     cgs = []
     for edp in edps:
@@ -1190,6 +1276,10 @@ def level_cgroups(request, project_id, level_id):
 @login_required
 def levels(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
+
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
     levels = project.levels()
     return render(request, 'slat/levels.html', 
                   {'project': project, 
@@ -1197,6 +1287,10 @@ def levels(request, project_id):
 @login_required
 def demand(request, project_id, level_id, type):
     project = get_object_or_404(Project, pk=project_id)
+
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
     if type == 'drift':
         type = 'D'
     elif type =='acceleration':
@@ -1224,6 +1318,10 @@ def demand(request, project_id, level_id, type):
 @login_required
 def analysis(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
+
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
     chart = None
     by_fate_chart = None
 
@@ -1446,6 +1544,10 @@ def shift_level(request, project_id, level_id, shift):
     shift = int(shift)
     print("> shift_level(..., {}, {}, {})".format(project_id, level_id, shift))
     project = Project.objects.get(pk=project_id)
+
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
     level_to_move = Level.objects.get(pk=level_id)
     if project != level_to_move.project:
         print("HEY--WRONG PROJECT!")
@@ -1481,6 +1583,10 @@ def shift_level(request, project_id, level_id, shift):
 @login_required
 def rename_level(request, project_id, level_id):
     project = Project.objects.get(pk=project_id)
+
+    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+        raise PermissionDenied
+
     level = Level.objects.get(pk=level_id)
     print("> rename_level: {} {} [{}]".format(project_id, level_id, level.label))
     if request.method == 'POST':
