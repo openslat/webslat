@@ -1,6 +1,6 @@
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
-from slat.models import Profile, Project
+from slat.models import Profile, Project, ProjectPermissions
 from http import HTTPStatus
 from pyquery import PyQuery
 from slat.views import make_demo
@@ -121,3 +121,112 @@ class PermissionTestCase(TestCase):
         self.assertEqual(pq('ul').children().eq(0).text(), "Sherlock's Project")
 
 
+    def test_access_changes(self):
+        """Change permissions, and make sure projects are visible to the correct users."""
+
+        # Grant Philip Marlowe access to one of Sam Spade's projects:
+        Project.objects.get(title_text="Sam Spade's Other Demo Project").AssignRole(
+            User.objects.get(username="marlowe"),
+            ProjectPermissions.ROLE_FULL)
+        
+        c = Client()
+
+        # Phil Marlowe should be able to see the project:
+        response = c.post('/login/?next=/slat/', {'username': 'marlowe', 'password': 'thebigsleep'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
+
+        # Should redirect to the login page:
+        response = c.get('/slat/')
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        pq = PyQuery(response.content)
+        self.assertEqual(pq('title').text(), 'WebSLAT Project List')
+
+        # Check the list of projects:
+        self.assertEqual(len(pq('ul').children()), 3)
+        self.assertEqual(pq('ul').children().eq(0).text(), "Phil Marlowe's First Project")
+        self.assertEqual(pq('ul').children().eq(1).text(), "Phil Marlowe's Second Project")
+        self.assertEqual(pq('ul').children().eq(2).text(), "Sam Spade's Other Demo Project")
+
+        # Sam should still see all his projects:
+        response = c.post('/login/?next=/slat/', {'username': 'samspade', 'password': 'maltesefalcon'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
+
+        # Should redirect to the login page:
+        response = c.get('/slat/')
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        pq = PyQuery(response.content)
+        self.assertEqual(pq('title').text(), 'WebSLAT Project List')
+
+        # Check the list of projects:
+        self.assertEqual(len(pq('ul').children()), 2)
+        self.assertEqual(pq('ul').children().eq(0).text(), "Sam Spade's Demo Project")
+        self.assertEqual(pq('ul').children().eq(1).text(), "Sam Spade's Other Demo Project")
+
+        # Sherlock still sees only his own projects:
+        response = c.post('/login/?next=/slat/', {'username': 'holmes', 'password': 'elementary'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
+
+        # Should redirect to the login page:
+        response = c.get('/slat/')
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        pq = PyQuery(response.content)
+        self.assertEqual(pq('title').text(), 'WebSLAT Project List')
+
+        # Check the list of projects:
+        self.assertEqual(len(pq('ul').children()), 1)
+        self.assertEqual(pq('ul').children().eq(0).text(), "Sherlock's Project")
+
+        # Remove access from Sam:
+        Project.objects.get(title_text="Sam Spade's Other Demo Project").AssignRole(
+            User.objects.get(username="samspade"),
+            ProjectPermissions.ROLE_NONE)
+        
+        # Phil Marlowe should still be able to see the project:
+        response = c.post('/login/?next=/slat/', {'username': 'marlowe', 'password': 'thebigsleep'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
+
+        # Should redirect to the login page:
+        response = c.get('/slat/')
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        pq = PyQuery(response.content)
+        self.assertEqual(pq('title').text(), 'WebSLAT Project List')
+
+        # Check the list of projects:
+        self.assertEqual(len(pq('ul').children()), 3)
+        self.assertEqual(pq('ul').children().eq(0).text(), "Phil Marlowe's First Project")
+        self.assertEqual(pq('ul').children().eq(1).text(), "Phil Marlowe's Second Project")
+        self.assertEqual(pq('ul').children().eq(2).text(), "Sam Spade's Other Demo Project")
+
+        # Sam should no longer see this project:
+        response = c.post('/login/?next=/slat/', {'username': 'samspade', 'password': 'maltesefalcon'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
+
+        # Should redirect to the login page:
+        response = c.get('/slat/')
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        pq = PyQuery(response.content)
+        self.assertEqual(pq('title').text(), 'WebSLAT Project List')
+
+        # Check the list of projects:
+        self.assertEqual(len(pq('ul').children()), 1)
+        self.assertEqual(pq('ul').children().eq(0).text(), "Sam Spade's Demo Project")
+
+        # Sherlock still sees only his own projects:
+        response = c.post('/login/?next=/slat/', {'username': 'holmes', 'password': 'elementary'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
+
+        # Should redirect to the login page:
+        response = c.get('/slat/')
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        pq = PyQuery(response.content)
+        self.assertEqual(pq('title').text(), 'WebSLAT Project List')
+
+        # Check the list of projects:
+        self.assertEqual(len(pq('ul').children()), 1)
+        self.assertEqual(pq('ul').children().eq(0).text(), "Sherlock's Project")
