@@ -83,8 +83,41 @@ class PermissionTestCase(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         pq = PyQuery(response.content)
         self.assertEqual(pq('title').text(), 'WebSLAT Project List')
-        
-        print("------------------")
-        print(pq.text())
-        print("------------------")
+
+        # Check the list of projects:
+        self.assertEqual(len(pq('ul').children()), 2)
+        self.assertEqual(pq('ul').children().eq(0).text(), "Sam Spade's Demo Project")
+        self.assertEqual(pq('ul').children().eq(1).text(), "Sam Spade's Other Demo Project")
+
+        # Log in as Philip Marlowe:
+        response = c.post('/login/?next=/slat/', {'username': 'marlowe', 'password': 'thebigsleep'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
+
+        # Should redirect to the login page:
+        response = c.get('/slat/')
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        pq = PyQuery(response.content)
+        self.assertEqual(pq('title').text(), 'WebSLAT Project List')
+
+        # Check the list of projects:
+        self.assertEqual(len(pq('ul').children()), 2)
+        self.assertEqual(pq('ul').children().eq(0).text(), "Phil Marlowe's First Project")
+        self.assertEqual(pq('ul').children().eq(1).text(), "Phil Marlowe's Second Project")
+
+        # Log in as Sherlock Holmes:
+        response = c.post('/login/?next=/slat/', {'username': 'holmes', 'password': 'elementary'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
+
+        # Should redirect to the login page:
+        response = c.get('/slat/')
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        pq = PyQuery(response.content)
+        self.assertEqual(pq('title').text(), 'WebSLAT Project List')
+
+        # Check the list of projects:
+        self.assertEqual(len(pq('ul').children()), 1)
+        self.assertEqual(pq('ul').children().eq(0).text(), "Sherlock's Project")
+
 
