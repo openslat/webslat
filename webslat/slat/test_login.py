@@ -7,6 +7,7 @@ import django.http
 
 class LoginTestCase(TestCase):
     def setUp(self):
+        # Create a single user for these tests
         new_user = User.objects.create_user(username='samspade',
                                             first_name='Samuel',
                                             last_name='Spade',
@@ -19,7 +20,6 @@ class LoginTestCase(TestCase):
 
     def test_login(self):
         """Sam Spade can log in"""
-        print("test_samspade_login()")
         c = Client()
         response = c.get('/slat/')
         # Should redirect to the login page:
@@ -43,3 +43,4 @@ class LoginTestCase(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         pq = PyQuery(response.content)
         self.assertEqual(pq('title').text(), 'WebSLAT Project List')
+
