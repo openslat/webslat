@@ -88,11 +88,17 @@ DATABASES = {
     },
     'components_db': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'components.sqlite3')
+        'NAME': os.path.join(BASE_DIR, 'components.sqlite3'),
+        'TEST': {
+            'NAME': os.path.join(BASE_DIR, 'test_components.sqlite3')
+        }
     },
     'constants_db': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'slat_constants.sqlite3')
+        'NAME': os.path.join(BASE_DIR, 'slat_constants.sqlite3'),
+        'TEST': {
+            'NAME': os.path.join(BASE_DIR, 'test_slat_constants.sqlite3')
+        }
     }    
 }
 

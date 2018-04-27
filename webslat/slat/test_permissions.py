@@ -1,40 +1,80 @@
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
-from slat.models import Profile
+from slat.models import Profile, Project
 from http import HTTPStatus
 from pyquery import PyQuery
+from slat.views import make_demo
 import django.http
 
-class LoginTestCase(TestCase):
+class PermissionTestCase(TestCase):
     def setUp(self):
+        # Create three new users:
         new_user = User.objects.create_user(username='samspade',
                                             first_name='Samuel',
                                             last_name='Spade',
                                             email='samspade@spadeandarcher.com',
-                                            password='maltese')
+                                            password='maltesefalcon')
         new_user.save()
         profile = Profile.objects.get(user=new_user)
         profile.organization = 'Spade and Archer'
+        
         profile.save()
 
-    def test_login(self):
-        """Sam Spade can log in"""
-        print("test_samspade_login()")
+        new_user = User.objects.create_user(username='marlowe',
+                                            first_name='Philip',
+                                            last_name='Malowe',
+                                            email='marlowe@marlowinvestigations.com',
+                                            password='thebigsleep')
+        new_user.save()
+        profile = Profile.objects.get(user=new_user)
+        profile.organization = 'Marlowe Investigations'
+        profile.save()
+
+        new_user = User.objects.create_user(username='holmes',
+                                            first_name='Sherlock',
+                                            last_name='Holmes',
+                                            email='sholmes@holmesandwatson.co.uk',
+                                            password='elementary')
+        new_user.save()
+        profile = Profile.objects.get(user=new_user)
+        profile.organization = 'Holmes and Watson'
+        profile.save()
+
+        # Create some demo projects
+        samspade = User.objects.get(username='samspade')
+
+        if len(Project.objects.filter(title_text="Sam Spade's Demo Project")) == 0:
+            project = make_demo(samspade)
+            project.title_text = "Sam Spade's Demo Project"
+            project.save()
+
+        if len(Project.objects.filter(title_text="Sam Spade's Other Demo Project")) == 0:
+            project = make_demo(samspade)
+            project.title_text = "Sam Spade's Other Demo Project"
+            project.save()
+
+        marlowe = User.objects.get(username='marlowe')
+        if len(Project.objects.filter(title_text="Phil Marlowe's First Project")) == 0:
+            project = make_demo(marlowe)
+            project.title_text = "Phil Marlowe's First Project"
+            project.save()
+
+        if len(Project.objects.filter(title_text="Phil Marlowe's Second Project")) == 0:
+            project = make_demo(marlowe)
+            project.title_text = "Phil Marlowe's Second Project"
+            project.save()
+
+        if len(Project.objects.filter(title_text="Sherlock's Project")) == 0:
+            holmes = User.objects.get(username='holmes')
+            project = make_demo(holmes)
+            project.title_text = "Sherlock's Project"
+            project.save()
+
+    def test_default_access(self):
+        """Each user can only see their own projects"""
         c = Client()
-        response = c.get('/slat/')
-        # Should redirect to the login page:
-        self.assertEqual(response.status_code, HTTPStatus.FOUND)
-        self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
-        self.assertEqual(response.url, '/login?next=/slat/')
-
-        # Bad password:
-        #response = c.post('/login/?next=/slat/', {'username': 'samspade', 'password': 'malteser'})
-        response = c.post(response.url, {'username': 'samspade', 'password': 'malteser'})
-        self.assertEqual(response.status_code, HTTPStatus.MOVED_PERMANENTLY)
-        self.assertIsInstance(response, django.http.response.HttpResponsePermanentRedirect)
-
-        # Good password:
-        response = c.post('/login/?next=/slat/', {'username': 'samspade', 'password': 'maltese'})
+        # Log in as Sam Spade:
+        response = c.post('/login/?next=/slat/', {'username': 'samspade', 'password': 'maltesefalcon'})
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
 
@@ -43,3 +83,8 @@ class LoginTestCase(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         pq = PyQuery(response.content)
         self.assertEqual(pq('title').text(), 'WebSLAT Project List')
+        
+        print("------------------")
+        print(pq.text())
+        print("------------------")
+
