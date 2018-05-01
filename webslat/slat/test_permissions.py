@@ -1,3 +1,4 @@
+import pyslat
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from slat.models import Profile, Project, ProjectPermissions, EDP, Level
@@ -8,6 +9,9 @@ import django.http
 
 class PermissionTestCase(TestCase):
     def setUp(self):
+        # Direct SLAT warnings to STDOUT, so they can easily be ignored
+        pyslat.LogToStdErr(True)
+
         # Create three new users:
         new_user = User.objects.create_user(username='samspade',
                                             first_name='Samuel',
@@ -244,6 +248,7 @@ class PermissionTestCase(TestCase):
 
         urls = ["/slat/project/{PROJECT}",
                 "/slat/project/{PROJECT}/hazard",
+                "/slat/project/{PROJECT}/hazard/choose",
                 "/slat/project/{PROJECT}/hazard/nzs",
                 "/slat/project/{PROJECT}/hazard/nzs/edit",
                 "/slat/project/{PROJECT}/hazard/nlh",
@@ -252,7 +257,13 @@ class PermissionTestCase(TestCase):
                 "/slat/project/{PROJECT}/hazard/interp/edit",
                 "/slat/project/{PROJECT}/hazard/interp/import",
                 "/slat/project/{PROJECT}/level",
-                "/slat/project/{PROJECT}/edp/{EDP}"]
+                "/slat/project/{PROJECT}/edp/{EDP}",
+                "/slat/project/{PROJECT}/edp/{EDP}/choose",
+                "/slat/project/{PROJECT}/edp/{EDP}/power",
+                "/slat/project/{PROJECT}/edp/{EDP}/power/edit",
+                "/slat/project/{PROJECT}/edp/{EDP}/userdef",
+                "/slat/project/{PROJECT}/edp/{EDP}/userdef/import",
+                "/slat/project/{PROJECT}/edp/{EDP}/userdef/edit"]
 
         for project_title, status in [
                 ["Sam Spade's Demo Project", [HTTPStatus.OK, HTTPStatus.FOUND]],
