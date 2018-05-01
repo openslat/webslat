@@ -1,6 +1,6 @@
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
-from slat.models import Profile, Project, ProjectPermissions
+from slat.models import Profile, Project, ProjectPermissions, EDP, Level
 from http import HTTPStatus
 from pyquery import PyQuery
 from slat.views import make_demo
@@ -48,10 +48,13 @@ class PermissionTestCase(TestCase):
             project.title_text = "Sam Spade's Demo Project"
             project.save()
 
-        if len(Project.objects.filter(title_text="Sam Spade's Other Demo Project")) == 0:
-            project = make_demo(samspade)
-            project.title_text = "Sam Spade's Other Demo Project"
+        if len(Project.objects.filter(title_text="Sam Spade's Empty Project")) == 0:
+            project = Project()
+            setattr(project, 'title_text', "Sam Spade's Empty Project")
+            setattr(project, 'description_text', "Describe this project...")
+            setattr(project, 'rarity', 1/500)
             project.save()
+            project.AssignRole(samspade, ProjectPermissions.ROLE_FULL)
 
         marlowe = User.objects.get(username='marlowe')
         if len(Project.objects.filter(title_text="Phil Marlowe's First Project")) == 0:
@@ -87,7 +90,7 @@ class PermissionTestCase(TestCase):
         # Check the list of projects:
         self.assertEqual(len(pq('ul').children()), 2)
         self.assertEqual(pq('ul').children().eq(0).text(), "Sam Spade's Demo Project")
-        self.assertEqual(pq('ul').children().eq(1).text(), "Sam Spade's Other Demo Project")
+        self.assertEqual(pq('ul').children().eq(1).text(), "Sam Spade's Empty Project")
 
         # Log in as Philip Marlowe:
         response = c.post('/login/?next=/slat/', {'username': 'marlowe', 'password': 'thebigsleep'})
@@ -125,7 +128,7 @@ class PermissionTestCase(TestCase):
         """Change permissions, and make sure projects are visible to the correct users."""
 
         # Grant Philip Marlowe access to one of Sam Spade's projects:
-        Project.objects.get(title_text="Sam Spade's Other Demo Project").AssignRole(
+        Project.objects.get(title_text="Sam Spade's Empty Project").AssignRole(
             User.objects.get(username="marlowe"),
             ProjectPermissions.ROLE_FULL)
         
@@ -146,7 +149,7 @@ class PermissionTestCase(TestCase):
         self.assertEqual(len(pq('ul').children()), 3)
         self.assertEqual(pq('ul').children().eq(0).text(), "Phil Marlowe's First Project")
         self.assertEqual(pq('ul').children().eq(1).text(), "Phil Marlowe's Second Project")
-        self.assertEqual(pq('ul').children().eq(2).text(), "Sam Spade's Other Demo Project")
+        self.assertEqual(pq('ul').children().eq(2).text(), "Sam Spade's Empty Project")
 
         # Sam should still see all his projects:
         response = c.post('/login/?next=/slat/', {'username': 'samspade', 'password': 'maltesefalcon'})
@@ -162,7 +165,7 @@ class PermissionTestCase(TestCase):
         # Check the list of projects:
         self.assertEqual(len(pq('ul').children()), 2)
         self.assertEqual(pq('ul').children().eq(0).text(), "Sam Spade's Demo Project")
-        self.assertEqual(pq('ul').children().eq(1).text(), "Sam Spade's Other Demo Project")
+        self.assertEqual(pq('ul').children().eq(1).text(), "Sam Spade's Empty Project")
 
         # Sherlock still sees only his own projects:
         response = c.post('/login/?next=/slat/', {'username': 'holmes', 'password': 'elementary'})
@@ -180,7 +183,7 @@ class PermissionTestCase(TestCase):
         self.assertEqual(pq('ul').children().eq(0).text(), "Sherlock's Project")
 
         # Remove access from Sam:
-        Project.objects.get(title_text="Sam Spade's Other Demo Project").AssignRole(
+        Project.objects.get(title_text="Sam Spade's Empty Project").AssignRole(
             User.objects.get(username="samspade"),
             ProjectPermissions.ROLE_NONE)
         
@@ -199,7 +202,7 @@ class PermissionTestCase(TestCase):
         self.assertEqual(len(pq('ul').children()), 3)
         self.assertEqual(pq('ul').children().eq(0).text(), "Phil Marlowe's First Project")
         self.assertEqual(pq('ul').children().eq(1).text(), "Phil Marlowe's Second Project")
-        self.assertEqual(pq('ul').children().eq(2).text(), "Sam Spade's Other Demo Project")
+        self.assertEqual(pq('ul').children().eq(2).text(), "Sam Spade's Empty Project")
 
         # Sam should no longer see this project:
         response = c.post('/login/?next=/slat/', {'username': 'samspade', 'password': 'maltesefalcon'})
@@ -230,3 +233,43 @@ class PermissionTestCase(TestCase):
         # Check the list of projects:
         self.assertEqual(len(pq('ul').children()), 1)
         self.assertEqual(pq('ul').children().eq(0).text(), "Sherlock's Project")
+
+    def test_url_munging(self):
+        """Make sure projects are protected against URL editing"""
+        c = Client()
+        # Log in as Sam Spade:
+        response = c.post('/login/?next=/slat/', {'username': 'samspade', 'password': 'maltesefalcon'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
+
+        urls = ["/slat/project/{PROJECT}",
+                "/slat/project/{PROJECT}/hazard",
+                "/slat/project/{PROJECT}/hazard/nzs",
+                "/slat/project/{PROJECT}/hazard/nzs/edit",
+                "/slat/project/{PROJECT}/hazard/nlh",
+                "/slat/project/{PROJECT}/hazard/nlh/edit",
+                "/slat/project/{PROJECT}/hazard/interp",
+                "/slat/project/{PROJECT}/hazard/interp/edit",
+                "/slat/project/{PROJECT}/hazard/interp/import",
+                "/slat/project/{PROJECT}/level",
+                "/slat/project/{PROJECT}/edp/{EDP}"]
+
+        for project_title, status in [
+                ["Sam Spade's Demo Project", [HTTPStatus.OK, HTTPStatus.FOUND]],
+                ["Sam Spade's Empty Project", [HTTPStatus.OK, HTTPStatus.FOUND, HTTPStatus.NOT_FOUND]],
+                ["Phil Marlowe's First Project", [HTTPStatus.FORBIDDEN]]]:
+
+            project = Project.objects.get(title_text=project_title)
+            
+            levels = Level.objects.filter(project=project)
+            demands =  EDP.objects.filter(project=project)
+
+            if len(levels) > 0:
+                demand = demands.get(level=levels.get(level=0)).pk
+            else:
+                demand = None
+
+            for url in urls:
+                u = url.replace("{PROJECT}", str(project.pk)).replace("{EDP}", str(demand))
+                response = c.get(u)
+                self.assertIn(response.status_code, status)

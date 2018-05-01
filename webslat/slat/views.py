@@ -299,6 +299,7 @@ def hazard_choose(request, project_id):
             # or to the page for the current hazard (they got here because they cancelled a change to the 
             # hazard type):
             if hazard:
+                # Shouldn't get here, but if we do, just redirect to the "choose hazard" page:
                 return HttpResponseRedirect(reverse('slat:hazard', args=(project_id)))
             else:
                 return HttpResponseRedirect(reverse('slat:project', args=(project_id)))
@@ -316,8 +317,8 @@ def hazard_choose(request, project_id):
                 else:
                     raise ValueError("UNKNOWN HAZARD TYPE")
             else:
-                # Shouldn't get here!
-                raise ValueError("SHOULDN'T GET HERE")
+                # Shouldn't get here, but if we do, just redirect to the "choose hazard" page:
+                return HttpResponseRedirect(reverse('slat:hazard_choose', args=(project_id,)))
         else:        
             # Hazard exists. If the chosen type already, exists, save the change and go to the
             # 'view' page for the hazard. Otherwise, don't save the change, but go to the 'edit'
@@ -339,7 +340,7 @@ def hazard_choose(request, project_id):
                     return HttpResponseRedirect(reverse('slat:im_interp', args=(project_id,)))
                 else:
                     return HttpResponseRedirect(reverse('slat:im_interp_edit', args=(project_id,)))
-            if flavour.id == IM_TYPE_NZSo:
+            if flavour.id == IM_TYPE_NZS:
                 if hazard.nzs:
                     hazard.flavour = flavour
                     hazard.save()
@@ -396,13 +397,13 @@ def nlh(request, project_id):
     hazard = project.IM
 
     if request.method == 'POST':
-        raise ValueError("SHOULDN'T GET HERE")
+        return HttpResponseRedirect(reverse('slat:hazard_choose', args=(project_id)))
     else:
         if hazard and hazard.nlh:
             return render(request, 'slat/nlh.html', {'nlh':hazard.nlh, 'title': project.title_text, 
                                                      'project_id': project_id, 'chart': _plot_hazard(hazard)})
         else:
-            raise ValueError("SHOULDN'T REACH THIS")
+            return HttpResponseRedirect(reverse('slat:hazard_choose', args=(project_id)))
             
 
 @login_required
@@ -496,23 +497,19 @@ def im_interp(request, project_id):
                                                        'project_id': project_id, 'title': project.title_text})
             
     # if a GET (or any other method) we'll create a blank form
-    else:
+    elif hazard:
         points = IM_Point.objects.filter(hazard=hazard).order_by('im_value')
         method = hazard.interp_method
 
-        if True:
-            if False:
-                data_source = ModelDataSource(IM_Point.objects.filter(hazard = hazard).order_by('im_value'), fields=['im_value', 'rate'])
-                chart = LineChart(data_source, options={'title': 'Intensity Measure Rate of Exceedance', 
-                                                        'hAxis': {'logScale': True}, 'vAxis': {'logScale': True}})
-                                                        
-                context = {'chart': chart}
-            else:
-                chart = _plot_hazard(hazard)
+        chart = _plot_hazard(hazard)
 
-            return render(request, 'slat/im_interp.html', {'method': method, 'points': points,
-                                                           'project_id': project_id, 'chart': chart,
-                                                           'title': project.title_text})
+        return render(request, 'slat/im_interp.html', {'method': method, 'points': points,
+                                                       'project_id': project_id, 'chart': chart,
+                                                       'title': project.title_text})
+    else:
+        # Shouldn't get here, but if we do, just redirect to the "choose hazard" page:
+        return HttpResponseRedirect(reverse('slat:hazard_choose', args=(project_id,)))
+        
     return render(request, 'slat/im_interp.html', {'method': method, 'points': points, 
                                                    'project_id': project_id,
                                                    'title': project.title_text})
@@ -682,7 +679,8 @@ def im_nzs(request, project_id):
     hazard = project.IM
 
     if request.method == 'POST':
-        raise ValueError("SHOULDN'T POST THIS PAGE")
+        # Shouldn't get here, but if we do, just redirect to the "choose hazard" page:
+        return HttpResponseRedirect(reverse('slat:hazard_choose', args=(project_id,)))
     else:
         if hazard and hazard.nzs:
             if False:
@@ -706,7 +704,8 @@ def im_nzs(request, project_id):
             return render(request, 'slat/nzs.html', {'nzs':hazard.nzs, 'title': project.title_text, 
                                                          'project_id': project_id, 'chart': chart})
         else:
-            raise ValueError("SHOULDN'T REACH THIS")
+            # Shouldn't get here, but if we do, just redirect to the "choose hazard" page:
+            return HttpResponseRedirect(reverse('slat:hazard_choose', args=(project_id,)))
             
 
 @login_required
@@ -805,28 +804,7 @@ def _plot_demand(edp):
                                                  'pointSize': 5,
                                                  'legend': {'position': 'none'}})
         return [chart1, chart2]
-    
-@login_required
-def edp(request, project_id):
-    # If the project doesn't exist, generate a 404:
-    project = get_object_or_404(Project, pk=project_id)
 
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
-        raise PermissionDenied
-
-    # Otherwise:
-    #    - Does the project already have EDPs defined? If so, we'll
-    #      redirect to the 'view' page for the EDPs
-    #    - If not, we'll redirect to the 'init' page:
-    if project.floors :
-        # EDP has been defined exists:
-        demand_table = "<demand table>"
-        return render(request, 'slat/edp.html', {'project': project,
-                                                 'edps': EDP.objects.filter(project=project).order_by('floor', 'type'),
-                                                 'demand_table': demand_table})
-    else:
-        return HttpResponseRedirect(reverse('slat:edp_init', args=(project_id)))
-    
 @login_required
 def edp_view(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)

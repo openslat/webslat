@@ -32,7 +32,6 @@ urlpatterns = [
     url(r'^project/(?P<project_id>[0-9]+)/hazard/interp/import$', views.im_file, name='im_file'),
     url(r'^project/(?P<project_id>[0-9]+)/hazard/nzs$', views.im_nzs, name='nzs'),
     url(r'^project/(?P<project_id>[0-9]+)/hazard/nzs/edit$', views.im_nzs_edit, name='im_nzs_edit'),
-    url(r'^project/(?P<project_id>[0-9]+)/edp$', views.edp, name='edp'),
     url(r'^project/(?P<project_id>[0-9]+)/edp/(?P<edp_id>[0-9]+)$', views.edp_view, name='edp_view'),
     url(r'^project/(?P<project_id>[0-9]+)/edp/init$', views.edp_init, name='edp_init'),
     url(r'^project/(?P<project_id>[0-9]+)/edp/(?P<edp_id>[0-9]+)/choose$', views.edp_choose, name='edp_choose'),
