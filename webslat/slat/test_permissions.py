@@ -10,7 +10,8 @@ import django.http
 class PermissionTestCase(TestCase):
     def setUp(self):
         # Direct SLAT warnings to STDOUT, so they can easily be ignored
-        pyslat.LogToStdErr(True)
+        pyslat.SetLogFile("permissions_test_log.txt")
+        pyslat.LogToStdErr(False)
 
         # Create three new users:
         new_user = User.objects.create_user(username='samspade',
@@ -263,7 +264,8 @@ class PermissionTestCase(TestCase):
                 "/slat/project/{PROJECT}/edp/{EDP}/power/edit",
                 "/slat/project/{PROJECT}/edp/{EDP}/userdef",
                 "/slat/project/{PROJECT}/edp/{EDP}/userdef/import",
-                "/slat/project/{PROJECT}/edp/{EDP}/userdef/edit"]
+                "/slat/project/{PROJECT}/edp/{EDP}/userdef/edit",
+                "/slat/project/{PROJECT}/analysis"]
 
         for project_title, status in [
                 ["Sam Spade's Demo Project", [HTTPStatus.OK, HTTPStatus.FOUND]],

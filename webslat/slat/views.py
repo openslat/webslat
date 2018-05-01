@@ -1302,6 +1302,8 @@ def analysis(request, project_id):
 
     chart = None
     by_fate_chart = None
+    by_floor_bar_chart = None
+    by_comp_pie_chart = None
 
     if project.IM:
         building = project.model()
