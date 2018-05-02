@@ -129,16 +129,175 @@ def make_demo(user):
             level = Level.objects.get(project=project, level=l)
             
             if re.compile(".*Accel").match(component.demand.name):
-                type='A'
+                demand_type='A'
             elif re.compile(".*Drift").match(component.demand.name):
-                type='D'
+                demand_type='D'
             else:
                 print(component.demand.name)
                 raise ValueError("UNRECOGNIZED DEMAND TYPE FOR COMPONENT")
 
             demand = EDP.objects.get(project=project,
                                      level=level,
-                                     type=type)
+                                     type=demand_type)
+            group = Component_Group(demand=demand, component=component, quantity=comp['quantity'])
+            group.save()
+    
+    return project
+
+def make_example_2(user):
+    project = Project()
+    setattr(project, 'title_text', "Example #2")
+    setattr(project, 'description_text', "This is based on the second example in Brendan Bradley's paper. ")
+    setattr(project, 'rarity', 1/500)
+    setattr(project, 'mean_im_collapse', 1.2)
+    setattr(project, 'sd_ln_im_collapse', 0.47)
+    setattr(project, 'mean_cost_collapse', 14E6)
+    setattr(project, 'sd_ln_cost_collapse', 0.35)
+    
+    setattr(project, 'mean_im_demolition', 0.9)
+    setattr(project, 'sd_ln_im_demolition', 0.47)
+    setattr(project, 'mean_cost_demolition', 14E6)
+    setattr(project, 'sd_ln_cost_demolition', 0.35)
+    project.save()
+
+    project.AssignRole(user, ProjectPermissions.ROLE_FULL)
+
+    # Create levels:
+    num_floors = 10
+    for l in range(num_floors + 1):
+        if l == 0:
+            label = "Ground Floor"
+        elif l == num_floors:
+            label = "Roof"
+        else:
+            label = "Floor #{}".format(l + 1)
+        level = Level(project=project, level=l, label=label)
+        level.save()
+        
+    # Create an IM:
+    data = np.genfromtxt('example2/imfunc.csv', comments="#", delimiter=",", invalid_raise=True)
+    for d in data:
+        if type(d) == list or type(d) == np.ndarray:
+            for e in d:
+                if isnan(e):
+                    raise ValueError("Error importing data")
+                else:
+                    if isnan(e):
+                        raise ValueError("Error importing data")
+
+    hazard = IM()
+    hazard.flavour = IM_Types.objects.get(pk=IM_TYPE_INTERP)
+    hazard.interp_method = Interpolation_Method.objects.get(method_text="Log-Log")
+    hazard.save()
+    project.IM = hazard
+    project.save()
+
+    # Insert new points:
+    for x, y in data:
+        IM_Point(hazard=hazard, im_value=x, rate=y).save()
+    project.IM = hazard
+    project.save()
+
+    # Create EDPs:
+    demand_params = [{'level': 10, 'accel': "RB_EDP21.csv", 'drift': "RB_EDP20.csv"},
+                     {'level': 9, 'accel': "RB_EDP19.csv", 'drift': "RB_EDP18.csv"},
+                     {'level': 8, 'accel': "RB_EDP17.csv" , 'drift': "RB_EDP16.csv" },
+                     {'level': 7, 'accel': "RB_EDP15.csv" , 'drift': "RB_EDP14.csv" },
+                     {'level': 6, 'accel': "RB_EDP13.csv" , 'drift': "RB_EDP12.csv" },
+                     {'level': 5, 'accel': "RB_EDP11.csv" , 'drift': "RB_EDP10.csv" },
+                     {'level': 4, 'accel': "RB_EDP9.csv" , 'drift': "RB_EDP8.csv" },
+                     {'level': 3, 'accel': "RB_EDP7.csv" , 'drift': "RB_EDP6.csv" },
+                     {'level': 2, 'accel': "RB_EDP5.csv" , 'drift': "RB_EDP4.csv" },
+                     {'level': 1, 'accel': "RB_EDP3.csv" , 'drift': "RB_EDP2.csv" },
+                     {'level': 0, 'accel': "RB_EDP1.csv"}]
+    for demand in demand_params:
+        level = Level.objects.get(project=project, level=demand['level'])
+        
+        for demand_type in ['accel', 'drift']:
+            if demand.get(demand_type):
+                if demand_type == 'accel':
+                    EDP_demand_type = 'A'
+                elif demand_type == 'drift':
+                    EDP_demand_type = 'D'
+                else:
+                    raise ValueError("INVALID DEMAND TYPE")
+                
+                edp = EDP(project=project, 
+                          level=level,
+                          type=EDP_demand_type)
+
+                file = demand.get(demand_type)
+                
+                data = np.genfromtxt('example2/{}'.format(file), comments="#", delimiter=",", invalid_raise=True)
+                # Validate the data:
+                for d in data:
+                    if type(d) == list or type(d) == np.ndarray:
+                        for e in d:
+                            if isnan(e):
+                                raise ValueError("Error importing data")
+                            else:
+                                if isnan(e):
+                                    raise ValueError("Error importing data")
+            
+                # Create an array from the points:
+                points = [{'im': 0.0, 'mu': 0.0, 'sigma': 0.0}]
+                for d in data:
+                    if len(d) < 2:
+                        raise ValueError("Wrong number of columns")
+                    im = d[0]
+                    values = d[1:]
+                    ln_values = []
+                    nz_values = []
+                    for value in values:
+                        if value != 0:
+                            ln_values.append(log(value))
+                            nz_values.append(value)
+                    median_edp = exp(np.mean(ln_values))
+                    sd_ln_edp = np.std(ln_values, ddof=1)
+                    points.append({'im': im, 'mu': median_edp, 'sigma': sd_ln_edp})
+
+                edp.flavour = EDP_Flavours.objects.get(pk=EDP_FLAVOUR_USERDEF);
+                edp.interpolation_method = Interpolation_Method.objects.get(method_text="Linear")
+                edp.save()
+
+                for p in points:
+                    EDP_Point(demand=edp, im=p['im'], median_x=p['mu'], sd_ln_x=p['sigma']).save()
+            
+    # Add components:
+    all_floors = range(num_floors + 1)
+    not_ground = range(1, num_floors+1)
+    not_roof = range(num_floors)
+    components = [{'levels': not_roof, 'id': '208', 'quantity': 53},
+                  {'levels': [0], 'id': '204', 'quantity': 2},
+                  {'levels': not_roof, 'id': '214', 'quantity': 10},
+                  {'levels': not_ground, 'id': '203', 'quantity': 693},
+                  {'levels': not_ground, 'id': '211', 'quantity': 23},
+                  {'levels': [1], 'id': '2', 'quantity': 20},
+                  {'levels': range(2, num_floors+1), 'id': '2', 'quantity': 4},
+                  {'levels': not_ground, 'id': '2', 'quantity': 18},
+                  {'levels': not_ground, 'id': '3', 'quantity': 16},
+                  {'levels': not_ground, 'id': '105', 'quantity': 721},
+                  {'levels': not_ground, 'id': '107', 'quantity': 99},
+                  {'levels': not_ground, 'id': '106', 'quantity': 721},
+                  {'levels': not_ground, 'id': '108', 'quantity': 10},
+                  {'levels': [num_floors], 'id': '205', 'quantity': 4}]
+                  
+    for comp in components:
+        component = ComponentsTab.objects.get(ident=comp['id'])
+        for l in comp['levels']:
+            level = Level.objects.get(project=project, level=l)
+            
+            if re.compile(".*Accel").match(component.demand.name):
+                demand_type='A'
+            elif re.compile(".*Drift").match(component.demand.name):
+                demand_type='D'
+            else:
+                print(component.demand.name)
+                raise ValueError("UNRECOGNIZED DEMAND TYPE FOR COMPONENT")
+
+            demand = EDP.objects.get(project=project,
+                                     level=level,
+                                     type=demand_type)
             group = Component_Group(demand=demand, component=component, quantity=comp['quantity'])
             group.save()
     
@@ -200,6 +359,7 @@ def project(request, project_id=None):
     else:
         # If the project exists, use it to populate the form:
         if project_id:
+            
             project = get_object_or_404(Project, pk=project_id)
             if not project.CanRead(request.user):
                 raise PermissionDenied
@@ -207,6 +367,7 @@ def project(request, project_id=None):
             form = ProjectForm(instance=project, initial=model_to_dict(project))
             
             if project.IM and len(project.model().ComponentsByEDP()) > 0:
+                
                 building = project.model()
                 im_func = project.IM.model()
                 
@@ -238,7 +399,7 @@ def project(request, project_id=None):
                                                         'vAxis': {'logScale': True, 'format': 'decimal',
                                                                   'title': 'Cost ($)'},
                                                         'pointSize': 5})
-
+                
             levels = project.num_levels()
             levels_form = None
             users = list(ProjectPermissions.objects.filter(project=project, role=ProjectPermissions.ROLE_FULL))

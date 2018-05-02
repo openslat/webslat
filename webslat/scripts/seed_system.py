@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from slat.models import Profile, Project
-from slat.views import make_demo
+from slat.views import make_demo, make_example_2
 
 def run():
     # Create a superuser:
@@ -20,13 +20,13 @@ def run():
     # Create Users:
     users = [{'username': 'samspade', 
               'email': 'samspade@spadeandarcher.com', 
-              'password': 'maltese', 
+              'password': 'maltesefalcon', 
               'first_name': 'Samuel',
               'last_name': 'Spade',
               'organization': 'Spade & Archer'},
              {'username': 'marlowe',
               'email': 'marlowe@marlowe.com',
-              'password': 'bigsleep',
+              'password': 'thebigsleep',
               'first_name': 'Philip',
               'last_name': 'Marlowe',
               'organization': 'The Marlowe Agency'},
@@ -81,7 +81,7 @@ def run():
 
     if len(Project.objects.filter(title_text="Sherlock's Project")) == 0:
         holmes = User.objects.get(username='holmes')
-        project = make_demo(holmes)
+        project = make_example_2(holmes)
         project.title_text = "Sherlock's Project"
         project.save()
 

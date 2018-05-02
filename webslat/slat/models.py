@@ -16,6 +16,9 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
 class SLAT_db_Router(object):
     """
     A router to control all database operations on models in the WebSLAT application.
@@ -123,6 +126,7 @@ class Project(models.Model):
 
     def _make_model(self):
         structure = pyslat.structure(self.id)
+        
         if self.mean_cost_collapse and self.sd_ln_cost_collapse:
             structure.setRebuildCost(
                 pyslat.MakeLogNormalDist(
@@ -147,7 +151,7 @@ class Project(models.Model):
         return list(Level.objects.filter(project=self).order_by('-level'))
 
     def num_levels(self):
-        return len(self.levels())
+        return max(0, len(self.levels()) - 1)
             
     def __str__(self):
         if self.IM:
@@ -184,6 +188,9 @@ class Level(models.Model):
     project = models.ForeignKey(Project, blank=False, null=False)
     level = models.IntegerField(blank=False, null=False)
     label = models.CharField(max_length=50, blank=False, null=False)
+
+    def __str__(self):
+        return "Level #{}: {}".format(self.level, self.label)
 
 class IM_Types(models.Model):
     name_text = models.CharField(max_length=25)
@@ -267,8 +274,7 @@ class NZ_Standard_Curve(models.Model):
 class IM(models.Model):
     flavour = models.ForeignKey(IM_Types, blank=False, null=False, default=IM_TYPE_INTERP)
     nlh = models.ForeignKey(NonLinearHyperbolic, null=True, blank=True)
-    #interp_method = models.ForeignKey(Interpolation_Method, null=True, blank=True)
-    interp_method = models.ForeignKey(Location, null=True, blank=True)
+    interp_method = models.ForeignKey(Interpolation_Method, null=True, blank=True)
     nzs = models.ForeignKey(NZ_Standard_Curve, null=True, blank=True)
 
     def label(self):
@@ -487,6 +493,7 @@ class EDP_Point(models.Model):
     sd_ln_x = models.FloatField()
 
     def __str__(self):
+        return("Demand: {}; IM: {}; median_x: {}, sd_ln_x: {}".format(self.demand, self.im, self.median_x, self.sd_ln_x))
         return("an EDP_Point: [{}]".format(self.id))
 
 class Component_Group(models.Model):
