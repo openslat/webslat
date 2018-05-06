@@ -13,8 +13,10 @@ from django.urls import get_script_prefix
 from django.utils.safestring import mark_safe
 from dal import forward
 from django.contrib.auth.models import User
+from django.db.models import CASCADE, PROTECT, SET_NULL, DO_NOTHING
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+import re
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -89,7 +91,7 @@ class Project(models.Model):
 
     title_text = models.CharField(max_length=50)
     description_text = models.CharField(max_length=200, blank=True)
-    IM = models.ForeignKey('IM', null=True, blank=True)
+    IM = models.ForeignKey('IM', on_delete=PROTECT, null=True, blank=True)
     rarity = models.FloatField(null=False, choices=FREQUENCY_CHOICES)
     mean_im_collapse = models.FloatField(null=True, blank=True)
     sd_ln_im_collapse = models.FloatField(null=True, blank=True)
@@ -180,12 +182,12 @@ class ProjectPermissions(models.Model):
         (ROLE_NONE, 'None'),
         }
     
-    project = models.ForeignKey(Project, blank=False, null=False)
-    user = models.ForeignKey(User, blank=False, null=False)
+    project = models.ForeignKey(Project, on_delete=CASCADE, blank=False, null=False)
+    user = models.ForeignKey(User, on_delete=CASCADE, blank=False, null=False)
     role = models.CharField(max_length=1, choices=ROLE_CHOICES, default=ROLE_NONE)
     
 class Level(models.Model):
-    project = models.ForeignKey(Project, blank=False, null=False)
+    project = models.ForeignKey(Project, on_delete=CASCADE, blank=False, null=False)
     level = models.IntegerField(blank=False, null=False)
     label = models.CharField(max_length=50, blank=False, null=False)
 
@@ -234,7 +236,7 @@ class Interpolation_Method(models.Model):
         return self.method_text
 
 class IM_Point(models.Model):
-    hazard = models.ForeignKey('IM', null=False)
+    hazard = models.ForeignKey('IM', on_delete=CASCADE, null=False)
     im_value = models.FloatField()
     rate = models.FloatField()
 
@@ -265,17 +267,22 @@ class NZ_Standard_Curve(models.Model):
         (SOIL_CLASS_E, 'E')
     )
 
-    location = models.ForeignKey(Location, null=False)
     soil_class = models.CharField(max_length=1,
                                   choices=SOIL_CLASS_CHOICES,
                                   default=SOIL_CLASS_A)
     period = models.FloatField(default=1.5)
+    location = models.ForeignKey(Location, on_delete=DO_NOTHING, null=False, db_constraint=False)
+
+    class Meta:
+        managed = True
+        db_table = 'slat_nz_standard_curve'
+
 
 class IM(models.Model):
-    flavour = models.ForeignKey(IM_Types, blank=False, null=False, default=IM_TYPE_INTERP)
-    nlh = models.ForeignKey(NonLinearHyperbolic, null=True, blank=True)
-    interp_method = models.ForeignKey(Interpolation_Method, null=True, blank=True)
-    nzs = models.ForeignKey(NZ_Standard_Curve, null=True, blank=True)
+    flavour = models.ForeignKey(IM_Types, on_delete=PROTECT, blank=False, null=False, default=IM_TYPE_INTERP, db_constraint=False)
+    nlh = models.ForeignKey(NonLinearHyperbolic, on_delete=SET_NULL, null=True, blank=True)
+    interp_method = models.ForeignKey(Interpolation_Method, on_delete=PROTECT, null=True, blank=True, db_constraint=False)
+    nzs = models.ForeignKey(NZ_Standard_Curve, on_delete=SET_NULL, null=True, blank=True)
 
     def label(self):
         return "Spectral Acceleration (g)"
@@ -373,8 +380,8 @@ class EDP_PowerCurve(models.Model):
     sd_ln_x_b = models.FloatField(default=0)
 
 class EDP(models.Model):
-    project = models.ForeignKey(Project, blank=False, null=False)
-    level = models.ForeignKey(Level, blank=False, null=False)
+    project = models.ForeignKey(Project, on_delete=CASCADE, blank=False, null=False)
+    level = models.ForeignKey(Level, on_delete=CASCADE, blank=False, null=False)
     EDP_TYPE_DRIFT = 'D'
     EDP_TYPE_ACCEL = 'A'
     EDP_TYPE_CHOICES = (
@@ -382,9 +389,9 @@ class EDP(models.Model):
         (EDP_TYPE_ACCEL, 'Acceleration'))
     type = models.CharField(max_length=1, 
                             choices=EDP_TYPE_CHOICES);
-    flavour = models.ForeignKey(EDP_Flavours, blank=False, null=True)
-    powercurve = models.ForeignKey(EDP_PowerCurve, null=True, blank=False)
-    interpolation_method = models.ForeignKey(Interpolation_Method, null=True, blank=False)
+    flavour = models.ForeignKey(EDP_Flavours, on_delete=PROTECT, blank=False, null=True, db_constraint=False)
+    powercurve = models.ForeignKey(EDP_PowerCurve, on_delete=SET_NULL, null=True, blank=False)
+    interpolation_method = models.ForeignKey(Interpolation_Method, on_delete=PROTECT, null=True, blank=False, db_constraint=False)
 
     def __str__(self):
         return "{} {}".format(self.level.label,
@@ -487,7 +494,7 @@ class EDP(models.Model):
 
 
 class EDP_Point(models.Model):
-    demand = models.ForeignKey('EDP', null=False)
+    demand = models.ForeignKey('EDP', on_delete=CASCADE, null=False)
     im = models.FloatField()
     median_x = models.FloatField()
     sd_ln_x = models.FloatField()
@@ -497,8 +504,8 @@ class EDP_Point(models.Model):
         return("an EDP_Point: [{}]".format(self.id))
 
 class Component_Group(models.Model):
-    demand = models.ForeignKey('EDP', null=False)
-    component = models.ForeignKey('ComponentsTab', null=False)
+    demand = models.ForeignKey('EDP', on_delete=PROTECT, null=False)
+    component = models.ForeignKey('ComponentsTab', on_delete=PROTECT, null=False, db_constraint=False)
     quantity = models.IntegerField(blank=False, null=False)
 
     def _make_model(self):
@@ -671,7 +678,7 @@ class ComponentForm(Form):
         self.fields['component'].widget.attrs['title'] = 'Choose the type of component.'
         
     quantity = IntegerField()
-    category = ChoiceField(ListOfComponentCategories, required=False)
+    category = ChoiceField(choices=ListOfComponentCategories, required=False)
     component = ModelChoiceField(
         queryset=ComponentsTab.objects.all(),
         widget=autocomplete.Select2(url='/slat/component-autocomplete/',
