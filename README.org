@@ -72,8 +72,6 @@ served via Apache.
 		 -p 3022 webslat-user@127.0.0.1 
    #+END_SRC
 
-   #+RESULTS:
-
 8. Run these commands on the VM as root. (I can't figure out how to do this from
    a script on the host machine).
 
@@ -121,12 +119,6 @@ served via Apache.
 	   tail -5
     #+END_SRC
 
-    #+RESULTS:
-    : 
-    : Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
-    : permitted by applicable law.
-    : Already up-to-date.
-    : make: Nothing to be done for 'all'.
 10. Add the search paths to ~.bashrc~, if they aren't already there;
    #+ATTR_LATEX: :options language=bash-remote
    #+BEGIN_SRC bash :results output :eval ask
@@ -138,13 +130,6 @@ served via Apache.
      " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 | tail -5
    #+END_SRC
 
-   #+RESULTS:
-   : the exact distribution terms for each program are described in the
-   : individual files in /usr/share/doc/*/copyright.
-   : 
-   : Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
-   : permitted by applicable law.
-
 11. Run the unit tests:
    #+ATTR_LATEX: :options language=bash-remote
     #+BEGIN_SRC bash :results output :eval ask
@@ -153,15 +138,6 @@ served via Apache.
       " | ssh -i ~/.ssh/vm -p 3022 \
 	      webslat-user@127.0.0.1 2>&1 | tail -5 
     #+END_SRC
-
-    #+RESULTS:
-    : fa is NAN
-    : ../src/structure_test.cpp(355): error: in "structure_cg_replace": difference{nan} between s.AnnualCost().get_mean_X(){nan} and 0.00545{0.00545} exceeds 0.1%
-    : ../src/structure_test.cpp(356): error: in "structure_cg_replace": difference{nan} between s.AnnualCost().get_sigma_lnX(){nan} and 2.826{2.8260000000000001} exceeds 0.1%
-    : 
-    : *** 15 failures are detected in the test module "Master Test Suite"
-
-
 
 12. Run the C++ example2 binary:
    #+ATTR_LATEX: :options language=bash-remote
@@ -172,13 +148,6 @@ served via Apache.
 	      webslat-user@127.0.0.1 2>&1 | tail -5 
     #+END_SRC
 
-    #+RESULTS:
-    : Total Search Evals: 1220940
-    : Number of Calls: 276816
-    : Successes: 276552
-    : NANs: 0
-    : Elapsed time: 22.5208
-
 13. Run the example2 Python script:
    #+ATTR_LATEX: :options language=bash-remote
     #+BEGIN_SRC bash :results output :eval ask
@@ -187,15 +156,6 @@ served via Apache.
       " | ssh -i ~/.ssh/vm -p 3022 \
 	      webslat-user@127.0.0.1 2>&1 | tail -5 
     #+END_SRC
-
-    #+RESULTS:
-    : Total Search Evals: 1657705
-    : Number of Calls: 274581
-    : Successes: 274351
-    : NANs: 0
-    : 
-
-
 
 14. Run the example2 SLAT script:
    #+ATTR_LATEX: :options language=bash-remote
@@ -206,21 +166,6 @@ served via Apache.
       " | ssh -i ~/.ssh/vm -p 3022 \
 	      webslat-user@127.0.0.1 2>&1 | tail -10 
     #+END_SRC
-
-    #+RESULTS:
-    #+begin_example
-    Max Integration Evals: 257
-    Integration Failures: 6
-    Total Integration Evals: 8818217
-    Max Search Evals: 256
-    Number Search Fails: 230
-    Total Search Evals: 1245545
-    Number of Calls: 274581
-    Successes: 274345
-    NANs: 0
-
-    #+end_example
-
 
 15. Run these commands on the VM as root. (I can't figure out how to do this from
    a script on the host machine).
@@ -247,27 +192,13 @@ served via Apache.
 		   django \
 		   django-graphos \
 		   django-autocomplete-light \
-		   django-registration
-	       pip3 install --upgrade confusable-homoglyphs
+                   django-extensions
+               pip3 install django-registration
+               pip3 install --upgrade django
 	       deactivate
       " | ssh -i ~/.ssh/vm -p 3022 \
 	      webslat-user@127.0.0.1 2>&1 | tail -10
     #+END_SRC
-
-    #+RESULTS:
-    #+begin_example
-      Downloading django_registration-2.3-py2.py3-none-any.whl (115kB)
-    Requirement already satisfied: pytz in ./webslat-env/lib/python3.5/site-packages (from matplotlib)
-    Requirement already satisfied: python-dateutil in ./webslat-env/lib/python3.5/site-packages (from matplotlib)
-    Requirement already satisfied: pyparsing!=2.0.0,!=2.0.4,!=2.1.2,!=2.1.6,>=1.5.6 in ./webslat-env/lib/python3.5/site-packages (from matplotlib)
-    Requirement already satisfied: cycler>=0.10 in ./webslat-env/lib/python3.5/site-packages (from matplotlib)
-    Requirement already satisfied: six>=1.10 in ./webslat-env/lib/python3.5/site-packages (from matplotlib)
-    Collecting confusable-homoglyphs~=2.0 (from django-registration)
-      Downloading confusable_homoglyphs-2.0.2-py2.py3-none-any.whl
-    Installing collected packages: confusable-homoglyphs, django-registration
-    Successfully installed confusable-homoglyphs-2.0.2 django-registration-2.3
-#+end_example
-
 
 17. Copy the ~webslat~ files to the VM:
    #+ATTR_LATEX: :options language=bash-local
@@ -278,20 +209,7 @@ served via Apache.
 	      webslat-user@127.0.0.1 2>&1 | tail -10
     #+END_SRC
 
-    #+RESULTS:
-    #+begin_example
-    Pseudo-terminal will not be allocated because stdin is not a terminal.
-    Linux webslat 4.9.0-4-amd64 #1 SMP Debian 4.9.51-1 (2017-09-28) x86_64
-
-    The programs included with the Debian GNU/Linux system are free software;
-    the exact distribution terms for each program are described in the
-    individual files in /usr/share/doc/*/copyright.
-
-    Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
-    permitted by applicable law.
-    Cloning into 'webslat'...
-    #+end_example
-17. Copy the ~graphos~ templates to the ~slat~ directory:
+18. Copy the ~graphos~ templates to the ~slat~ directory:
    #+ATTR_LATEX: :options language=bash-remote
     #+BEGIN_SRC bash :results output :eval ask
       echo "cd ~/webslat-env/lib/python3.5/site-packages/graphos/templates
@@ -299,26 +217,45 @@ served via Apache.
       " | ssh -i ~/.ssh/vm -p 3022 \
 	      webslat-user@127.0.0.1 2>&1 | tail -10
     #+END_SRC
+19. Initialise the databse:
+   As ~webslat-user~ on the VM, run:
+  #+ATTR_LATEX: :options language=bash-remote
+   #+BEGIN_SRC bash :results output
+     source webslat-env/bin/activate
+     cd webslat/webslat
+     python3 manage.py migrate
+   #+END_SRC
 
-    #+RESULTS:
-    : Pseudo-terminal will not be allocated because stdin is not a terminal.
-    : Linux webslat 4.9.0-4-amd64 #1 SMP Debian 4.9.51-1 (2017-09-28) x86_64
-    : 
-    : The programs included with the Debian GNU/Linux system are free software;
-    : the exact distribution terms for each program are described in the
-    : individual files in /usr/share/doc/*/copyright.
-    : 
-    : Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
-    : permitted by applicable law.
-    
-
-18. Test the ~django~ server:
+20. Run the test scripts:
     As ~webslat-user~ on the VM, run:
    #+ATTR_LATEX: :options language=bash-remote
     #+BEGIN_SRC bash :results output
-      source webslat-env/bin/activate
-      cd webslat/webslat
-      python3 manage.py migrate
+      python3 manage.py test
+    #+END_SRC
+
+21. Seed the databse:
+    As ~webslat-user~ on the VM, run:
+   #+ATTR_LATEX: :options language=bash-remote
+    #+BEGIN_SRC bash :results output
+      python3 manage.py runscript seed_system
+    #+END_SRC
+    This will populate the database with several users and projects:
+    | User ID    | Password      | Admin? | Projects                       |
+    |------------+---------------+--------+--------------------------------|
+    | slat-admin | swordfish     | X      |                                |
+    |------------+---------------+--------+--------------------------------|
+    | samspade   | maltesefalcon |        | Sam Spade's Demo Project       |
+    |            |               |        | Sam Spade's Other Demo Project |
+    |------------+---------------+--------+--------------------------------|
+    | marlowe    | thebigsleep   |        | Phil Marlowe's First Project   |
+    |            |               |        | Phil Marlowe's Second Project  |
+    |------------+---------------+--------+--------------------------------|
+    | holmes     | elementary    |        | Sherlock's Project             |
+    |------------+---------------+--------+--------------------------------|
+22. Test the ~django~ server:
+    As ~webslat-user~ on the VM, run:
+   #+ATTR_LATEX: :options language=bash-remote
+    #+BEGIN_SRC bash :results output
       python3 manage.py runserver 0:8000
     #+END_SRC
 
@@ -330,13 +267,13 @@ served via Apache.
     to confirm the server is working.
 
     Quit ~links2~ and kill the server.
-19. User ~apache2~ to serve ~webslat~. First, as ~root~ on the VM, run:
+23. User ~apache2~ to serve ~webslat~. First, as ~root~ on the VM, run:
    #+ATTR_LATEX: :options language=bash-remote-root
    #+BEGIN_SRC bash
      apt-get -y install apache2 \
          libapache2-mod-wsgi-py3
    #+END_SRC
-20. Make sure the ~apache2~ process can read the database file.
+24. Make sure the ~apache2~ process can read the database file.
     1. Assign appropriate permissions:
        #+ATTR_LATEX: :options language=bash-remote
        #+BEGIN_SRC bash :results output :eval ask
@@ -346,19 +283,6 @@ served via Apache.
 	 " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 2>&1 | tail -10 
        #+END_SRC
 
-       #+RESULTS:
-       : Pseudo-terminal will not be allocated because stdin is not a terminal.
-       : Linux webslat 4.9.0-4-amd64 #1 SMP Debian 4.9.51-1 (2017-09-28) x86_64
-       : 
-       : The programs included with the Debian GNU/Linux system are free software;
-       : the exact distribution terms for each program are described in the
-       : individual files in /usr/share/doc/*/copyright.
-       : 
-       : Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
-       : permitted by applicable law.
-
-
-
     2. Assign the files to the ~www-data~ group. As root on the VM, run:
        #+ATTR_LATEX: :options language=bash-remote-root
        #+BEGIN_SRC bash :results output
@@ -366,7 +290,7 @@ served via Apache.
            chown :www-data /home/webslat-user/webslat/webslat
            chown --recursive :www-data /home/webslat-user/webslat/webslat/slat/static
        #+END_SRC
-21. Edit ~webslat/webslat/webslat/settings.py~
+25. Edit ~webslat/webslat/webslat/settings.py~
     1. Set:
        #+BEGIN_SRC fundamental
 	 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '127.0.1.1']
@@ -375,7 +299,7 @@ served via Apache.
        #+BEGIN_SRC fundamental
 	 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
        #+END_SRC
-22. Create the static files:
+26. Create the static files:
    #+ATTR_LATEX: :options language=bash-remote
     #+BEGIN_SRC bash :results output :eval ask
       echo "source webslat-env/bin/activate
@@ -384,29 +308,15 @@ served via Apache.
       " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 2>&1 | tail -10 
     #+END_SRC
 
-    #+RESULTS:
-    #+begin_example
-    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/js/admin/DateTimeShortcuts.js'
-    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/js/admin/RelatedObjectLookups.js'
-    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/js/vendor/jquery/jquery.min.js'
-    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/js/vendor/jquery/LICENSE-JQUERY.txt'
-    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/js/vendor/jquery/jquery.js'
-    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/js/vendor/xregexp/xregexp.min.js'
-    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/js/vendor/xregexp/xregexp.js'
-    Copying '/home/webslat-user/webslat-env/lib/python3.5/site-packages/django/contrib/admin/static/admin/js/vendor/xregexp/LICENSE-XREGEXP.txt'
-
-    1023 static files copied to '/home/webslat-user/webslat/webslat/static'.
-    #+end_example
-
-23. As ~root~ on the VM, edit ~/etc/apache2/sites-available/000-default.conf~, by
+27. As ~root~ on the VM, edit ~/etc/apache2/sites-available/000-default.conf~, by
     adding, inside the ~<VirtualHost...>~ tag:
     #+BEGIN_SRC fundamental
-	Alias /static /home/webslat-user/webslat/webslat/static
-	<Directory /home/webslat-user/webslat/webslat/static>
+        Alias /static /home/webslat-user/webslat/webslat/static
+        <Directory /home/webslat-user/webslat/webslat/static>
 	  Require all granted
-	</Directory>
+        </Directory>
 
-	<Directory /home/webslat-user/webslat/webslat/webslat>
+        <Directory /home/webslat-user/webslat/webslat/webslat>
 	  <Files wsgi.py>
 	      Require all granted
 	  </Files>
@@ -423,13 +333,13 @@ served via Apache.
     apache2ctl configtest
     #+END_SRC
     to check the configuration file.
-24. Install ~libslat~ where ~apache2~ can find it. As ~root~, on the VM, run:
+28. Install ~libslat~ where ~apache2~ can find it. As ~root~, on the VM, run:
    #+ATTR_LATEX: :options language=bash-remote-root
     #+BEGIN_SRC bash
     ln -s /home/webslat-user/SLAT/linux/lib/libslat.so /usr/local/lib
     ldconfig
     #+END_SRC
-25. Restart the server. As ~root~, on the VM, run:
+29. Restart the server. As ~root~, on the VM, run:
    #+ATTR_LATEX: :options language=bash-remote-root
     #+BEGIN_SRC bash
     systemctl restart apache2
@@ -449,12 +359,6 @@ To update OpenSLAT and WebSLAT without creating a new image:
 	  tail -5
     #+END_SRC
 
-    #+RESULTS:
-    : 
-    : Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
-    : permitted by applicable law.
-    : Already up-to-date.
-    : make: Nothing to be done for 'all'.
 
 2. Update WebSLAT:
    #+ATTR_LATEX: :options language=bash-remote
@@ -468,12 +372,6 @@ To update OpenSLAT and WebSLAT without creating a new image:
 	  tail -5
    #+END_SRC   
 
-   #+RESULTS:
-   :  create mode 100644 webslat/slat/static/slat/qclogo-small.png
-   :  create mode 100644 webslat/slat/templates/base.html
-   :  create mode 100644 webslat/slat/templates/base_site.html
-   :  create mode 100644 webslat/slat/templates/registration/login.html
-   :  create mode 100644 webslat/slat/templates/registration/registration_form.html
 
 3. Run migrations:
    #+ATTR_LATEX: :options language=bash-remote
@@ -484,19 +382,6 @@ To update OpenSLAT and WebSLAT without creating a new image:
      " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 2>&1 | tail -10 
     #+END_SRC
 
-    #+RESULTS:
-    #+begin_example
-    The programs included with the Debian GNU/Linux system are free software;
-    the exact distribution terms for each program are described in the
-    individual files in /usr/share/doc/*/copyright.
-
-    Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
-    permitted by applicable law.
-    Operations to perform:
-      Apply all migrations: admin, auth, contenttypes, sessions, slat
-    Running migrations:
-      No migrations to apply.
-#+end_example
 
 4. Update the static files:
    #+ATTR_LATEX: :options language=bash-remote
@@ -507,19 +392,6 @@ To update OpenSLAT and WebSLAT without creating a new image:
      " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 2>&1 | tail -10 
     #+END_SRC
 
-    #+RESULTS:
-    #+begin_example
-    Are you sure you want to do this?
-
-    Type 'yes' to continue, or 'no' to cancel: Copying '/home/webslat-user/webslat/webslat/slat/static/slat/qclogo-small.png'
-    Copying '/home/webslat-user/webslat/webslat/slat/static/slat/openslat-logo.png'
-    Copying '/home/webslat-user/webslat/webslat/slat/static/slat/style.css'
-    Copying '/home/webslat-user/webslat/webslat/slat/static/slat/login.css'
-    Copying '/home/webslat-user/webslat/webslat/slat/static/slat/qclogo-medium.png'
-    Found another file with the destination path 'admin/js/jquery.init.js'. It will be ignored since only the first encountered file is collected. If this is not what you want, make sure every static file has a unique path.
-
-    5 static files copied to '/home/webslat-user/webslat/webslat/static', 1017 unmodified.
-#+end_example
 
 5. Restart the server. As ~root~, on the VM, run:
    #+ATTR_LATEX: :options language=bash-remote-root
