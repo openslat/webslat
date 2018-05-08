@@ -2,7 +2,10 @@ from __future__ import print_function
 import sys
 import pyslat
 import re
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
+from graphos.renderers import gchart
+from graphos.views import FlotAsJson, RendererAsJson
+from jchart import Chart
 import numpy as np
 from scipy.optimize import fsolve
 from django.http import Http404, HttpResponseRedirect, HttpResponseForbidden
@@ -27,9 +30,80 @@ from registration.backends.simple.views import RegistrationView
 from registration.forms import RegistrationForm
 from django.forms import ModelForm
 import sys
+from random import randint
+from datetime import datetime, timedelta
+
+from jchart import Chart
+from jchart.config import Axes, DataSet, rgba
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+
+class Cost_IM_Chart(Chart):
+    chart_type = 'line'
+    scales = {
+        'xAxes': [Axes(type='linear', position='bottom')],
+    }
+
+    def __init__(self, data):
+        super(Cost_IM_Chart, self).__init__()
+        self.repair = []
+        self.demolition = []
+        self.collapse = []
+        for im, repair, demolition, collapse in data:
+            self.repair.append({'x': im, 'y': repair})
+            self.demolition.append({'x': im, 'y': demolition})
+            self.collapse.append({'x': im, 'y': collapse})
+        
+    def get_datasets(self, *args, **kwargs):
+        return [
+            DataSet(
+                type='line',
+                label='Repair',
+                data=self.repair,
+                borderColor=rgba(255,99,132,1.0),
+                backgroundColor=rgba(0,0,0,0)
+            ),
+            DataSet(
+                type='line',
+                label='Demolition',
+                data=self.demolition,
+                borderColor=rgba(54,262,235,1.0),
+                backgroundColor=rgba(0,0,0,0)
+            ),
+            DataSet(
+                type='line',
+                label='Collapse',
+                data=self.collapse,
+                borderColor=rgba(75,192,192,1.0),
+                backgroundColor=rgba(0,0,0,0)
+            )]
+                
+
+class JxBarChart(Chart):
+    chart_type = 'line'
+
+    def get_labels(self, **kwargs):
+        return ["January", "February", "March", "April",
+                "May", "June", "July"]
+
+    def get_datasets(self, **kwargs):
+        data = [10, 15, 29, 30, 5, 10, 22]
+        colors = [
+            rgba(255, 99, 132, 0.2),
+            rgba(54, 162, 235, 0.2),
+            rgba(255, 206, 86, 0.2),
+            rgba(75, 192, 192, 0.2),
+            rgba(153, 102, 255, 0.2),
+            rgba(255, 159, 64, 0.2)
+        ]
+
+        return [DataSet(label='Bar Chart',
+                        data=data,
+                        borderWidth=1,
+                        backgroundColor=colors,
+                        borderColor=colors)]
+
 
 @login_required
 def index(request):
@@ -72,7 +146,8 @@ def make_demo(user):
         level.save()
         
     # Create an IM:
-    nzs = NZ_Standard_Curve(location=Location.objects.get(location='Christchurch'),
+    christchurch = Location.objects.get(location='Christchurch')
+    nzs = NZ_Standard_Curve(location=christchurch,
                             soil_class = NZ_Standard_Curve.SOIL_CLASS_C,
                             period = 2.0)
     nzs.save()
@@ -399,6 +474,8 @@ def project(request, project_id=None):
                                                         'vAxis': {'logScale': True, 'format': 'decimal',
                                                                   'title': 'Cost ($)'},
                                                         'pointSize': 5})
+                j_chart = Cost_IM_Chart(data)
+                chart = j_chart
                 
             levels = project.num_levels()
             levels_form = None
