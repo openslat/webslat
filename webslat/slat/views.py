@@ -34,7 +34,7 @@ from random import randint
 from datetime import datetime, timedelta
 
 from jchart import Chart
-from jchart.config import Axes, DataSet, rgba
+from jchart.config import Axes, DataSet, rgba, ScaleLabel, Legend, Title
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -76,6 +76,38 @@ class Cost_IM_Chart(Chart):
                 label='Collapse',
                 data=self.collapse,
                 borderColor=rgba(75,192,192,1.0),
+                backgroundColor=rgba(0,0,0,0)
+            )]
+                
+
+class ExpectedLoss_Over_Time_Chart(Chart):
+    chart_type = 'line'
+    legend = Legend(display=False)
+    title = Title(display=True, text="Expected Loss over Time")
+    scales = {
+        'xAxes': [Axes(type='linear', 
+                       position='bottom', 
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Years From Present'))],
+        'yAxes': [Axes(type='linear', 
+                       position='left',
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Expected Loss ($k)'))],
+    }
+
+    def __init__(self, data, title):
+        super(ExpectedLoss_Over_Time_Chart, self).__init__()
+        self.data = []
+        for year, loss in data:
+            self.data.append({'x': year, 'y': loss})
+        self.title['text'] = title
+        
+    def get_datasets(self, *args, **kwargs):
+        return [
+            DataSet(
+                type='line',
+                data=self.data,
+                borderColor=rgba(255,99,132,1.0),
                 backgroundColor=rgba(0,0,0,0)
             )]
                 
@@ -1539,6 +1571,7 @@ def analysis(request, project_id):
         raise PermissionDenied
 
     chart = None
+    jchart = None
     by_fate_chart = None
     by_floor_bar_chart = None
     by_comp_pie_chart = None
@@ -1575,6 +1608,10 @@ def analysis(request, project_id):
                                                 'pointsVisible': False,
                                                 'curveType': 'function',
                                                 'legend': {'position': 'none'}})
+
+        jchart = ExpectedLoss_Over_Time_Chart(data, title.replace("\n", "; "))
+                                              
+        
         if False:
             im_func = project.IM.model()
             columns = ['IM', 'Repair Costs']
@@ -1722,6 +1759,7 @@ def analysis(request, project_id):
     return render(request, 'slat/analysis.html', {'project': project, 
                                                   'structure': project.model(),
                                                   'chart': chart,
+                                                  'jchart': jchart,
                                                   #'by_fate_chart': by_fate_chart,
                                                   #'s_ns_chart': s_ns_chart,
                                                   #'by_floor_chart': by_floor_chart,
