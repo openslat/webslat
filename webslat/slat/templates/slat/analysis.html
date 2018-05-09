@@ -46,6 +46,14 @@
     <hr />
 {% endif %}
 
+{% if j_by_floor_bar_chart %} 
+    <div style="position: relative;  width:50%">
+      {{ j_by_floor_bar_chart.as_html }}
+    </div>
+    <hr />
+{% else %}
+    <b>No j_by_floor_bar_chart</b>
+{% endif %}
 {% if by_floor_chart %} 
     {{ by_floor_chart.as_html }}
     <hr />

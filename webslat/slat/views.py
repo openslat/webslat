@@ -112,29 +112,40 @@ class ExpectedLoss_Over_Time_Chart(Chart):
             )]
                 
 
-class JxBarChart(Chart):
-    chart_type = 'line'
-
+class ByFloorChart(Chart):
+    chart_type = 'horizontalBar'
+    legend = Legend(display=False)
+    title = Title(display=True, text="Mean Annual Repair Cost by Floor")
+    scales = {
+        'xAxes': [Axes(type='linear', 
+                       position='bottom', 
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Cost ($)'))],
+        'yAxes': [Axes(position='left',
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Floor'))],
+    }
+    
+    def __init__(self, data):
+        print(data)
+        super(ByFloorChart, self).__init__()
+        self.labels = []
+        self.costs = []
+        # Skip the first entry, which are the column labels:
+        for label, costs in data[1:]:
+            self.labels.append(label)
+            self.costs.append(costs)
+        #self.title['text'] = 'By Floor'
+        
     def get_labels(self, **kwargs):
-        return ["January", "February", "March", "April",
-                "May", "June", "July"]
+        return self.labels
 
     def get_datasets(self, **kwargs):
-        data = [10, 15, 29, 30, 5, 10, 22]
-        colors = [
-            rgba(255, 99, 132, 0.2),
-            rgba(54, 162, 235, 0.2),
-            rgba(255, 206, 86, 0.2),
-            rgba(75, 192, 192, 0.2),
-            rgba(153, 102, 255, 0.2),
-            rgba(255, 159, 64, 0.2)
-        ]
-
         return [DataSet(label='Bar Chart',
-                        data=data,
-                        borderWidth=1,
-                        backgroundColor=colors,
-                        borderColor=colors)]
+                        data=self.costs,
+                        borderWidth=1)]
+
+
 
 
 @login_required
@@ -1738,6 +1749,9 @@ def analysis(request, project_id):
                                                             'hAxis': {'title': 'Cost ($)'},
                                                             'vAxis': {'title': 'Floor'}})
 
+        j_by_floor_bar_chart = ByFloorChart(data)
+        print(j_by_floor_bar_chart)
+
         columns = ['Component Type', 'Cost']
         data = [columns]
         groups = {}
@@ -1755,7 +1769,8 @@ def analysis(request, project_id):
 
         data_source = SimpleDataSource(data=data)
         by_comp_pie_chart = PieChart(data_source, options={'title': 'Mean Annual Repair Cost By Component Type'})
-        
+
+    print(j_by_floor_bar_chart)
     return render(request, 'slat/analysis.html', {'project': project, 
                                                   'structure': project.model(),
                                                   'chart': chart,
@@ -1764,6 +1779,7 @@ def analysis(request, project_id):
                                                   #'s_ns_chart': s_ns_chart,
                                                   #'by_floor_chart': by_floor_chart,
                                                   'by_floor_bar_chart': by_floor_bar_chart,
+                                                  'j_by_floor_bar_chart': j_by_floor_bar_chart,
                                                   'by_comp_pie_chart': by_comp_pie_chart})
 
 class ComponentAutocomplete(autocomplete.Select2QuerySetView):
