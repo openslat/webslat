@@ -151,7 +151,7 @@ class ByFloorChart(Chart):
 
 class ByCompPieChart(Chart):
     chart_type = 'pie'
-    legend = Legend(display=True, position='bottom')
+    legend = Legend(display=True, position='right')
     title = Title(display=True)
     
     def __init__(self, data, title):
