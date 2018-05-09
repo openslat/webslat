@@ -51,35 +51,55 @@ class Cost_IM_Chart(Chart):
         self.repair = []
         self.demolition = []
         self.collapse = []
-        for im, repair, demolition, collapse in data:
-            self.repair.append({'x': im, 'y': repair})
-            self.demolition.append({'x': im, 'y': demolition})
-            self.collapse.append({'x': im, 'y': collapse})
+        print(data)
+        headings = data[0]
+
+        for line in data[1:]:
+            line.reverse()
+            im = line.pop()
+
+            for i in range(1, len(headings)):
+                cost = line.pop()
+                heading = headings[i]
+                if heading == 'Repair':
+                    self.repair.append({'x': im, 'y': cost})
+                elif heading == 'Demolition':
+                    self.demolition.append({'x': im, 'y': cost})
+                elif heading == 'Collapse':
+                    self.collapse.append({'x': im, 'y': cost})
+                else:
+                    raise ValueError("Unknown cost type: {}".format(heading))
+        print(self.repair)
+        print(self.demolition)
+        print(self.collapse)
         
     def get_datasets(self, *args, **kwargs):
-        return [
-            DataSet(
+        datasets = []
+        if len(self.repair) > 0:
+            datasets.append(DataSet(
                 type='line',
                 label='Repair',
                 data=self.repair,
                 borderColor=rgba(255,99,132,1.0),
                 backgroundColor=rgba(0,0,0,0)
-            ),
-            DataSet(
+            ))
+        if len(self.demolition) > 0:
+            datasets.append(DataSet(
                 type='line',
                 label='Demolition',
                 data=self.demolition,
-                borderColor=rgba(54,262,235,1.0),
+                borderColor=rgba(54, 262, 235, 1.0),
                 backgroundColor=rgba(0,0,0,0)
-            ),
-            DataSet(
+            ))
+        if len(self.collapse) > 0:
+            datasets.append(DataSet(
                 type='line',
                 label='Collapse',
                 data=self.collapse,
-                borderColor=rgba(75,192,192,1.0),
+                borderColor=rgba(74, 192, 191, 1.0),
                 backgroundColor=rgba(0,0,0,0)
-            )]
-                
+            ))
+        return datasets
 
 class ExpectedLoss_Over_Time_Chart(Chart):
     chart_type = 'line'
@@ -1621,7 +1641,9 @@ def analysis(request, project_id):
     jchart = None
     by_fate_chart = None
     by_floor_bar_chart = None
+    j_by_floor_bar_chart = None
     by_comp_pie_chart = None
+    j_by_comp_pie_chart = None
 
     if project.IM:
         building = project.model()
