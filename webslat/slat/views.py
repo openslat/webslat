@@ -35,6 +35,7 @@ from datetime import datetime, timedelta
 
 from jchart import Chart
 from jchart.config import Axes, DataSet, rgba, ScaleLabel, Legend, Title
+import seaborn as sns
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -107,7 +108,7 @@ class ExpectedLoss_Over_Time_Chart(Chart):
             DataSet(
                 type='line',
                 data=self.data,
-                borderColor=rgba(255,99,132,1.0),
+                borderColor=rgba(0x34,0x64,0xC7,1.0),
                 backgroundColor=rgba(0,0,0,0)
             )]
                 
@@ -143,8 +144,43 @@ class ByFloorChart(Chart):
     def get_datasets(self, **kwargs):
         return [DataSet(label='Bar Chart',
                         data=self.costs,
-                        borderWidth=1)]
+                        borderWidth=1,
+                        borderColor=rgba(0,0,0,1.0),
+                        backgroundColor=rgba(0x34,0x64,0xC7,1.0))]
 
+
+class ByCompPieChart(Chart):
+    chart_type = 'pie'
+    legend = Legend(display=True, position='bottom')
+    title = Title(display=True)
+    
+    def __init__(self, data, title):
+        print(data)
+        super(ByCompPieChart, self).__init__()
+        self.title['text'] = title
+        self.labels = []
+        self.costs = []
+        # Skip the first entry, which are the column labels:
+        for label, costs in data[1:]:
+            self.labels.append(label)
+            self.costs.append(costs)
+        #self.title['text'] = 'By Floor'
+        
+    def get_labels(self, **kwargs):
+        return self.labels
+
+    def get_datasets(self, **kwargs):
+        palette = sns.color_palette(None, len(self.costs))
+        colors = []
+        for r, g, b in palette:
+            colors.append(rgba(int(r * 255), int(g * 255), int(b * 255), 0.5))
+            
+        print(colors)
+        return [DataSet(label='Pie Chart',
+                        data=self.costs,
+                        borderWidth=1,
+                        borderColor=rgba(0,0,0,1.0),
+                        backgroundColor=colors)]
 
 
 
@@ -1767,8 +1803,10 @@ def analysis(request, project_id):
         for key in groups.keys():
             data.append([key, groups[key]])
 
+        print(data)
         data_source = SimpleDataSource(data=data)
         by_comp_pie_chart = PieChart(data_source, options={'title': 'Mean Annual Repair Cost By Component Type'})
+        j_by_comp_pie_chart = ByCompPieChart(data, 'Mean Annual Repair Cost By Component Type')
 
     print(j_by_floor_bar_chart)
     return render(request, 'slat/analysis.html', {'project': project, 
@@ -1780,7 +1818,8 @@ def analysis(request, project_id):
                                                   #'by_floor_chart': by_floor_chart,
                                                   'by_floor_bar_chart': by_floor_bar_chart,
                                                   'j_by_floor_bar_chart': j_by_floor_bar_chart,
-                                                  'by_comp_pie_chart': by_comp_pie_chart})
+                                                  'by_comp_pie_chart': by_comp_pie_chart,
+                                                  'j_by_comp_pie_chart': j_by_comp_pie_chart})
 
 class ComponentAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
