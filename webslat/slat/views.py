@@ -39,13 +39,43 @@ class Cost_IM_Chart(Chart):
         'xAxes': [Axes(type='linear', position='bottom')],
     }
 
-    def __init__(self, data):
+    def __init__(self, project):
         super(Cost_IM_Chart, self).__init__()
         self.repair = []
         self.demolition = []
         self.collapse = []
-        headings = data[0]
 
+        # This was copied from earlier code, which calculated the data,
+        # then passed it to the chart. This can be cleaned up to 
+        # eliminate intermediate variables and streamline the process.
+        if project.IM and len(project.model().ComponentsByEDP()) > 0:
+            building = project.model()
+            im_func = project.IM.model()
+                
+            xlimit = im_func.plot_max()
+
+            columns = ['IM', 'Repair']
+            if im_func.DemolitionRate():
+                columns.append('Demolition')
+            if im_func.CollapseRate():
+                columns.append('Collapse')
+                        
+            data = [columns]
+
+            N = 10
+            for i in range(N + 1):
+                im = i/N * xlimit
+                new_data = [im]
+                costs = building.CostsByFate(im)
+                new_data.append(costs[0].mean())
+                
+                if im_func.DemolitionRate():
+                    new_data.append(costs[1].mean())
+                if im_func.CollapseRate():
+                    new_data.append(costs[2].mean())
+                data.append(new_data)
+
+        headings = data[0]
         for line in data[1:]:
             line.reverse()
             im = line.pop()
@@ -517,41 +547,13 @@ def project(request, project_id=None):
     else:
         # If the project exists, use it to populate the form:
         if project_id:
-            
             project = get_object_or_404(Project, pk=project_id)
             if not project.CanRead(request.user):
                 raise PermissionDenied
                 
             form = ProjectForm(instance=project, initial=model_to_dict(project))
             
-            if project.IM and len(project.model().ComponentsByEDP()) > 0:
-                
-                building = project.model()
-                im_func = project.IM.model()
-                
-                xlimit = im_func.plot_max()
-
-                columns = ['IM', 'Repair']
-                if im_func.DemolitionRate():
-                    columns.append('Demolition')
-                if im_func.CollapseRate():
-                    columns.append('Collapse')
-                        
-                data = [columns]
-
-                for i in range(11):
-                    im = i/10 * xlimit
-                    new_data = [im]
-                    costs = building.CostsByFate(im)
-                    new_data.append(costs[0].mean())
-                        
-                    if im_func.DemolitionRate():
-                        new_data.append(costs[1].mean())
-                    if im_func.CollapseRate():
-                        new_data.append(costs[2].mean())
-                    data.append(new_data)
-
-                chart = Cost_IM_Chart(data)
+            chart = Cost_IM_Chart(project)
                 
             levels = project.num_levels()
             levels_form = None
