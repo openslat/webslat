@@ -7,6 +7,8 @@
 <script type="text/javascript">
     google.load("visualization", "1", {packages:["corechart"]});
 </script>
+<script src="{% static "slat/js/Chart.js" %}"></script>
+<script src="{% static "slat/js/Chart.min.js" %}"></script>
 {% endblock %}
 {% block bodyclass %}{{ block.super }} slat {% endblock %}
 {% block title %}WebSLAT Project {{ form.instance.title_text }}{% endblock %}
@@ -39,6 +41,13 @@
     {% for chart in charts %}
         {{ chart.as_html }}
     {% endfor %}
+{% endif %}
+{% if jcharts %} 
+    <div style="position: relative;  width:100%">
+    {% for chart in jcharts %}
+        {{ chart.as_html }}
+    {% endfor %}
+    </div>
 {% endif %}
 </td></tr></table>
 {% endblock %}

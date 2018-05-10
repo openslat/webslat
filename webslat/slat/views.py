@@ -1185,6 +1185,123 @@ def _plot_demand(edp):
                                                  'legend': {'position': 'none'}})
         return [chart1, chart2]
 
+class IMDemandPlot(Chart):
+    chart_type = 'line'
+    legend = Legend(display=True)
+    title = Title(display=True, text="Hazard Curve")
+    scales = {
+        'xAxes': [Axes(type='linear', 
+                       position='bottom', 
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Intensity Measure'))],
+        'yAxes': [Axes(type='linear', 
+                       position='left',
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Demand'))]
+    }
+    
+    
+    def __init__(self, demand):
+        super(IMDemandPlot, self).__init__()
+        demand_func = demand.model()
+        if demand_func:
+            if demand.type == 'D':
+                demand_type  = 'Drift (radians)'
+            elif demand.type == 'A':
+                demand_type  = 'Acceleration (g)'
+            else:
+                demand_type = 'Unknown'
+            
+            self.title['text'] = "{} {}".format(demand.level.label, demand_type)
+            self.scales['yAxes'][0]['scaleLabel']['labelString'] = demand_type
+            xlimit = demand.project.IM.model().plot_max()
+
+            self.median =  []
+            self.x_10 = []
+            self.x_90 = []
+            N = 25
+            for i in range(1,N +1):
+                x = i/N * xlimit
+                median = demand_func.Median(x)
+                x_10 = demand_func.X_at_exceedence(x, 0.10)
+                x_90 = demand_func.X_at_exceedence(x, 0.90)
+
+                self.median.append({'x': x, 'y': median})
+                self.x_10.append({'x': x, 'y': x_10})
+                self.x_90.append({'x': x, 'y': x_90})
+                
+    def get_datasets(self, *args, **kwargs):
+        return [
+            DataSet(
+                type='line',
+                label='Median',
+                data=self.median,
+                borderColor=rgba(255,99,132,1.0),
+                backgroundColor=rgba(0,0,0,0)
+            ),
+            DataSet(
+                type='line',
+                label='10%',
+                data=self.x_10,
+                borderColor=rgba(54, 262, 235, 1.0),
+                backgroundColor=rgba(0,0,0,0)
+            ),
+            DataSet(
+                type='line',
+                label='90%',
+                data=self.x_90,
+                borderColor=rgba(74, 192, 191, 1.0),
+                backgroundColor=rgba(0,0,0,0)
+            )]
+
+class DemandRatePlot(Chart):
+    chart_type = 'line'
+    legend = Legend(display=True)
+    title = Title(display=True, text="Rate of Exceedence Curve")
+    scales = {
+        'xAxes': [Axes(type='linear', 
+                       position='bottom', 
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Demand'))],
+        'yAxes': [Axes(type='linear', 
+                       position='left',
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Annual Rate of Exceedance'))]
+    }
+    
+    
+    def __init__(self, demand):
+        super(DemandRatePlot, self).__init__()
+        demand_func = demand.model()
+        if demand_func:
+            if demand.type == 'D':
+                demand_type  = 'Drift (radians)'
+            elif demand.type == 'A':
+                demand_type  = 'Acceleration (g)'
+            else:
+                demand_type = 'Unknown'
+            
+            self.title['text'] = "{} {} Rate of Exceedance".format(demand.level.label, demand_type)
+            
+            xlimit = demand_func.plot_max()
+            self.rate =  []
+            N = 25
+            for i in range(0,N +1):
+                x = i/N * xlimit
+                rate = demand_func.getlambda(x)
+                self.rate.append({'x': x, 'y': rate})
+                
+            print(self.rate)
+                
+    def get_datasets(self, *args, **kwargs):
+        return [
+            DataSet(
+                type='line',
+                data=self.rate,
+                borderColor=rgba(255,99,132,1.0),
+                backgroundColor=rgba(0,0,0,0))]
+
+
 @login_required
 def edp_view(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)
@@ -1268,7 +1385,8 @@ def edp_power(request, project_id, edp_id):
 
     edp = get_object_or_404(EDP, pk=edp_id)
     charts = _plot_demand(edp)
-    return render(request, 'slat/edp_power.html', {'project': project, 'edp': edp, 'charts': charts})
+    jcharts = [IMDemandPlot(edp), DemandRatePlot(edp)]
+    return render(request, 'slat/edp_power.html', {'project': project, 'edp': edp, 'charts': charts, 'jcharts': jcharts})
 
 @login_required
 def edp_power_edit(request, project_id, edp_id):
@@ -1314,11 +1432,13 @@ def edp_userdef(request, project_id, edp_id):
 
     edp = get_object_or_404(EDP, pk=edp_id)
     charts = _plot_demand(edp)
+    jcharts = [IMDemandPlot(edp), DemandRatePlot(edp)]
     
     return render(request, 'slat/edp_userdef.html',
                   { 'project': project, 
                     'edp': edp,
                     'charts': charts,
+                    'jcharts': jcharts,
                     'points': EDP_Point.objects.filter(demand=edp).order_by('im')})
 
 @login_required
