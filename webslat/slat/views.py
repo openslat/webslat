@@ -702,7 +702,6 @@ def _plot_hazard(h):
             y = im_func.getlambda(x)
             data.append([x, y])
             
-        print(data)
         data_source = SimpleDataSource(data=data)
         chart = LineChart(data_source, options={'title': 'Intensity Measure Rate of Exceedance', 
                                                 'hAxis': {'logScale': True, 'title': h.label(),
@@ -749,8 +748,6 @@ class HazardPlot(Chart):
                 y = im_func.getlambda(x)
                 self.data.append({'x': x, 'y': y})
 
-            print(self.data)
-                
     def get_datasets(self, *args, **kwargs):
         return [
             DataSet(
@@ -1153,8 +1150,9 @@ def _plot_demand(edp):
         xlimit = edp.project.IM.model().plot_max()
 
         data =  [['IM', 'Median', "10%", "90%"]]
-        for i in range(11):
-            x = i/10 * xlimit
+        N = 25
+        for i in range(N + 1):
+            x = i/N * xlimit
             median = edp_func.Median(x)
             x_10 = edp_func.X_at_exceedence(x, 0.10)
             x_90 = edp_func.X_at_exceedence(x, 0.90)
@@ -1171,8 +1169,8 @@ def _plot_demand(edp):
         xlimit = edp_func.plot_max()
 
         #print("{:>15.6}{:>15.6}".format("EDP", "LAMBDA"))
-        for i in range(11):
-            xval = i/10 * xlimit
+        for i in range(1, N + 1):
+            xval = i/N * xlimit
             rate = edp_func.getlambda(xval)
             data.append([xval, rate])
             #print("{:>15.6}{:>15.6}".format(xval, rate))
@@ -1256,7 +1254,7 @@ class IMDemandPlot(Chart):
 
 class DemandRatePlot(Chart):
     chart_type = 'line'
-    legend = Legend(display=True)
+    legend = Legend(display=False)
     title = Title(display=True, text="Rate of Exceedence Curve")
     scales = {
         'xAxes': [Axes(type='linear', 
@@ -1282,16 +1280,15 @@ class DemandRatePlot(Chart):
                 demand_type = 'Unknown'
             
             self.title['text'] = "{} {} Rate of Exceedance".format(demand.level.label, demand_type)
+            self.scales['xAxes'][0]['scaleLabel']['labelString'] = demand_type
             
             xlimit = demand_func.plot_max()
             self.rate =  []
             N = 25
-            for i in range(0,N +1):
+            for i in range(1,N +1):
                 x = i/N * xlimit
                 rate = demand_func.getlambda(x)
                 self.rate.append({'x': x, 'y': rate})
-                
-            print(self.rate)
                 
     def get_datasets(self, *args, **kwargs):
         return [

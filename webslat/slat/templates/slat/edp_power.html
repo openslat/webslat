@@ -1,14 +1,8 @@
 {% extends "base_site.html" %}
 {% load i18n static %}
-{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
+{% block extrastyle %}
+{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
 {{ form.media }}
-
-<script type="text/javascript" src="https://www.google.com/jsapi"></script>
-<script type="text/javascript">
-    google.load("visualization", "1", {packages:["corechart"]});
-</script>
-<script src="{% static "slat/js/Chart.js" %}"></script>
-<script src="{% static "slat/js/Chart.min.js" %}"></script>
 {% endblock %}
 {% block bodyclass %}{{ block.super }} slat {% endblock %}
 {% block title %}WebSLAT Project {{ form.instance.title_text }}{% endblock %}

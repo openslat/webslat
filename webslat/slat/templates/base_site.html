@@ -1,6 +1,14 @@
 {% extends "base.html" %}
-{% load static %}
+{% load i18n static %}
 <link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{% now "U" %}" />
+{% block extrastyle %}
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript">
+    google.load("visualization", "1", {packages:["corechart"]});
+</script>
+<script src="{% static "slat/js/Chart.js" %}"></script>
+<script src="{% static "slat/js/Chart.min.js" %}"></script>
+{% endblock %}
 
 {% block title %}{{ title }} | {{ site_title|default:_('WebSLAT Admin') }}{% endblock %}
 
