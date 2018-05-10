@@ -20,14 +20,10 @@
 <p><b>Annual Cost SD log:</b> {{ structure.AnnualCost.sd_ln|floatformat:2 }}</p>
 
 
-{% if jchart %} 
-    <div style="position: relative;  width:50%">
-      {{ jchart.as_html }}
-    </div>
-    <hr />
-{% endif %}
 {% if chart %} 
-    {{ chart.as_html }}
+    <div style="position: relative;  width:50%">
+      {{ chart.as_html }}
+    </div>
     <hr />
 {% endif %}
 
@@ -41,37 +37,19 @@
     <hr />
 {% endif %}
 
-{% if j_by_floor_bar_chart %} 
-    <div style="position: relative;  width:50%">
-      {{ j_by_floor_bar_chart.as_html }}
-    </div>
-    <hr />
-{% else %}
-    <b>No j_by_floor_bar_chart</b>
-{% endif %}
-{% if by_floor_chart %} 
-    {{ by_floor_chart.as_html }}
-    <hr />
-{% endif %}
-
 {% if by_floor_bar_chart %} 
-    {{ by_floor_bar_chart.as_html }}
+    <div style="position: relative;  width:50%">
+      {{ by_floor_bar_chart.as_html }}
+    </div>
     <hr />
 {% endif %}
 
-{% if j_by_comp_pie_chart %} 
+{% if by_comp_pie_chart %} 
     <div style="position: relative;  width:50%">
-      {{ j_by_comp_pie_chart.as_html }}
+      {{ by_comp_pie_chart.as_html }}
     </div>
     <hr />
-{% else %}
-    <b>No j_by_comp_pie_chart</b>
 {% endif %}
-{% if by_comp_pie_chart %} 
-    {{ by_comp_pie_chart.as_html }}
-    <hr />
-{% endif %}
-</hr>
 <a href="{% url 'slat:project' project.id %}">Return to Project</a><br /><br/>
 <a href="{% url 'slat:index' %}">Return to Project List</a>
 

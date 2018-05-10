@@ -551,8 +551,7 @@ def project(request, project_id=None):
                         new_data.append(costs[2].mean())
                     data.append(new_data)
 
-                j_chart = Cost_IM_Chart(data)
-                chart = j_chart
+                chart = Cost_IM_Chart(data)
                 
             levels = project.num_levels()
             levels_form = None
@@ -733,7 +732,7 @@ def nlh(request, project_id):
         if hazard and hazard.nlh:
             return render(request, 'slat/nlh.html', {'nlh':hazard.nlh, 'title': project.title_text, 
                                                      'project_id': project_id, 
-                                                     'jchart': HazardPlot(hazard)})
+                                                     'chart': HazardPlot(hazard)})
         else:
             return HttpResponseRedirect(reverse('slat:hazard_choose', args=(project_id)))
             
@@ -833,11 +832,11 @@ def im_interp(request, project_id):
         points = IM_Point.objects.filter(hazard=hazard).order_by('im_value')
         method = hazard.interp_method
 
-        jchart = HazardPlot(hazard)
+        chart = HazardPlot(hazard)
 
         return render(request, 'slat/im_interp.html', {'method': method, 'points': points,
                                                        'project_id': project_id,
-                                                       'jchart': jchart,
+                                                       'chart': chart,
                                                        'title': project.title_text})
     else:
         # Shouldn't get here, but if we do, just redirect to the "choose hazard" page:
@@ -1016,11 +1015,11 @@ def im_nzs(request, project_id):
         return HttpResponseRedirect(reverse('slat:hazard_choose', args=(project_id,)))
     else:
         if hazard and hazard.nzs:
-            jchart = HazardPlot(hazard)
+            chart = HazardPlot(hazard)
         
             return render(request, 'slat/nzs.html', {'nzs':hazard.nzs, 'title': project.title_text, 
                                                      'project_id': project_id, 
-                                                     'jchart': jchart})
+                                                     'chart': chart})
         else:
             # Shouldn't get here, but if we do, just redirect to the "choose hazard" page:
             return HttpResponseRedirect(reverse('slat:hazard_choose', args=(project_id,)))
@@ -1274,8 +1273,8 @@ def edp_power(request, project_id, edp_id):
         raise PermissionDenied
 
     edp = get_object_or_404(EDP, pk=edp_id)
-    jcharts = [IMDemandPlot(edp), DemandRatePlot(edp)]
-    return render(request, 'slat/edp_power.html', {'project': project, 'edp': edp, 'jcharts': jcharts})
+    charts = [IMDemandPlot(edp), DemandRatePlot(edp)]
+    return render(request, 'slat/edp_power.html', {'project': project, 'edp': edp, 'charts': charts})
 
 @login_required
 def edp_power_edit(request, project_id, edp_id):
@@ -1320,12 +1319,12 @@ def edp_userdef(request, project_id, edp_id):
         raise PermissionDenied
 
     edp = get_object_or_404(EDP, pk=edp_id)
-    jcharts = [IMDemandPlot(edp), DemandRatePlot(edp)]
+    charts = [IMDemandPlot(edp), DemandRatePlot(edp)]
     
     return render(request, 'slat/edp_userdef.html',
                   { 'project': project, 
                     'edp': edp,
-                    'jcharts': jcharts,
+                    'charts': charts,
                     'points': EDP_Point.objects.filter(demand=edp).order_by('im')})
 
 @login_required
@@ -1815,7 +1814,7 @@ def analysis(request, project_id):
                 costs = costs + c.model().E_annual_cost()
             data.append([l.label, costs])
 
-        j_by_floor_bar_chart = ByFloorChart(data)
+        by_floor_bar_chart = ByFloorChart(data)
 
         columns = ['Component Type', 'Cost']
         data = [columns]
@@ -1832,16 +1831,13 @@ def analysis(request, project_id):
         for key in groups.keys():
             data.append([key, groups[key]])
 
-        j_by_comp_pie_chart = ByCompPieChart(data, 'Mean Annual Repair Cost By Component Type')
+        by_comp_pie_chart = ByCompPieChart(data, 'Mean Annual Repair Cost By Component Type')
 
     return render(request, 'slat/analysis.html', {'project': project, 
                                                   'structure': project.model(),
                                                   'chart': chart,
-                                                  'jchart': jchart,
                                                   'by_floor_bar_chart': by_floor_bar_chart,
-                                                  'j_by_floor_bar_chart': j_by_floor_bar_chart,
-                                                  'by_comp_pie_chart': by_comp_pie_chart,
-                                                  'j_by_comp_pie_chart': j_by_comp_pie_chart})
+                                                  'by_comp_pie_chart': by_comp_pie_chart})
 
 class ComponentAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):

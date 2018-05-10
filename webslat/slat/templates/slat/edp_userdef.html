@@ -41,13 +41,8 @@
 <a href="{% url 'slat:index' %}">Return to Project List</a>
 </td><td>
 {% if charts %} 
+    <div style="position:relative; width:100%">
     {% for chart in charts %}
-        {{ chart.as_html }}
-    {% endfor %}
-{% endif %}
-{% if jcharts %} 
-    <div>
-    {% for chart in jcharts %}
         {{ chart.as_html }}
     {% endfor %}
     </div>

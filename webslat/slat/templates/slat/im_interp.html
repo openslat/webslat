@@ -12,15 +12,9 @@
 </div>
 
 {% if chart %} 
-    {{ chart.as_html }}
-{% endif %}
-
-{% if jchart %} 
     <div style="position: relative;  width:50%">
-      {{ jchart.as_html }}
+      {{ chart.as_html }}
     </div>
-{% else %}
-    <b>NO JCHART</b>
 {% endif %}
 
 <p>Interpolation Method: <B>{{ method }}</B></p>

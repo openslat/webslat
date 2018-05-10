@@ -32,13 +32,8 @@
 </td>
 </td><td>
 {% if charts %} 
-    {% for chart in charts %}
-        {{ chart.as_html }}
-    {% endfor %}
-{% endif %}
-{% if jcharts %} 
     <div style="position: relative;  width:100%">
-    {% for chart in jcharts %}
+    {% for chart in charts %}
         {{ chart.as_html }}
     {% endfor %}
     </div>
