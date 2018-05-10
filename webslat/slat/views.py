@@ -33,14 +33,14 @@ import seaborn as sns
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
-class Cost_IM_Chart(Chart):
+class IMCostChart(Chart):
     chart_type = 'line'
     scales = {
         'xAxes': [Axes(type='linear', position='bottom')],
     }
 
     def __init__(self, project):
-        super(Cost_IM_Chart, self).__init__()
+        super(IMCostChart, self).__init__()
         self.repair = []
         self.demolition = []
         self.collapse = []
@@ -553,7 +553,7 @@ def project(request, project_id=None):
                 
             form = ProjectForm(instance=project, initial=model_to_dict(project))
             
-            chart = Cost_IM_Chart(project)
+            chart = IMCostChart(project)
                 
             levels = project.num_levels()
             levels_form = None
