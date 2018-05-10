@@ -51,7 +51,6 @@ class Cost_IM_Chart(Chart):
         self.repair = []
         self.demolition = []
         self.collapse = []
-        print(data)
         headings = data[0]
 
         for line in data[1:]:
@@ -69,9 +68,6 @@ class Cost_IM_Chart(Chart):
                     self.collapse.append({'x': im, 'y': cost})
                 else:
                     raise ValueError("Unknown cost type: {}".format(heading))
-        print(self.repair)
-        print(self.demolition)
-        print(self.collapse)
         
     def get_datasets(self, *args, **kwargs):
         datasets = []
@@ -148,7 +144,6 @@ class ByFloorChart(Chart):
     }
     
     def __init__(self, data):
-        print(data)
         super(ByFloorChart, self).__init__()
         self.labels = []
         self.costs = []
@@ -175,7 +170,6 @@ class ByCompPieChart(Chart):
     title = Title(display=True)
     
     def __init__(self, data, title):
-        print(data)
         super(ByCompPieChart, self).__init__()
         self.title['text'] = title
         self.labels = []
@@ -195,7 +189,6 @@ class ByCompPieChart(Chart):
         for r, g, b in palette:
             colors.append(rgba(int(r * 255), int(g * 255), int(b * 255), 0.5))
             
-        print(colors)
         return [DataSet(label='Pie Chart',
                         data=self.costs,
                         borderWidth=1,
@@ -307,8 +300,7 @@ def make_demo(user):
             elif re.compile(".*Drift").match(component.demand.name):
                 demand_type='D'
             else:
-                print(component.demand.name)
-                raise ValueError("UNRECOGNIZED DEMAND TYPE FOR COMPONENT")
+                raise ValueError("UNRECOGNIZED DEMAND TYPE FOR COMPONENT: {}".format(component.demand.name))
 
             demand = EDP.objects.get(project=project,
                                      level=level,
@@ -466,8 +458,7 @@ def make_example_2(user):
             elif re.compile(".*Drift").match(component.demand.name):
                 demand_type='D'
             else:
-                print(component.demand.name)
-                raise ValueError("UNRECOGNIZED DEMAND TYPE FOR COMPONENT")
+                raise ValueError("UNRECOGNIZED DEMAND TYPE FOR COMPONENT: {}".format(component.demand.name))
 
             demand = EDP.objects.get(project=project,
                                      level=level,
@@ -1808,7 +1799,6 @@ def analysis(request, project_id):
                                                             'vAxis': {'title': 'Floor'}})
 
         j_by_floor_bar_chart = ByFloorChart(data)
-        print(j_by_floor_bar_chart)
 
         columns = ['Component Type', 'Cost']
         data = [columns]
@@ -1825,12 +1815,10 @@ def analysis(request, project_id):
         for key in groups.keys():
             data.append([key, groups[key]])
 
-        print(data)
         data_source = SimpleDataSource(data=data)
         by_comp_pie_chart = PieChart(data_source, options={'title': 'Mean Annual Repair Cost By Component Type'})
         j_by_comp_pie_chart = ByCompPieChart(data, 'Mean Annual Repair Cost By Component Type')
 
-    print(j_by_floor_bar_chart)
     return render(request, 'slat/analysis.html', {'project': project, 
                                                   'structure': project.model(),
                                                   'chart': chart,
