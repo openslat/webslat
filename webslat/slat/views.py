@@ -696,11 +696,13 @@ def _plot_hazard(h):
         data =  [
             ['IM', 'lambda'],
         ]
-        for i in range(11):
-            x = i/10 * xlimit
+        N = 25
+        for i in range(1, N + 1):
+            x = i/N * xlimit
             y = im_func.getlambda(x)
             data.append([x, y])
             
+        print(data)
         data_source = SimpleDataSource(data=data)
         chart = LineChart(data_source, options={'title': 'Intensity Measure Rate of Exceedance', 
                                                 'hAxis': {'logScale': True, 'title': h.label(),
@@ -713,8 +715,52 @@ def _plot_hazard(h):
                                                 'pointSize': 5,
                                                 'legend': {'position': 'none'}})
         return chart
+
+class HazardPlot(Chart):
+    chart_type = 'line'
+    legend = Legend(display=False)
+    title = Title(display=True, text="Hazard Curve")
+    scales = {
+        'xAxes': [Axes(type='logarithmic', 
+                       position='bottom', 
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Intensity Measure'))],
+        'yAxes': [Axes(type='logarithmic', 
+                       position='left',
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Annual Rate of Exceedance'))]
+    }
     
+    
+    def __init__(self, hazard):
+        super(HazardPlot, self).__init__()
+        self.title['text'] = 'Hazard Curve for {}'.format(Project.objects.get(IM=hazard).title_text)
+        self.scales['xAxes'][0]['scaleLabel']['labelString'] = hazard.label()
         
+        if hazard.model():
+            im_func = hazard.model()
+            xlimit = im_func.plot_max()
+
+            self.data =  []
+            
+            N = 25
+            for i in range(1,N +1):
+                x = i/N * xlimit
+                y = im_func.getlambda(x)
+                self.data.append({'x': x, 'y': y})
+
+            print(self.data)
+                
+    def get_datasets(self, *args, **kwargs):
+        return [
+            DataSet(
+                type='line',
+                data=self.data,
+                borderColor=rgba(0x34,0x64,0xC7,1.0),
+                backgroundColor=rgba(0,0,0,0)
+            )]
+
+    
 @login_required
 def nlh(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
@@ -729,7 +775,8 @@ def nlh(request, project_id):
     else:
         if hazard and hazard.nlh:
             return render(request, 'slat/nlh.html', {'nlh':hazard.nlh, 'title': project.title_text, 
-                                                     'project_id': project_id, 'chart': _plot_hazard(hazard)})
+                                                     'project_id': project_id, 'chart': _plot_hazard(hazard),
+                                                     'jchart': HazardPlot(hazard)})
         else:
             return HttpResponseRedirect(reverse('slat:hazard_choose', args=(project_id)))
             
@@ -830,9 +877,11 @@ def im_interp(request, project_id):
         method = hazard.interp_method
 
         chart = _plot_hazard(hazard)
+        jchart = HazardPlot(hazard)
 
         return render(request, 'slat/im_interp.html', {'method': method, 'points': points,
                                                        'project_id': project_id, 'chart': chart,
+                                                       'jchart': jchart,
                                                        'title': project.title_text})
     else:
         # Shouldn't get here, but if we do, just redirect to the "choose hazard" page:
@@ -1026,11 +1075,14 @@ def im_nzs(request, project_id):
                     data_source = SimpleDataSource(data=data)
                     chart = LineChart(data_source, options={'title': 'Intensity Measure Rate of Exceedance', 
                                                             'hAxis': {'logScale': True}, 'vAxis': {'logScale': True}})
+                    jchart = None
             else:
                 chart = _plot_hazard(hazard)
+                jchart = HazardPlot(hazard)
         
             return render(request, 'slat/nzs.html', {'nzs':hazard.nzs, 'title': project.title_text, 
-                                                         'project_id': project_id, 'chart': chart})
+                                                         'project_id': project_id, 'chart': chart,
+                                                     'jchart': jchart})
         else:
             # Shouldn't get here, but if we do, just redirect to the "choose hazard" page:
             return HttpResponseRedirect(reverse('slat:hazard_choose', args=(project_id,)))

@@ -7,6 +7,8 @@
 <script type="text/javascript">
     google.load("visualization", "1", {packages:["corechart"]});
 </script>
+<script src="{% static "slat/js/Chart.js" %}"></script>
+<script src="{% static "slat/js/Chart.min.js" %}"></script>
 {% endblock %}
 {% block bodyclass %}{{ block.super }} slat {% endblock %}
 {% block title %}WebSLAT: {{ title }}{% endblock %}
@@ -18,6 +20,14 @@
 
 {% if chart %} 
     {{ chart.as_html }}
+{% endif %}
+
+{% if jchart %} 
+    <div style="position: relative;  width:50%">
+      {{ jchart.as_html }}
+    </div>
+{% else %}
+    <b>NO JCHART</b>
 {% endif %}
 
 <p>Interpolation Method: <B>{{ method }}</B></p>
