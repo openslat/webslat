@@ -2,10 +2,6 @@ from __future__ import print_function
 import sys
 import pyslat
 import re
-#import matplotlib.pyplot as plt
-from graphos.renderers import gchart
-from graphos.views import FlotAsJson, RendererAsJson
-from jchart import Chart
 import numpy as np
 from scipy.optimize import fsolve
 from django.http import Http404, HttpResponseRedirect, HttpResponseForbidden
@@ -16,9 +12,6 @@ from django.forms.models import model_to_dict
 from django.core.exceptions import PermissionDenied
 from .nzs import *
 from math import *
-from graphos.sources.model import SimpleDataSource
-from graphos.sources.model import ModelDataSource
-from graphos.renderers.gchart import LineChart, AreaChart, BarChart, PieChart
 from dal import autocomplete
 from django.template import RequestContext
 
@@ -558,12 +551,6 @@ def project(request, project_id=None):
                         new_data.append(costs[2].mean())
                     data.append(new_data)
 
-                data_source = SimpleDataSource(data=data)
-                chart = LineChart(data_source, options={'title': 'Cost | IM',
-                                                        'hAxis': {'logScale': True, 'title': 'Intensity Measure (g)'},
-                                                        'vAxis': {'logScale': True, 'format': 'decimal',
-                                                                  'title': 'Cost ($)'},
-                                                        'pointSize': 5})
                 j_chart = Cost_IM_Chart(data)
                 chart = j_chart
                 
@@ -688,33 +675,6 @@ def hazard_choose(request, project_id):
                                                            'project_id': project_id,
                                                            'title': project.title_text })
 
-def _plot_hazard(h):
-    if h.model():
-        im_func = h.model()
-        xlimit = im_func.plot_max()
-
-        data =  [
-            ['IM', 'lambda'],
-        ]
-        N = 25
-        for i in range(1, N + 1):
-            x = i/N * xlimit
-            y = im_func.getlambda(x)
-            data.append([x, y])
-            
-        data_source = SimpleDataSource(data=data)
-        chart = LineChart(data_source, options={'title': 'Intensity Measure Rate of Exceedance', 
-                                                'hAxis': {'logScale': True, 'title': h.label(),
-                                                          'minorGridlines': {'count': 3}},
-                                                'vAxis': {'logScale': True, 
-                                                          'title': 'Rate of Exceedance',
-                                                          'format': 'decimal',
-                                                          'gridlines': {'count': 3},
-                                                          'minorGridlines': {'count': 5}},
-                                                'pointSize': 5,
-                                                'legend': {'position': 'none'}})
-        return chart
-
 class HazardPlot(Chart):
     chart_type = 'line'
     legend = Legend(display=False)
@@ -772,7 +732,7 @@ def nlh(request, project_id):
     else:
         if hazard and hazard.nlh:
             return render(request, 'slat/nlh.html', {'nlh':hazard.nlh, 'title': project.title_text, 
-                                                     'project_id': project_id, 'chart': _plot_hazard(hazard),
+                                                     'project_id': project_id, 
                                                      'jchart': HazardPlot(hazard)})
         else:
             return HttpResponseRedirect(reverse('slat:hazard_choose', args=(project_id)))
@@ -873,11 +833,10 @@ def im_interp(request, project_id):
         points = IM_Point.objects.filter(hazard=hazard).order_by('im_value')
         method = hazard.interp_method
 
-        chart = _plot_hazard(hazard)
         jchart = HazardPlot(hazard)
 
         return render(request, 'slat/im_interp.html', {'method': method, 'points': points,
-                                                       'project_id': project_id, 'chart': chart,
+                                                       'project_id': project_id,
                                                        'jchart': jchart,
                                                        'title': project.title_text})
     else:
@@ -1057,28 +1016,10 @@ def im_nzs(request, project_id):
         return HttpResponseRedirect(reverse('slat:hazard_choose', args=(project_id,)))
     else:
         if hazard and hazard.nzs:
-            if False:
-                nzs = hazard.nzs
-                data = [['IM', 'lambda']]
-                for r in R_defaults:
-                    y = 1/r
-                    x =  C(hazard.nzs.soil_class,
-                           hazard.nzs.period,
-                           r,
-                           hazard.nzs.location.z,
-                           hazard.nzs.location.min_distance)
-                    data.append([x, y])
-
-                    data_source = SimpleDataSource(data=data)
-                    chart = LineChart(data_source, options={'title': 'Intensity Measure Rate of Exceedance', 
-                                                            'hAxis': {'logScale': True}, 'vAxis': {'logScale': True}})
-                    jchart = None
-            else:
-                chart = _plot_hazard(hazard)
-                jchart = HazardPlot(hazard)
+            jchart = HazardPlot(hazard)
         
             return render(request, 'slat/nzs.html', {'nzs':hazard.nzs, 'title': project.title_text, 
-                                                         'project_id': project_id, 'chart': chart,
+                                                     'project_id': project_id, 
                                                      'jchart': jchart})
         else:
             # Shouldn't get here, but if we do, just redirect to the "choose hazard" page:
@@ -1134,54 +1075,6 @@ def im_nzs_edit(request, project_id):
     return render(request, 'slat/nzs_edit.html', {'form': form, 'project_id': project_id,
                                                      'title': project.title_text})
     
-def _plot_demand(edp):
-    if edp.model():
-        
-        if edp.type == 'D':
-            demand_type  = 'Drift (radians)'
-        elif edp.type == 'A':
-            demand_type  = 'Acceleration (g)'
-        else:
-            demand_type = 'Unknown'
-            
-        demand = "{} {}".format(edp.level.label, demand_type)
-                                    
-        edp_func = edp.model()
-        xlimit = edp.project.IM.model().plot_max()
-
-        data =  [['IM', 'Median', "10%", "90%"]]
-        N = 25
-        for i in range(N + 1):
-            x = i/N * xlimit
-            median = edp_func.Median(x)
-            x_10 = edp_func.X_at_exceedence(x, 0.10)
-            x_90 = edp_func.X_at_exceedence(x, 0.90)
-            data.append([x, median, x_10, x_90])
-
-            
-        data_source = SimpleDataSource(data=data)
-        chart1 = LineChart(data_source, options={'title': '{} | Intensity Measure'.format(demand), 
-                                                 'hAxis': {'title': edp.project.im_label()},
-                                                 'vAxis': {'title': demand},
-                                                'pointSize': 5})
-        
-        data = [['Demand', 'Lambda']]
-        xlimit = edp_func.plot_max()
-
-        #print("{:>15.6}{:>15.6}".format("EDP", "LAMBDA"))
-        for i in range(1, N + 1):
-            xval = i/N * xlimit
-            rate = edp_func.getlambda(xval)
-            data.append([xval, rate])
-            #print("{:>15.6}{:>15.6}".format(xval, rate))
-
-        data_source = SimpleDataSource(data=data)
-        chart2 = LineChart(data_source, options={'title': '{} Rate of Exceedance'.format(demand), 
-                                                'hAxis': {'logScale': False, 'title': demand},
-                                                 'vAxis': {'logScale': False, 'title': 'Rate of Exceedance'},
-                                                 'pointSize': 5,
-                                                 'legend': {'position': 'none'}})
-        return [chart1, chart2]
 
 class IMDemandPlot(Chart):
     chart_type = 'line'
@@ -1381,9 +1274,8 @@ def edp_power(request, project_id, edp_id):
         raise PermissionDenied
 
     edp = get_object_or_404(EDP, pk=edp_id)
-    charts = _plot_demand(edp)
     jcharts = [IMDemandPlot(edp), DemandRatePlot(edp)]
-    return render(request, 'slat/edp_power.html', {'project': project, 'edp': edp, 'charts': charts, 'jcharts': jcharts})
+    return render(request, 'slat/edp_power.html', {'project': project, 'edp': edp, 'jcharts': jcharts})
 
 @login_required
 def edp_power_edit(request, project_id, edp_id):
@@ -1428,13 +1320,11 @@ def edp_userdef(request, project_id, edp_id):
         raise PermissionDenied
 
     edp = get_object_or_404(EDP, pk=edp_id)
-    charts = _plot_demand(edp)
     jcharts = [IMDemandPlot(edp), DemandRatePlot(edp)]
     
     return render(request, 'slat/edp_userdef.html',
                   { 'project': project, 
                     'edp': edp,
-                    'charts': charts,
                     'jcharts': jcharts,
                     'points': EDP_Point.objects.filter(demand=edp).order_by('im')})
 
@@ -1819,8 +1709,6 @@ def analysis(request, project_id):
             loss = building.E_cost(year, rate) / 1000
             data.append([year, loss])
         
-        data_source = SimpleDataSource(data=data)
-        
         if isnan(building.getRebuildCost().mean()):
             title = "EAL=${}\nDiscount rate = {}%".format(building.AnnualCost().mean(), 100 * rate)
         else:
@@ -1829,15 +1717,6 @@ def analysis(request, project_id):
                                                                                         building.AnnualCost().mean()/building.getRebuildCost().mean()) /
                                                                                   100,
                                                                                   100 * rate)
-        chart = LineChart(data_source, options={'title': title,
-                                                'hAxis': {'logScale': False, 'title': 'Time from present (years)'},
-                                                'vAxis': {'logScale': False, 'format': 'decimal',
-                                                          'title': 'Expected Loss ($k)'},
-                                                'pointSize': 5,
-                                                'pointsVisible': False,
-                                                'curveType': 'function',
-                                                'legend': {'position': 'none'}})
-
         jchart = ExpectedLoss_Over_Time_Chart(data, title.replace("\n", "; "))
                                               
         
@@ -1924,32 +1803,6 @@ def analysis(request, project_id):
                                                                    'viewWindow': {'min': 1}},
                                                          'pointSize': 5})
 
-        if False:
-            columns = ['IM']
-            for f in range(project.floors + 1):
-                columns.append("Floor #{}".format(f))
-            #columns.append('Total')
-            data = [columns]
-
-            xlimit = im_func.plot_max()
-            for i in range(10):
-                im = i/10 * xlimit
-                new_data = [im]
-
-                for f in range(project.floors + 1):
-                    costs = 0
-                    for c in floors[f]:
-                        costs = costs + c.model().E_Cost_IM(im)
-                    new_data.append(costs)
-                data.append(new_data)
-
-            data_source = SimpleDataSource(data=data)
-            by_floor_chart = LineChart(data_source, options={'title': 'Cost | IM',
-                                                             'hAxis': {'logScale': False, 'title': project.im_label()},
-                                                             'vAxis': {'logScale': False, 'format': 'decimal',
-                                                                       'title': 'Cost ($)'},
-                                                             'pointSize': 5})
-
         columns = ['Floor', 'Cost']
         data = [columns]
         
@@ -1961,11 +1814,6 @@ def analysis(request, project_id):
             for c in levels[l]:
                 costs = costs + c.model().E_annual_cost()
             data.append([l.label, costs])
-
-        data_source = SimpleDataSource(data=data)
-        by_floor_bar_chart = BarChart(data_source, options={'title': 'Mean Annual Repair Cost By Floor',
-                                                            'hAxis': {'title': 'Cost ($)'},
-                                                            'vAxis': {'title': 'Floor'}})
 
         j_by_floor_bar_chart = ByFloorChart(data)
 
@@ -1984,17 +1832,12 @@ def analysis(request, project_id):
         for key in groups.keys():
             data.append([key, groups[key]])
 
-        data_source = SimpleDataSource(data=data)
-        by_comp_pie_chart = PieChart(data_source, options={'title': 'Mean Annual Repair Cost By Component Type'})
         j_by_comp_pie_chart = ByCompPieChart(data, 'Mean Annual Repair Cost By Component Type')
 
     return render(request, 'slat/analysis.html', {'project': project, 
                                                   'structure': project.model(),
                                                   'chart': chart,
                                                   'jchart': jchart,
-                                                  #'by_fate_chart': by_fate_chart,
-                                                  #'s_ns_chart': s_ns_chart,
-                                                  #'by_floor_chart': by_floor_chart,
                                                   'by_floor_bar_chart': by_floor_bar_chart,
                                                   'j_by_floor_bar_chart': j_by_floor_bar_chart,
                                                   'by_comp_pie_chart': by_comp_pie_chart,
