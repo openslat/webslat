@@ -135,11 +135,31 @@ class ExpectedLoss_Over_Time_Chart(Chart):
                                              labelString='Expected Loss ($k)'))],
     }
 
-    def __init__(self, data, title):
+    def __init__(self, project):
         super(ExpectedLoss_Over_Time_Chart, self).__init__()
+        building = project.model()
+        im_func = project.IM.model()
+        
+        xlimit = im_func.plot_max()
+        
         self.data = []
-        for year, loss in data:
+
+        rate = 0.06
+
+        for i in range(20):
+            year = (i + 1) * 5
+            loss = building.E_cost(year, rate) / 1000
             self.data.append({'x': year, 'y': loss})
+        
+        if isnan(building.getRebuildCost().mean()):
+            title = "EAL=${}\nDiscount rate = {}%".format(building.AnnualCost().mean(), 100 * rate)
+        else:
+            title = "EAL=${}\n({} % of rebuild cost)\nDiscount rate = {}%".format(
+                round(building.AnnualCost().mean()),
+                round(10000 * 
+                      building.AnnualCost().mean()/building.getRebuildCost().mean()) /
+                100,
+                100 * rate)
         self.title['text'] = title
         
     def get_datasets(self, *args, **kwargs):
@@ -148,7 +168,7 @@ class ExpectedLoss_Over_Time_Chart(Chart):
                 type='line',
                 data=self.data,
                 borderColor=rgba(0x34,0x64,0xC7,1.0),
-                backgroundColor=rgba(0,0,0,0)
+                backgroundColor=rgba(0,0,0,0.0)
             )]
                 
 
@@ -1710,15 +1730,7 @@ def analysis(request, project_id):
             loss = building.E_cost(year, rate) / 1000
             data.append([year, loss])
         
-        if isnan(building.getRebuildCost().mean()):
-            title = "EAL=${}\nDiscount rate = {}%".format(building.AnnualCost().mean(), 100 * rate)
-        else:
-            title = "EAL=${}\n({} % of rebuild cost)\nDiscount rate = {}%".format(round(building.AnnualCost().mean()),
-                                                                                  round(10000 * 
-                                                                                        building.AnnualCost().mean()/building.getRebuildCost().mean()) /
-                                                                                  100,
-                                                                                  100 * rate)
-        jchart = ExpectedLoss_Over_Time_Chart(data, title.replace("\n", "; "))
+        chart = ExpectedLoss_Over_Time_Chart(project)
                                               
         
         if False:
