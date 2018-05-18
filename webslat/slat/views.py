@@ -2,7 +2,6 @@ from __future__ import print_function
 import sys
 import pyslat
 import re
-import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import fsolve
 from django.http import Http404, HttpResponseRedirect, HttpResponseForbidden
@@ -13,9 +12,6 @@ from django.forms.models import model_to_dict
 from django.core.exceptions import PermissionDenied
 from .nzs import *
 from math import *
-from graphos.sources.model import SimpleDataSource
-from graphos.sources.model import ModelDataSource
-from graphos.renderers.gchart import LineChart, AreaChart, BarChart, PieChart
 from dal import autocomplete
 from django.template import RequestContext
 
@@ -27,9 +23,222 @@ from registration.backends.simple.views import RegistrationView
 from registration.forms import RegistrationForm
 from django.forms import ModelForm
 import sys
+from random import randint
+from datetime import datetime, timedelta
+
+from jchart import Chart
+from jchart.config import Axes, DataSet, rgba, ScaleLabel, Legend, Title
+import seaborn as sns
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+
+class IMCostChart(Chart):
+    chart_type = 'line'
+    scales = {
+        'xAxes': [Axes(type='linear', position='bottom')],
+    }
+
+    def __init__(self, project):
+        super(IMCostChart, self).__init__()
+        self.repair = []
+        self.demolition = []
+        self.collapse = []
+
+        # This was copied from earlier code, which calculated the data,
+        # then passed it to the chart. This can be cleaned up to 
+        # eliminate intermediate variables and streamline the process.
+        if project.IM and len(project.model().ComponentsByEDP()) > 0:
+            building = project.model()
+            im_func = project.IM.model()
+                
+            xlimit = im_func.plot_max()
+
+            columns = ['IM', 'Repair']
+            if im_func.DemolitionRate():
+                columns.append('Demolition')
+            if im_func.CollapseRate():
+                columns.append('Collapse')
+                        
+            data = [columns]
+
+            N = 10
+            for i in range(N + 1):
+                im = i/N * xlimit
+                new_data = [im]
+                costs = building.CostsByFate(im)
+                new_data.append(costs[0].mean())
+                
+                if im_func.DemolitionRate():
+                    new_data.append(costs[1].mean())
+                if im_func.CollapseRate():
+                    new_data.append(costs[2].mean())
+                data.append(new_data)
+
+        headings = data[0]
+        for line in data[1:]:
+            line.reverse()
+            im = line.pop()
+
+            for i in range(1, len(headings)):
+                cost = line.pop()
+                heading = headings[i]
+                if heading == 'Repair':
+                    self.repair.append({'x': im, 'y': cost})
+                elif heading == 'Demolition':
+                    self.demolition.append({'x': im, 'y': cost})
+                elif heading == 'Collapse':
+                    self.collapse.append({'x': im, 'y': cost})
+                else:
+                    raise ValueError("Unknown cost type: {}".format(heading))
+        
+    def get_datasets(self, *args, **kwargs):
+        datasets = []
+        if len(self.repair) > 0:
+            datasets.append(DataSet(
+                type='line',
+                label='Repair',
+                data=self.repair,
+                borderColor=rgba(255,99,132,1.0),
+                backgroundColor=rgba(0,0,0,0)
+            ))
+        if len(self.demolition) > 0:
+            datasets.append(DataSet(
+                type='line',
+                label='Demolition',
+                data=self.demolition,
+                borderColor=rgba(54, 262, 235, 1.0),
+                backgroundColor=rgba(0,0,0,0)
+            ))
+        if len(self.collapse) > 0:
+            datasets.append(DataSet(
+                type='line',
+                label='Collapse',
+                data=self.collapse,
+                borderColor=rgba(74, 192, 191, 1.0),
+                backgroundColor=rgba(0,0,0,0)
+            ))
+        return datasets
+
+class ExpectedLoss_Over_Time_Chart(Chart):
+    chart_type = 'line'
+    legend = Legend(display=False)
+    title = Title(display=True, text="Expected Loss over Time")
+    scales = {
+        'xAxes': [Axes(type='linear', 
+                       position='bottom', 
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Years From Present'))],
+        'yAxes': [Axes(type='linear', 
+                       position='left',
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Expected Loss ($k)'))],
+    }
+
+    def __init__(self, project):
+        super(ExpectedLoss_Over_Time_Chart, self).__init__()
+        building = project.model()
+        im_func = project.IM.model()
+        
+        xlimit = im_func.plot_max()
+        
+        self.data = []
+
+        rate = 0.06
+
+        for i in range(20):
+            year = (i + 1) * 5
+            loss = building.E_cost(year, rate) / 1000
+            self.data.append({'x': year, 'y': loss})
+        
+        if isnan(building.getRebuildCost().mean()):
+            title = "EAL=${}\nDiscount rate = {}%".format(building.AnnualCost().mean(), 100 * rate)
+        else:
+            title = "EAL=${}\n({} % of rebuild cost)\nDiscount rate = {}%".format(
+                round(building.AnnualCost().mean()),
+                round(10000 * 
+                      building.AnnualCost().mean()/building.getRebuildCost().mean()) /
+                100,
+                100 * rate)
+        self.title['text'] = title
+        
+    def get_datasets(self, *args, **kwargs):
+        return [
+            DataSet(
+                type='line',
+                data=self.data,
+                borderColor=rgba(0x34,0x64,0xC7,1.0),
+                backgroundColor=rgba(0,0,0,0.0)
+            )]
+                
+
+class ByFloorChart(Chart):
+    chart_type = 'horizontalBar'
+    legend = Legend(display=False)
+    title = Title(display=True, text="Mean Annual Repair Cost by Floor")
+    scales = {
+        'xAxes': [Axes(type='linear', 
+                       position='bottom', 
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Cost ($)'))],
+        'yAxes': [Axes(position='left',
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Floor'))],
+    }
+    
+    def __init__(self, data):
+        super(ByFloorChart, self).__init__()
+        self.labels = []
+        self.costs = []
+        # Skip the first entry, which are the column labels:
+        for label, costs in data[1:]:
+            self.labels.append(label)
+            self.costs.append(costs)
+        #self.title['text'] = 'By Floor'
+        
+    def get_labels(self, **kwargs):
+        return self.labels
+
+    def get_datasets(self, **kwargs):
+        return [DataSet(label='Bar Chart',
+                        data=self.costs,
+                        borderWidth=1,
+                        borderColor=rgba(0,0,0,1.0),
+                        backgroundColor=rgba(0x34,0x64,0xC7,1.0))]
+
+
+class ByCompPieChart(Chart):
+    chart_type = 'pie'
+    legend = Legend(display=True, position='right')
+    title = Title(display=True)
+    
+    def __init__(self, data, title):
+        super(ByCompPieChart, self).__init__()
+        self.title['text'] = title
+        self.labels = []
+        self.costs = []
+        # Skip the first entry, which are the column labels:
+        for label, costs in data[1:]:
+            self.labels.append(label)
+            self.costs.append(costs)
+        #self.title['text'] = 'By Floor'
+        
+    def get_labels(self, **kwargs):
+        return self.labels
+
+    def get_datasets(self, **kwargs):
+        palette = sns.color_palette(None, len(self.costs))
+        colors = []
+        for r, g, b in palette:
+            colors.append(rgba(int(r * 255), int(g * 255), int(b * 255), 0.5))
+            
+        return [DataSet(label='Pie Chart',
+                        data=self.costs,
+                        borderWidth=1,
+                        borderColor=rgba(0,0,0,1.0),
+                        backgroundColor=colors)]
+
+
 
 @login_required
 def index(request):
@@ -72,7 +281,8 @@ def make_demo(user):
         level.save()
         
     # Create an IM:
-    nzs = NZ_Standard_Curve(location=Location.objects.get(location='Christchurch'),
+    christchurch = Location.objects.get(location='Christchurch')
+    nzs = NZ_Standard_Curve(location=christchurch,
                             soil_class = NZ_Standard_Curve.SOIL_CLASS_C,
                             period = 2.0)
     nzs.save()
@@ -133,8 +343,7 @@ def make_demo(user):
             elif re.compile(".*Drift").match(component.demand.name):
                 demand_type='D'
             else:
-                print(component.demand.name)
-                raise ValueError("UNRECOGNIZED DEMAND TYPE FOR COMPONENT")
+                raise ValueError("UNRECOGNIZED DEMAND TYPE FOR COMPONENT: {}".format(component.demand.name))
 
             demand = EDP.objects.get(project=project,
                                      level=level,
@@ -292,8 +501,7 @@ def make_example_2(user):
             elif re.compile(".*Drift").match(component.demand.name):
                 demand_type='D'
             else:
-                print(component.demand.name)
-                raise ValueError("UNRECOGNIZED DEMAND TYPE FOR COMPONENT")
+                raise ValueError("UNRECOGNIZED DEMAND TYPE FOR COMPONENT: {}".format(component.demand.name))
 
             demand = EDP.objects.get(project=project,
                                      level=level,
@@ -359,46 +567,13 @@ def project(request, project_id=None):
     else:
         # If the project exists, use it to populate the form:
         if project_id:
-            
             project = get_object_or_404(Project, pk=project_id)
             if not project.CanRead(request.user):
                 raise PermissionDenied
                 
             form = ProjectForm(instance=project, initial=model_to_dict(project))
             
-            if project.IM and len(project.model().ComponentsByEDP()) > 0:
-                
-                building = project.model()
-                im_func = project.IM.model()
-                
-                xlimit = im_func.plot_max()
-
-                columns = ['IM', 'Repair']
-                if im_func.DemolitionRate():
-                    columns.append('Demolition')
-                if im_func.CollapseRate():
-                    columns.append('Collapse')
-                        
-                data = [columns]
-
-                for i in range(11):
-                    im = i/10 * xlimit
-                    new_data = [im]
-                    costs = building.CostsByFate(im)
-                    new_data.append(costs[0].mean())
-                        
-                    if im_func.DemolitionRate():
-                        new_data.append(costs[1].mean())
-                    if im_func.CollapseRate():
-                        new_data.append(costs[2].mean())
-                    data.append(new_data)
-
-                data_source = SimpleDataSource(data=data)
-                chart = LineChart(data_source, options={'title': 'Cost | IM',
-                                                        'hAxis': {'logScale': True, 'title': 'Intensity Measure (g)'},
-                                                        'vAxis': {'logScale': True, 'format': 'decimal',
-                                                                  'title': 'Cost ($)'},
-                                                        'pointSize': 5})
+            chart = IMCostChart(project)
                 
             levels = project.num_levels()
             levels_form = None
@@ -521,33 +696,49 @@ def hazard_choose(request, project_id):
                                                            'project_id': project_id,
                                                            'title': project.title_text })
 
-def _plot_hazard(h):
-    if h.model():
-        im_func = h.model()
-        xlimit = im_func.plot_max()
-
-        data =  [
-            ['IM', 'lambda'],
-        ]
-        for i in range(11):
-            x = i/10 * xlimit
-            y = im_func.getlambda(x)
-            data.append([x, y])
-            
-        data_source = SimpleDataSource(data=data)
-        chart = LineChart(data_source, options={'title': 'Intensity Measure Rate of Exceedance', 
-                                                'hAxis': {'logScale': True, 'title': h.label(),
-                                                          'minorGridlines': {'count': 3}},
-                                                'vAxis': {'logScale': True, 
-                                                          'title': 'Rate of Exceedance',
-                                                          'format': 'decimal',
-                                                          'gridlines': {'count': 3},
-                                                          'minorGridlines': {'count': 5}},
-                                                'pointSize': 5,
-                                                'legend': {'position': 'none'}})
-        return chart
+class HazardPlot(Chart):
+    chart_type = 'line'
+    legend = Legend(display=False)
+    title = Title(display=True, text="Hazard Curve")
+    scales = {
+        'xAxes': [Axes(type='logarithmic', 
+                       position='bottom', 
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Intensity Measure'))],
+        'yAxes': [Axes(type='logarithmic', 
+                       position='left',
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Annual Rate of Exceedance'))]
+    }
     
+    
+    def __init__(self, hazard):
+        super(HazardPlot, self).__init__()
+        self.title['text'] = 'Hazard Curve for {}'.format(Project.objects.get(IM=hazard).title_text)
+        self.scales['xAxes'][0]['scaleLabel']['labelString'] = hazard.label()
         
+        if hazard.model():
+            im_func = hazard.model()
+            xlimit = im_func.plot_max()
+
+            self.data =  []
+            
+            N = 25
+            for i in range(1,N +1):
+                x = i/N * xlimit
+                y = im_func.getlambda(x)
+                self.data.append({'x': x, 'y': y})
+
+    def get_datasets(self, *args, **kwargs):
+        return [
+            DataSet(
+                type='line',
+                data=self.data,
+                borderColor=rgba(0x34,0x64,0xC7,1.0),
+                backgroundColor=rgba(0,0,0,0)
+            )]
+
+    
 @login_required
 def nlh(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
@@ -562,7 +753,8 @@ def nlh(request, project_id):
     else:
         if hazard and hazard.nlh:
             return render(request, 'slat/nlh.html', {'nlh':hazard.nlh, 'title': project.title_text, 
-                                                     'project_id': project_id, 'chart': _plot_hazard(hazard)})
+                                                     'project_id': project_id, 
+                                                     'chart': HazardPlot(hazard)})
         else:
             return HttpResponseRedirect(reverse('slat:hazard_choose', args=(project_id)))
             
@@ -662,10 +854,11 @@ def im_interp(request, project_id):
         points = IM_Point.objects.filter(hazard=hazard).order_by('im_value')
         method = hazard.interp_method
 
-        chart = _plot_hazard(hazard)
+        chart = HazardPlot(hazard)
 
         return render(request, 'slat/im_interp.html', {'method': method, 'points': points,
-                                                       'project_id': project_id, 'chart': chart,
+                                                       'project_id': project_id,
+                                                       'chart': chart,
                                                        'title': project.title_text})
     else:
         # Shouldn't get here, but if we do, just redirect to the "choose hazard" page:
@@ -844,26 +1037,11 @@ def im_nzs(request, project_id):
         return HttpResponseRedirect(reverse('slat:hazard_choose', args=(project_id,)))
     else:
         if hazard and hazard.nzs:
-            if False:
-                nzs = hazard.nzs
-                data = [['IM', 'lambda']]
-                for r in R_defaults:
-                    y = 1/r
-                    x =  C(hazard.nzs.soil_class,
-                           hazard.nzs.period,
-                           r,
-                           hazard.nzs.location.z,
-                           hazard.nzs.location.min_distance)
-                    data.append([x, y])
-
-                    data_source = SimpleDataSource(data=data)
-                    chart = LineChart(data_source, options={'title': 'Intensity Measure Rate of Exceedance', 
-                                                            'hAxis': {'logScale': True}, 'vAxis': {'logScale': True}})
-            else:
-                chart = _plot_hazard(hazard)
+            chart = HazardPlot(hazard)
         
             return render(request, 'slat/nzs.html', {'nzs':hazard.nzs, 'title': project.title_text, 
-                                                         'project_id': project_id, 'chart': chart})
+                                                     'project_id': project_id, 
+                                                     'chart': chart})
         else:
             # Shouldn't get here, but if we do, just redirect to the "choose hazard" page:
             return HttpResponseRedirect(reverse('slat:hazard_choose', args=(project_id,)))
@@ -918,53 +1096,122 @@ def im_nzs_edit(request, project_id):
     return render(request, 'slat/nzs_edit.html', {'form': form, 'project_id': project_id,
                                                      'title': project.title_text})
     
-def _plot_demand(edp):
-    if edp.model():
-        
-        if edp.type == 'D':
-            demand_type  = 'Drift (radians)'
-        elif edp.type == 'A':
-            demand_type  = 'Acceleration (g)'
-        else:
-            demand_type = 'Unknown'
+
+class IMDemandPlot(Chart):
+    chart_type = 'line'
+    legend = Legend(display=True)
+    title = Title(display=True, text="Hazard Curve")
+    scales = {
+        'xAxes': [Axes(type='linear', 
+                       position='bottom', 
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Intensity Measure'))],
+        'yAxes': [Axes(type='linear', 
+                       position='left',
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Demand'))]
+    }
+    
+    
+    def __init__(self, demand):
+        super(IMDemandPlot, self).__init__()
+        demand_func = demand.model()
+        if demand_func:
+            if demand.type == 'D':
+                demand_type  = 'Drift (radians)'
+            elif demand.type == 'A':
+                demand_type  = 'Acceleration (g)'
+            else:
+                demand_type = 'Unknown'
             
-        demand = "{} {}".format(edp.level.label, demand_type)
-                                    
-        edp_func = edp.model()
-        xlimit = edp.project.IM.model().plot_max()
+            self.title['text'] = "{} {}".format(demand.level.label, demand_type)
+            self.scales['yAxes'][0]['scaleLabel']['labelString'] = demand_type
+            xlimit = demand.project.IM.model().plot_max()
 
-        data =  [['IM', 'Median', "10%", "90%"]]
-        for i in range(11):
-            x = i/10 * xlimit
-            median = edp_func.Median(x)
-            x_10 = edp_func.X_at_exceedence(x, 0.10)
-            x_90 = edp_func.X_at_exceedence(x, 0.90)
-            data.append([x, median, x_10, x_90])
+            self.median =  []
+            self.x_10 = []
+            self.x_90 = []
+            N = 25
+            for i in range(1,N +1):
+                x = i/N * xlimit
+                median = demand_func.Median(x)
+                x_10 = demand_func.X_at_exceedence(x, 0.10)
+                x_90 = demand_func.X_at_exceedence(x, 0.90)
 
+                self.median.append({'x': x, 'y': median})
+                self.x_10.append({'x': x, 'y': x_10})
+                self.x_90.append({'x': x, 'y': x_90})
+                
+    def get_datasets(self, *args, **kwargs):
+        return [
+            DataSet(
+                type='line',
+                label='Median',
+                data=self.median,
+                borderColor=rgba(255,99,132,1.0),
+                backgroundColor=rgba(0,0,0,0)
+            ),
+            DataSet(
+                type='line',
+                label='10%',
+                data=self.x_10,
+                borderColor=rgba(54, 262, 235, 1.0),
+                backgroundColor=rgba(0,0,0,0)
+            ),
+            DataSet(
+                type='line',
+                label='90%',
+                data=self.x_90,
+                borderColor=rgba(74, 192, 191, 1.0),
+                backgroundColor=rgba(0,0,0,0)
+            )]
+
+class DemandRatePlot(Chart):
+    chart_type = 'line'
+    legend = Legend(display=False)
+    title = Title(display=True, text="Rate of Exceedence Curve")
+    scales = {
+        'xAxes': [Axes(type='linear', 
+                       position='bottom', 
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Demand'))],
+        'yAxes': [Axes(type='linear', 
+                       position='left',
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Annual Rate of Exceedance'))]
+    }
+    
+    
+    def __init__(self, demand):
+        super(DemandRatePlot, self).__init__()
+        demand_func = demand.model()
+        if demand_func:
+            if demand.type == 'D':
+                demand_type  = 'Drift (radians)'
+            elif demand.type == 'A':
+                demand_type  = 'Acceleration (g)'
+            else:
+                demand_type = 'Unknown'
             
-        data_source = SimpleDataSource(data=data)
-        chart1 = LineChart(data_source, options={'title': '{} | Intensity Measure'.format(demand), 
-                                                 'hAxis': {'title': edp.project.im_label()},
-                                                 'vAxis': {'title': demand},
-                                                'pointSize': 5})
-        
-        data = [['Demand', 'Lambda']]
-        xlimit = edp_func.plot_max()
+            self.title['text'] = "{} {} Rate of Exceedance".format(demand.level.label, demand_type)
+            self.scales['xAxes'][0]['scaleLabel']['labelString'] = demand_type
+            
+            xlimit = demand_func.plot_max()
+            self.rate =  []
+            N = 25
+            for i in range(1,N +1):
+                x = i/N * xlimit
+                rate = demand_func.getlambda(x)
+                self.rate.append({'x': x, 'y': rate})
+                
+    def get_datasets(self, *args, **kwargs):
+        return [
+            DataSet(
+                type='line',
+                data=self.rate,
+                borderColor=rgba(255,99,132,1.0),
+                backgroundColor=rgba(0,0,0,0))]
 
-        #print("{:>15.6}{:>15.6}".format("EDP", "LAMBDA"))
-        for i in range(11):
-            xval = i/10 * xlimit
-            rate = edp_func.getlambda(xval)
-            data.append([xval, rate])
-            #print("{:>15.6}{:>15.6}".format(xval, rate))
-
-        data_source = SimpleDataSource(data=data)
-        chart2 = LineChart(data_source, options={'title': '{} Rate of Exceedance'.format(demand), 
-                                                'hAxis': {'logScale': False, 'title': demand},
-                                                 'vAxis': {'logScale': False, 'title': 'Rate of Exceedance'},
-                                                 'pointSize': 5,
-                                                 'legend': {'position': 'none'}})
-        return [chart1, chart2]
 
 @login_required
 def edp_view(request, project_id, edp_id):
@@ -1048,7 +1295,7 @@ def edp_power(request, project_id, edp_id):
         raise PermissionDenied
 
     edp = get_object_or_404(EDP, pk=edp_id)
-    charts = _plot_demand(edp)
+    charts = [IMDemandPlot(edp), DemandRatePlot(edp)]
     return render(request, 'slat/edp_power.html', {'project': project, 'edp': edp, 'charts': charts})
 
 @login_required
@@ -1094,7 +1341,7 @@ def edp_userdef(request, project_id, edp_id):
         raise PermissionDenied
 
     edp = get_object_or_404(EDP, pk=edp_id)
-    charts = _plot_demand(edp)
+    charts = [IMDemandPlot(edp), DemandRatePlot(edp)]
     
     return render(request, 'slat/edp_userdef.html',
                   { 'project': project, 
@@ -1462,9 +1709,12 @@ def analysis(request, project_id):
         raise PermissionDenied
 
     chart = None
+    jchart = None
     by_fate_chart = None
     by_floor_bar_chart = None
+    j_by_floor_bar_chart = None
     by_comp_pie_chart = None
+    j_by_comp_pie_chart = None
 
     if project.IM:
         building = project.model()
@@ -1480,24 +1730,9 @@ def analysis(request, project_id):
             loss = building.E_cost(year, rate) / 1000
             data.append([year, loss])
         
-        data_source = SimpleDataSource(data=data)
+        chart = ExpectedLoss_Over_Time_Chart(project)
+                                              
         
-        if isnan(building.getRebuildCost().mean()):
-            title = "EAL=${}\nDiscount rate = {}%".format(building.AnnualCost().mean(), 100 * rate)
-        else:
-            title = "EAL=${}\n({} % of rebuild cost)\nDiscount rate = {}%".format(round(building.AnnualCost().mean()),
-                                                                                  round(10000 * 
-                                                                                        building.AnnualCost().mean()/building.getRebuildCost().mean()) /
-                                                                                  100,
-                                                                                  100 * rate)
-        chart = LineChart(data_source, options={'title': title,
-                                                'hAxis': {'logScale': False, 'title': 'Time from present (years)'},
-                                                'vAxis': {'logScale': False, 'format': 'decimal',
-                                                          'title': 'Expected Loss ($k)'},
-                                                'pointSize': 5,
-                                                'pointsVisible': False,
-                                                'curveType': 'function',
-                                                'legend': {'position': 'none'}})
         if False:
             im_func = project.IM.model()
             columns = ['IM', 'Repair Costs']
@@ -1581,32 +1816,6 @@ def analysis(request, project_id):
                                                                    'viewWindow': {'min': 1}},
                                                          'pointSize': 5})
 
-        if False:
-            columns = ['IM']
-            for f in range(project.floors + 1):
-                columns.append("Floor #{}".format(f))
-            #columns.append('Total')
-            data = [columns]
-
-            xlimit = im_func.plot_max()
-            for i in range(10):
-                im = i/10 * xlimit
-                new_data = [im]
-
-                for f in range(project.floors + 1):
-                    costs = 0
-                    for c in floors[f]:
-                        costs = costs + c.model().E_Cost_IM(im)
-                    new_data.append(costs)
-                data.append(new_data)
-
-            data_source = SimpleDataSource(data=data)
-            by_floor_chart = LineChart(data_source, options={'title': 'Cost | IM',
-                                                             'hAxis': {'logScale': False, 'title': project.im_label()},
-                                                             'vAxis': {'logScale': False, 'format': 'decimal',
-                                                                       'title': 'Cost ($)'},
-                                                             'pointSize': 5})
-
         columns = ['Floor', 'Cost']
         data = [columns]
         
@@ -1619,10 +1828,7 @@ def analysis(request, project_id):
                 costs = costs + c.model().E_annual_cost()
             data.append([l.label, costs])
 
-        data_source = SimpleDataSource(data=data)
-        by_floor_bar_chart = BarChart(data_source, options={'title': 'Mean Annual Repair Cost By Floor',
-                                                            'hAxis': {'title': 'Cost ($)'},
-                                                            'vAxis': {'title': 'Floor'}})
+        by_floor_bar_chart = ByFloorChart(data)
 
         columns = ['Component Type', 'Cost']
         data = [columns]
@@ -1639,15 +1845,11 @@ def analysis(request, project_id):
         for key in groups.keys():
             data.append([key, groups[key]])
 
-        data_source = SimpleDataSource(data=data)
-        by_comp_pie_chart = PieChart(data_source, options={'title': 'Mean Annual Repair Cost By Component Type'})
-        
+        by_comp_pie_chart = ByCompPieChart(data, 'Mean Annual Repair Cost By Component Type')
+
     return render(request, 'slat/analysis.html', {'project': project, 
                                                   'structure': project.model(),
                                                   'chart': chart,
-                                                  #'by_fate_chart': by_fate_chart,
-                                                  #'s_ns_chart': s_ns_chart,
-                                                  #'by_floor_chart': by_floor_chart,
                                                   'by_floor_bar_chart': by_floor_bar_chart,
                                                   'by_comp_pie_chart': by_comp_pie_chart})
 

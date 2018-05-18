@@ -2,10 +2,6 @@
 {% load i18n static %}
 {% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
 {{ form.media }}
-<script type="text/javascript" src="https://www.google.com/jsapi"></script>
-<script type="text/javascript">
-    google.load("visualization", "1", {packages:["corechart"]});
-</script>
 {% endblock %}
 {% block bodyclass %}{{ block.super }} slat {% endblock %}
 {% block title %}WebSLAT: {{ title }} Hazard{% endblock %}
@@ -17,7 +13,9 @@
 <h1>NZ Standard Seismic Hazard</h1>
 
 {% if chart %} 
-    {{ chart.as_html }}
+    <div style="position: relative;  width:50%">
+      {{ chart.as_html }}
+    </div>
 {% endif %}
 
 

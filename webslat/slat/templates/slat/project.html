@@ -3,10 +3,6 @@
 {% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
 {{ form.media }}
 
-<script type="text/javascript" src="https://www.google.com/jsapi"></script>
-<script type="text/javascript">
-    google.load("visualization", "1", {packages:["corechart"]});
-</script>
 {% endblock %}
 
 {% block bodyclass %}{{ block.super }} slat {% endblock %}
@@ -66,6 +62,9 @@
      {% endif %}
 </form>
 
+    {% if chart %} 
+        {{ chart.as_html }}
+    {% endif %}
 {% comment %}
     {% if chart %} 
         {{ chart.as_html }}

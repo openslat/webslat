@@ -4,10 +4,7 @@
     <link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
     <script src="{% static "js/jquery-3.2.1.min.js" %}"></script>
     <script src="{% static "js/slat-utils.js" %}"></script>
-    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-    <script type="text/javascript">
-      google.load("visualization", "1", {packages:["corechart"]});
-    </script>
+
     {{ form.media }}
 {% endblock %}
 
@@ -24,7 +21,9 @@
 
 
 {% if chart %} 
-    {{ chart.as_html }}
+    <div style="position: relative;  width:50%">
+      {{ chart.as_html }}
+    </div>
     <hr />
 {% endif %}
 
@@ -38,21 +37,19 @@
     <hr />
 {% endif %}
 
-{% if by_floor_chart %} 
-    {{ by_floor_chart.as_html }}
-    <hr />
-{% endif %}
-
 {% if by_floor_bar_chart %} 
-    {{ by_floor_bar_chart.as_html }}
+    <div style="position: relative;  width:50%">
+      {{ by_floor_bar_chart.as_html }}
+    </div>
     <hr />
 {% endif %}
 
 {% if by_comp_pie_chart %} 
-    {{ by_comp_pie_chart.as_html }}
+    <div style="position: relative;  width:50%">
+      {{ by_comp_pie_chart.as_html }}
+    </div>
     <hr />
 {% endif %}
-</hr>
 <a href="{% url 'slat:project' project.id %}">Return to Project</a><br /><br/>
 <a href="{% url 'slat:index' %}">Return to Project List</a>
 
