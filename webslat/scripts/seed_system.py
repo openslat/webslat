@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
-from slat.models import Profile, Project
+from slat.models import Profile, Project, Level, EDP, Component_Group
+from slat.component_models import ComponentsTab
 from slat.views import make_demo, make_example_2
 
 def run():
@@ -62,6 +63,19 @@ def run():
         project = make_demo(samspade)
         project.title_text = "Sam Spade's Demo Project"
         project.save()
+        
+        # Add a component group with a cost adjustment and comment
+        roof = Level.objects.get(project=project, level=project.num_levels())
+        demand = EDP.objects.get(project=project, 
+                                 level=roof, 
+                                 type=EDP.EDP_TYPE_ACCEL)
+        component = ComponentsTab.objects.get(ident='206')
+        group = Component_Group(demand=demand, 
+                                component=component,
+                                quantity=1,
+                                comment="THE Maltese Falcon",
+                                cost_adj=100)
+        group.save()
 
     if len(Project.objects.filter(title_text="Sam Spade's Other Demo Project")) == 0:
         project = make_demo(samspade)

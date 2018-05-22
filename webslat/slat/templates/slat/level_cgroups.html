@@ -18,12 +18,13 @@ Component Groups for {{ level.label }}
 {{ form.errors }}
 {% comment %}
 <b>Structural Components</b>
-<table border="1"><tr><th><b>Component</b></th><th><b>Quantity</b></th><th><b>E annual cost</b></th><th></th><th></th></tr>
+<table border="1"><tr><td><b>Component</b></td><td><b>Quantity</b></td><td><b>Adjustment Factor</b></td><td><b>E annual cost</b></td><td></td><td></td></tr>
 {% for cg in cgs %}
   {% if cg.component.structural %}
 <tr><td>
     <!-- <a href="{% url 'slat:component' cg.component.ident %}"> -->{{ cg.component }}<!--</a>--></td>
     <td align="RIGHT">{{ cg.quantity }}</td>
+   <td align="RIGHT">{{ cg.cost_adj|floatformat:2 }}</td>
    <td align="RIGHT">{{ cg.model.E_annual_cost|floatformat:2 }}</td>
     <td>
     <form action="{% url 'slat:level_compgroup' project.id level.id cg.id  %}" method="get">
@@ -42,12 +43,13 @@ Component Groups for {{ level.label }}
 
 <br/>
 <b>Non-Structural Components</b>
-<table border="1"><tr><th><b>Component</b></th><th><b>Quantity</b></th><th><b>E annual cost</b></th><th></th><th></th></tr>
+<table border="1"><tr><td><b>Component</b></td><td><b>Quantity</b></td><td><b>Adjustment Factor</b></td><td><b>E annual cost</b></td><td></td><td></td></tr>
 {% for cg in cgs %}
   {% if not cg.component.structural %}
   <tr><td>
       <!-- <a href="{% url 'slat:component' cg.component.ident %}"> -->{{ cg.component }}<!--</a>--></td>
     <td align="RIGHT">{{ cg.quantity }}</td>
+   <td align="RIGHT">{{ cg.cost_adj|floatformat:2 }}</td>
    <td align="RIGHT">{{ cg.model.E_annual_cost|floatformat:2 }}</td>
     <td>
     <form action="{% url 'slat:level_compgroup' project.id level.id cg.id  %}" method="get">
@@ -65,11 +67,17 @@ Component Groups for {{ level.label }}
 </table>
 {% endcomment %}
 
-<table border="1"><tr><th><b>Component</b></th><th><b>Quantity</b></th><th><b>E annual cost</b></th><th></th><th></th></tr>
+<table border="1"><tr><td><b>Component</b></td><td><b>Quantity</b></td><td><b>Adjustment Factor</b></td><td><b>E annual cost</b></td><td></td><td></td></tr>
 {% for cg in cgs %}
 <tr><td>
-    <!-- <a href="{% url 'slat:component' cg.component.ident %}"> -->{{ cg.component }}<!--</a>--></td>
+    <!-- <a href="{% url 'slat:component' cg.component.ident %}"> -->{{ cg.component }}
+    {% if cg.comment %}
+        <br/>
+        <table border="0"><tr><td><b>Comment:</b></td><td><i>{{cg.comment}}</i></td></tr></table>
+    {% endif %}
+    <!--</a>--></td>
     <td align="RIGHT">{{ cg.quantity }}</td>
+   <td align="RIGHT">{{ cg.cost_adj|floatformat:2 }}</td>
    <td align="RIGHT">{{ cg.model.E_annual_cost|floatformat:2 }}</td>
     <td>
     <form action="{% url 'slat:level_compgroup' project.id level.id cg.id  %}" method="get">

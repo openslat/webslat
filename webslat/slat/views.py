@@ -1550,6 +1550,8 @@ def level_cgroup(request, project_id, level_id, cg_id=None):
          cg.demand = edp[0]
          cg.component = component
          cg.quantity = cg_form.cleaned_data['quantity']
+         cg.cost_adj = cg_form.cleaned_data['cost_adj']
+         cg.comment = cg_form.cleaned_data['comment']
          cg.save()
          if cg_form.has_changed():
              cg._make_model()

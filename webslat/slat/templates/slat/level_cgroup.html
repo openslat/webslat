@@ -21,6 +21,8 @@
         {% csrf_token %}
     <table border="1">
       <tr><td><label for="id_quantity" class="normal">{{ demand_form.quantity.label }}</td><td>{{ demand_form.quantity }}</td></tr>
+      <tr><td><label for="id_cost_adj" class="normal">{{ demand_form.cost_adj.label }}</td><td>{{ demand_form.cost_adj }}</td></tr>
+      <tr><td><label for="id_comment" class="normal">{{ demand_form.comment.label }}</td><td>{{ demand_form.comment }}</td></tr>
       <tr><td><label for="id_category" class="normal">{{ demand_form.category.label }}</td><td>{{ demand_form.category }}</td></tr>
       <tr><td><label for="id_component" class="normal">{{ demand_form.component.label }}</td><td>{{ demand_form.component }}</td></tr>
       </table>

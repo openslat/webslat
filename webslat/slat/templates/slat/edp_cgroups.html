@@ -8,12 +8,13 @@
 <P><B>Project:</B> {{ project.title_text }}</P>
 
 <b>Structural Components</b>
-<table border="1"><tr><td><b>Component</b></td><td><b>Quantity</b></td><td><b>E annual cost</b></td><td></td><td></td></tr>
+<table border="1"><tr><td><b>Component</b></td><td><b>Quantity</b></td><td><b>Adjustment Factor</b></td><td><b>E annual cost</b></td><td></td><td></td></tr>
 {% for cg in cgs %}
   {% if cg.component.structural %}
 <tr><td><a href="{% url 'slat:component' cg.component.ident %}">{{ cg.component }}</a></td>
     <td align="RIGHT">{{ cg.quantity }}</td>
    <td align="RIGHT">{{ cg.model.E_annual_cost|floatformat:2 }}</td>
+   <td align="RIGHT">{{ cg.cost_adj|floatformat:2 }}</td>
     <td>
     <form action="{% url 'slat:edp_cgroup' project.id edp.id cg.id  %}" method="get">
         {% csrf_token %}
@@ -31,12 +32,13 @@
 
 <br/>
 <b>Non-Structural Components</b>
-<table border="1"><tr><td><b>Component</b></td><td><b>Quantity</b></td><td><b>E annual cost</b></td><td></td><td></td></tr>
+<table border="1"><tr><td><b>Component</b></td><td><b>Quantity</b></td><td><b>Adjustment Factor</b></td><td><b>E annual cost</b></td><td></td><td></td></tr>
 {% for cg in cgs %}
   {% if not cg.component.structural %}
 <tr><td><a href="{% url 'slat:component' cg.component.ident %}">{{ cg.component }}</a></td>
     <td align="RIGHT">{{ cg.quantity }}</td>
    <td align="RIGHT">{{ cg.model.E_annual_cost|floatformat:2 }}</td>
+   <td align="RIGHT">{{ cg.cost_adj|floatformat:2 }}</td>
     <td>
     <form action="{% url 'slat:edp_cgroup' project.id edp.id cg.id  %}" method="get">
         {% csrf_token %}

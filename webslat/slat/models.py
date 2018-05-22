@@ -507,6 +507,8 @@ class Component_Group(models.Model):
     demand = models.ForeignKey('EDP', on_delete=PROTECT, null=False)
     component = models.ForeignKey('ComponentsTab', on_delete=PROTECT, null=False, db_constraint=False)
     quantity = models.IntegerField(blank=False, null=False)
+    cost_adj = models.FloatField(blank=False, null=False, default=1.0)
+    comment = models.CharField(blank=True, null=True, max_length=256)
 
     def _make_model(self):
         frags = []
@@ -523,7 +525,7 @@ class Component_Group(models.Model):
                                                 c.dispersion))
         cost = pyslat.bilevellossfn(self.id, costs)
         pyslat.compgroup(self.id, self.demand.model(), fragility, cost, None, self.quantity, 
-                         1.0, # cost adjustment factor
+                         self.cost_adj,
                          1.0  # delay adjustment factor
                          )
 
@@ -658,6 +660,8 @@ class EDPCompGroupForm(ModelForm):
 class FloorCompGroupForm(Form):
     component = ModelChoiceField(queryset=ComponentsTab.objects)
     quantity = IntegerField(initial=1)
+    cost_adj = FloatField()
+    comment = CharField(required=False)
         
 def ListOfComponentCategories():
     demands = [[r"", "All"], ["^[0-9]", "SLAT"], ["^[A-Z]", "PACT"]]
@@ -674,13 +678,19 @@ class ComponentForm(Form):
             self.fields['component'].initial = initial['component']
         self.fields['component'].widget.forward.append(forward.Const(level, 'level'))
         self.fields['quantity'].widget.attrs['class'] = 'normal'
+        self.fields['cost_adj'].widget.attrs['class'] = 'normal'
+        self.fields['comment'].widget.attrs['comment'] = 'normal'
         self.fields['category'].widget.attrs['class'] = 'normal'
         self.fields['component'].widget.attrs['class'] = 'normal'
         self.fields['quantity'].widget.attrs['title'] = 'How many of this component are in the group?'
+        self.fields['cost_adj'].widget.attrs['title'] = 'Adjustment factor from standard cost.'
+        self.fields['comment'].widget.attrs['title'] = 'Notes about this component.'
         self.fields['category'].widget.attrs['title'] = 'Narrow the component search by category.'
         self.fields['component'].widget.attrs['title'] = 'Choose the type of component.'
         
     quantity = IntegerField()
+    cost_adj = FloatField()
+    comment = CharField(max_length=256, required=False)
     category = ChoiceField(choices=ListOfComponentCategories, required=False)
     component = ModelChoiceField(
         queryset=ComponentsTab.objects.all(),
