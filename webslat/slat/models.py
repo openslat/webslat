@@ -522,7 +522,10 @@ class Component_Group(models.Model):
                                                 c.max_cost, c.min_cost,
                                                 c.dispersion))
         cost = pyslat.bilevellossfn(self.id, costs)
-        pyslat.compgroup(self.id, self.demand.model(), fragility, cost, None, self.quantity)
+        pyslat.compgroup(self.id, self.demand.model(), fragility, cost, None, self.quantity, 
+                         1.0, # cost adjustment factor
+                         1.0  # delay adjustment factor
+                         )
 
     def model(self):
         if not pyslat.compgroup.lookup(self.id):

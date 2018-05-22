@@ -75,22 +75,22 @@ class IMCostChart(Chart):
                     new_data.append(costs[2].mean())
                 data.append(new_data)
 
-        headings = data[0]
-        for line in data[1:]:
-            line.reverse()
-            im = line.pop()
+            headings = data[0]
+            for line in data[1:]:
+                line.reverse()
+                im = line.pop()
 
-            for i in range(1, len(headings)):
-                cost = line.pop()
-                heading = headings[i]
-                if heading == 'Repair':
-                    self.repair.append({'x': im, 'y': cost})
-                elif heading == 'Demolition':
-                    self.demolition.append({'x': im, 'y': cost})
-                elif heading == 'Collapse':
-                    self.collapse.append({'x': im, 'y': cost})
-                else:
-                    raise ValueError("Unknown cost type: {}".format(heading))
+                for i in range(1, len(headings)):
+                    cost = line.pop()
+                    heading = headings[i]
+                    if heading == 'Repair':
+                        self.repair.append({'x': im, 'y': cost})
+                    elif heading == 'Demolition':
+                        self.demolition.append({'x': im, 'y': cost})
+                    elif heading == 'Collapse':
+                        self.collapse.append({'x': im, 'y': cost})
+                    else:
+                        raise ValueError("Unknown cost type: {}".format(heading))
         
     def get_datasets(self, *args, **kwargs):
         datasets = []
