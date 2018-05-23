@@ -234,7 +234,7 @@ class ByCompPieChart(Chart):
 
         print(colors)
         self._colors = colors
-        self._color_map = list(zip(self.labels, self._colors))
+        self._color_map = list(zip(self.labels, self._colors, self.costs))
 
     def get_color_map(self):
         return self._color_map
