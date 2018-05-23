@@ -209,7 +209,7 @@ class ByFloorChart(Chart):
 
 class ByCompPieChart(Chart):
     chart_type = 'pie'
-    legend = Legend(display=True, position='right')
+    legend = Legend(display=False)
     title = Title(display=True)
     
     def __init__(self, data, title):
@@ -222,21 +222,32 @@ class ByCompPieChart(Chart):
             self.labels.append(label)
             self.costs.append(costs)
         #self.title['text'] = 'By Floor'
-        
+
+        # Assign colors
+        palette = sns.color_palette(None, len(self.costs))
+        colors = []
+        for r, g, b in palette:
+            r = int(r * 255)
+            g = int(g * 255)
+            b = int(b * 255)
+            colors.append(rgba(r, g, b, 0.5))
+
+        print(colors)
+        self._colors = colors
+        self._color_map = list(zip(self.labels, self._colors))
+
+    def get_color_map(self):
+        return self._color_map
+    
     def get_labels(self, **kwargs):
         return self.labels
 
     def get_datasets(self, **kwargs):
-        palette = sns.color_palette(None, len(self.costs))
-        colors = []
-        for r, g, b in palette:
-            colors.append(rgba(int(r * 255), int(g * 255), int(b * 255), 0.5))
-            
         return [DataSet(label='Pie Chart',
                         data=self.costs,
                         borderWidth=1,
                         borderColor=rgba(0,0,0,1.0),
-                        backgroundColor=colors)]
+                        backgroundColor=self._colors)]
 
 
 
@@ -1848,12 +1859,14 @@ def analysis(request, project_id):
             data.append([key, groups[key]])
 
         by_comp_pie_chart = ByCompPieChart(data, 'Mean Annual Repair Cost By Component Type')
+        by_comp_pie_chart_legend = by_comp_pie_chart.get_color_map()
 
     return render(request, 'slat/analysis.html', {'project': project, 
                                                   'structure': project.model(),
                                                   'chart': chart,
                                                   'by_floor_bar_chart': by_floor_bar_chart,
-                                                  'by_comp_pie_chart': by_comp_pie_chart})
+                                                  'by_comp_pie_chart': by_comp_pie_chart,
+                                                  'by_comp_pie_chart_legend': by_comp_pie_chart_legend})
 
 class ComponentAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
