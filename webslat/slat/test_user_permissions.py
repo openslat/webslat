@@ -1,7 +1,7 @@
 import pyslat
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
-from slat.models import Profile, Project, ProjectPermissions, EDP, Level
+from slat.models import Profile, Project, ProjectUserPermissions, EDP, Level
 from http import HTTPStatus
 from pyquery import PyQuery
 from slat.views import make_demo
@@ -59,7 +59,7 @@ class PermissionTestCase(TestCase):
             setattr(project, 'description_text', "Describe this project...")
             setattr(project, 'rarity', 1/500)
             project.save()
-            project.AssignRole(samspade, ProjectPermissions.ROLE_FULL)
+            project.AssignRole(samspade, ProjectUserPermissions.ROLE_FULL)
 
         marlowe = User.objects.get(username='marlowe')
         if len(Project.objects.filter(title_text="Phil Marlowe's First Project")) == 0:
@@ -135,7 +135,7 @@ class PermissionTestCase(TestCase):
         # Grant Philip Marlowe access to one of Sam Spade's projects:
         Project.objects.get(title_text="Sam Spade's Empty Project").AssignRole(
             User.objects.get(username="marlowe"),
-            ProjectPermissions.ROLE_FULL)
+            ProjectUserPermissions.ROLE_FULL)
         
         c = Client()
 
@@ -190,7 +190,7 @@ class PermissionTestCase(TestCase):
         # Remove access from Sam:
         Project.objects.get(title_text="Sam Spade's Empty Project").AssignRole(
             User.objects.get(username="samspade"),
-            ProjectPermissions.ROLE_NONE)
+            ProjectUserPermissions.ROLE_NONE)
         
         # Phil Marlowe should still be able to see the project:
         response = c.post('/login/?next=/slat/', {'username': 'marlowe', 'password': 'thebigsleep'})

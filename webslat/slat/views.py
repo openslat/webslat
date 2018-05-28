@@ -14,7 +14,10 @@ from .nzs import *
 from math import *
 from dal import autocomplete
 from django.template import RequestContext
-
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
+from django.contrib import messages
+from django.shortcuts import render, redirect
 from  .models import *
 from .component_models import *
 from slat.constants import *
@@ -232,7 +235,6 @@ class ByCompPieChart(Chart):
             b = int(b * 255)
             colors.append(rgba(r, g, b, 0.5))
 
-        print(colors)
         self._colors = colors
         self._color_map = list(zip(self.labels, self._colors, self.costs))
 
@@ -253,21 +255,20 @@ class ByCompPieChart(Chart):
 
 @login_required
 def index(request):
-    if request.user.is_authenticated:
-        user = "User is authenticated"
-    else:
-        user = "User is NOT authenticated"
-
     project_list = []
-    for permissions in ProjectPermissions.objects.filter(user=request.user):
-        project = permissions.project
-        if project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
-            #project_list.append(permissions.project)
-                project_list.append({'id': project.id,
-                                 'title_text': project.title_text,
-                                 'role': permissions.role})
+    for project in Project.objects.all():
+        if project.CanRead(request.user):
+            project_list.append({'id': project.id,
+                                 'title_text': project.title_text})
+
+    group_list = []
+    for group in Group.objects.all():
+        if group.IsMember(request.user):
+            #group_list.append({'name': group.name})
+            group_list.append(group)
+
                 
-    context = { 'project_list': project_list, 'user': user }
+    context = { 'project_list': project_list, 'group_list': group_list}
     return render(request, 'slat/index.html', context)
 
 def make_demo(user):
@@ -277,7 +278,7 @@ def make_demo(user):
     setattr(project, 'rarity', 1/500)
     project.save()
 
-    project.AssignRole(user, ProjectPermissions.ROLE_FULL)
+    project.AssignRole(user, ProjectUserPermissions.ROLE_FULL)
 
     # Create levels:
     num_floors = 5
@@ -380,7 +381,7 @@ def make_example_2(user):
     setattr(project, 'sd_ln_cost_demolition', 0.35)
     project.save()
 
-    project.AssignRole(user, ProjectPermissions.ROLE_FULL)
+    project.AssignRole(user, ProjectUserPermissions.ROLE_FULL)
 
     # Create levels:
     num_floors = 10
@@ -571,7 +572,7 @@ def project(request, project_id=None):
                     edp._make_model()
                 project._make_model()
                 
-            project.AssignRole(request.user, ProjectPermissions.ROLE_FULL)
+            project.AssignRole(request.user, ProjectUserPermissions.ROLE_FULL)
 
             return HttpResponseRedirect(reverse('slat:project', args=(form.instance.id,)))
 
@@ -582,31 +583,38 @@ def project(request, project_id=None):
             if not project.CanRead(request.user):
                 raise PermissionDenied
                 
+            can_add = project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL
             form = ProjectForm(instance=project, initial=model_to_dict(project))
             
             chart = IMCostChart(project)
                 
             levels = project.num_levels()
             levels_form = None
-            users = list(ProjectPermissions.objects.filter(project=project, role=ProjectPermissions.ROLE_FULL))
+            users = list(ProjectUserPermissions.objects.filter(project=project, role=ProjectUserPermissions.ROLE_FULL))
+            groups = []
+            for g in ProjectGroupPermissions.objects.filter(project=project):
+                groups.append(g.group)
         else:
             form = ProjectForm()
             levels = None
             levels_form = LevelsForm()
             users = None
+            groups = None
+            can_add = False
     return render(request, 'slat/project.html', {'form': form, 
                                                  'levels': levels, 
                                                  'levels_form': levels_form, 
                                                  'chart': chart,
-                                                 'users': users})
-
+                                                 'users': users, 
+                                                 'groups': groups,
+                                                 'can_add': can_add})
 
 @login_required
 def hazard(request, project_id):
     # If the project doesn't exist, generate a 404:
     project = get_object_or_404(Project, pk=project_id)
 
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
     # Otherwise:
@@ -635,7 +643,7 @@ def hazard(request, project_id):
 def hazard_choose(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
     
     hazard = project.IM
@@ -754,7 +762,7 @@ class HazardPlot(Chart):
 def nlh(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
 
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
     
     hazard = project.IM
@@ -774,7 +782,7 @@ def nlh(request, project_id):
 def nlh_edit(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
 
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
     hazard = project.IM
@@ -817,7 +825,7 @@ def nlh_edit(request, project_id):
 def im_interp(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
 
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
     hazard = project.IM
@@ -883,7 +891,7 @@ def im_interp(request, project_id):
 def im_interp_edit(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
 
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
     hazard = project.IM
@@ -957,7 +965,7 @@ def im_interp_edit(request, project_id):
 def im_file(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
 
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
     hazard = project.IM
@@ -1038,7 +1046,7 @@ def im_file(request, project_id):
 def im_nzs(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
 
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
     hazard = project.IM
@@ -1062,7 +1070,7 @@ def im_nzs(request, project_id):
 def im_nzs_edit(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
 
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
     hazard = project.IM
@@ -1228,7 +1236,7 @@ class DemandRatePlot(Chart):
 def edp_view(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)
 
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
     edp = get_object_or_404(EDP, pk=edp_id)
@@ -1251,7 +1259,7 @@ def edp_init(request, project_id):
     # If the project doesn't exist, generate a 404:
     project = get_object_or_404(Project, pk=project_id)
 
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
     if request.method == 'POST':
@@ -1273,7 +1281,7 @@ def edp_init(request, project_id):
 def edp_choose(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)
 
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
     edp = get_object_or_404(EDP, pk=edp_id)
@@ -1302,7 +1310,7 @@ def edp_choose(request, project_id, edp_id):
 def edp_power(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)
 
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
     edp = get_object_or_404(EDP, pk=edp_id)
@@ -1313,7 +1321,7 @@ def edp_power(request, project_id, edp_id):
 def edp_power_edit(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)
 
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
     edp = get_object_or_404(EDP, pk=edp_id)
@@ -1348,7 +1356,7 @@ def edp_power_edit(request, project_id, edp_id):
 def edp_userdef(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)
 
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
     edp = get_object_or_404(EDP, pk=edp_id)
@@ -1364,7 +1372,7 @@ def edp_userdef(request, project_id, edp_id):
 def edp_userdef_edit(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)
 
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
     edp = get_object_or_404(EDP, pk=edp_id)
@@ -1414,7 +1422,7 @@ def edp_userdef_edit(request, project_id, edp_id):
 def edp_userdef_import(request, project_id, edp_id):
     project = get_object_or_404(Project, pk=project_id)
 
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
     edp = get_object_or_404(EDP, pk=edp_id)
@@ -1499,7 +1507,7 @@ def edp_userdef_import(request, project_id, edp_id):
 def cgroup(request, project_id, floor_num, cg_id=None):
      project = get_object_or_404(Project, pk=project_id)
 
-     if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+     if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
      if request.method == 'POST':
@@ -1528,7 +1536,7 @@ def cgroup(request, project_id, floor_num, cg_id=None):
 def level_cgroup(request, project_id, level_id, cg_id=None):
      project = get_object_or_404(Project, pk=project_id)
 
-     if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+     if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
      if request.method == 'POST':
@@ -1599,7 +1607,7 @@ def edp_cgroups(request, project_id, edp_id):
 def edp_cgroup(request, project_id, edp_id, cg_id=None):
     project = get_object_or_404(Project, pk=project_id)
 
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
     edp = get_object_or_404(EDP, pk=edp_id)
@@ -1654,7 +1662,7 @@ def cgroups(request, project_id):
 def level_cgroups(request, project_id, level_id):
     project = get_object_or_404(Project, pk=project_id)
 
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
     edps = EDP.objects.filter(project=project, level=Level.objects.get(pk=level_id))
@@ -1676,7 +1684,7 @@ def level_cgroups(request, project_id, level_id):
 def levels(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
 
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
     levels = project.levels()
@@ -1687,7 +1695,7 @@ def levels(request, project_id):
 def demand(request, project_id, level_id, type):
     project = get_object_or_404(Project, pk=project_id)
 
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
     if type == 'drift':
@@ -1718,16 +1726,15 @@ def demand(request, project_id, level_id, type):
 def analysis(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
 
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
     chart = None
     jchart = None
     by_fate_chart = None
     by_floor_bar_chart = None
-    j_by_floor_bar_chart = None
     by_comp_pie_chart = None
-    j_by_comp_pie_chart = None
+    by_comp_pie_chart_legend = None
 
     if project.IM:
         building = project.model()
@@ -1900,10 +1907,9 @@ def ComponentDescription(request, component_key):
 @login_required
 def shift_level(request, project_id, level_id, shift):
     shift = int(shift)
-    print("> shift_level(..., {}, {}, {})".format(project_id, level_id, shift))
     project = Project.objects.get(pk=project_id)
 
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
     level_to_move = Level.objects.get(pk=level_id)
@@ -1942,7 +1948,7 @@ def shift_level(request, project_id, level_id, shift):
 def rename_level(request, project_id, level_id):
     project = Project.objects.get(pk=project_id)
 
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
     level = Level.objects.get(pk=level_id)
@@ -1991,7 +1997,7 @@ class ProjectAddUserForm(Form):
 @login_required
 def project_add_user(request, project_id):
     project = Project.objects.get(pk=project_id)
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.CanWrite(request.user):
         raise PermissionDenied
 
     if request.method == 'POST':
@@ -2001,7 +2007,7 @@ def project_add_user(request, project_id):
         print(form.cleaned_data['userid'])
         try:
             user = User.objects.get(username=form.cleaned_data['userid'])
-            project.AssignRole(user, ProjectPermissions.ROLE_FULL)
+            project.AssignRole(user, ProjectUserPermissions.ROLE_FULL)
             return HttpResponseRedirect(reverse('slat:project', args=(project_id,)))
         except:
             print("EXCEPTION")
@@ -2019,7 +2025,7 @@ class ProjectRemoveUserForm(Form):
 @login_required
 def project_remove_user(request, project_id):
     project = Project.objects.get(pk=project_id)
-    if not project.GetRole(request.user) == ProjectPermissions.ROLE_FULL:
+    if not project.CanWrite(request.user):
         raise PermissionDenied
 
     if request.method == 'POST':
@@ -2027,7 +2033,7 @@ def project_remove_user(request, project_id):
         form.is_valid()
         try:
             user = User.objects.get(username=form.cleaned_data['userid'])
-            project.AssignRole(user, ProjectPermissions.ROLE_NONE)
+            project.AssignRole(user, ProjectUserPermissions.ROLE_NONE)
             return HttpResponseRedirect(reverse('slat:project', args=(project_id,)))
         except:
             form.message = "User {} not found.".format(form.cleaned_data['userid'])
@@ -2040,7 +2046,7 @@ def project_remove_user(request, project_id):
         form = ProjectRemoveUserForm()
         form.fields['userid'].widget = Select()
         users = []
-        for permissions in ProjectPermissions.objects.filter(project=project, role=ProjectPermissions.ROLE_FULL):
+        for permissions in ProjectUserPermissions.objects.filter(project=project, role=ProjectUserPermissions.ROLE_FULL):
             user = permissions.user
             if user != request.user:
                 users.append([user.username, user.username])
@@ -2048,3 +2054,195 @@ def project_remove_user(request, project_id):
         return render(request, 'slat/project_remove_user.html', context={'project_id': project_id,
                                                                          'project': project, 
                                                                          'form': form})
+
+@login_required    
+def group(request, group_id=None):
+    if group_id:
+        group = Group.objects.get(pk=group_id)
+        if not group.IsMember(request.user):
+            raise PermissionDenied
+    else:
+        group = None
+
+        
+    if request.method == 'POST':
+        print("POSTING")
+        if group:
+            print("GROUP")
+            form = GroupForm(request.POST,
+                             group,
+                             initial=model_to_dict(group))
+            form.instance.id = group_id
+        else:
+            print("NO GROUP")
+            form = GroupForm(request.POST)
+
+        if not group or form.has_changed():
+            if not form.is_valid():
+                print(form.errors)
+                return render(request, 'slat/group.html', { 'group': group, 'form': form})
+            else:
+                form.save()
+                group = form.instance
+                if not group.IsMember(request.user):
+                    group.AddMember(request.user)
+
+        return HttpResponseRedirect(reverse('slat:group', args=(form.instance.id,)))
+    else:
+        if group:
+            form = GroupForm(instance=group, initial=model_to_dict(group))
+            members = []
+            for user in User.objects.all():
+                if group.IsMember(user):
+                    members.append(user)
+        else:
+            form = GroupForm()
+            members = None
+
+    return render(request, 'slat/group.html', { 'group': group, 'members': members, 'form': form})
+
+class GroupAddUserForm(Form):
+    userid = CharField()
+    
+@login_required
+def group_add_user(request, group_id):
+    group = Group.objects.get(pk=group_id)
+
+    if not group.IsMember(request.user):
+        raise PermissionDenied
+
+    if request.method == 'POST':
+        print("POST")
+        form = GroupAddUserForm(request.POST)
+        form.is_valid()
+        print(form.cleaned_data['userid'])
+        try:
+            user = User.objects.get(username=form.cleaned_data['userid'])
+            group.AddMember(user)
+            return HttpResponseRedirect(reverse('slat:group', args=(group_id,)))
+        except:
+            print("EXCEPTION")
+            form.message = "User {} not found.".format(form.cleaned_data['userid'])
+            return render(request, 'slat/group_add_user.html', context={'group_id':group.id, 'group': group, 'form': form})
+            
+    else:
+        print("GET")
+        form = GroupAddUserForm()
+        return render(request, 'slat/group_add_user.html', context={'group_id':group.id, 'group': group, 'form': form})
+    
+class GroupRemoveUserForm(Form):
+    userid = CharField()
+    
+@login_required
+def group_remove_user(request, group_id):
+    group = Group.objects.get(pk=group_id)
+    if not group.IsMember(request.user):
+        raise PermissionDenied
+
+    if request.method == 'POST':
+        form = GroupRemoveUserForm(request.POST)
+        form.is_valid()
+        try:
+            user = User.objects.get(username=form.cleaned_data['userid'])
+            group.RemoveMember(user)
+            if user == request.user:
+                # User removed themselves from the group, so they
+                # won't be able to see it anymore
+                return HttpResponseRedirect(reverse('slat:index'))
+            else:
+                return HttpResponseRedirect(reverse('slat:group', args=(group_id,)))
+        except:
+            form.message = "User {} not found.".format(form.cleaned_data['userid'])
+            return render(request, 'slat/group_remove_user.html', 
+                          context={'groujp_id': group_id, 
+                                   'group': group, 
+                                   'form': form})
+            
+    else:
+        form = GroupRemoveUserForm()
+        form.fields['userid'].widget = Select()
+        users = []
+        for user in User.objects.all():
+            if group.IsMember(user):
+                users.append([user.username, user.username])
+        form.fields['userid'].widget.choices = users
+        return render(request, 'slat/group_remove_user.html', context={'group_id': group_id,
+                                                                       'group': group,
+                                                                       'form': form})
+
+class ProjectAddGroupForm(Form):
+    groupid = CharField()
+    
+@login_required
+def project_add_group(request, project_id):
+    project = Project.objects.get(pk=project_id)
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
+        raise PermissionDenied
+
+    if request.method == 'POST':
+        form = ProjectAddGroupForm(request.POST)
+        form.is_valid()
+        print(form.cleaned_data['groupid'])
+        try:
+            group = Group.objects.get(name=form.cleaned_data['groupid'])
+            group.GrantAccess(project)
+            return HttpResponseRedirect(reverse('slat:project', args=(project_id,)))
+        except:
+            form.message = "Group {} not found.".format(form.cleaned_data['groupid'])
+            return render(request, 'slat/project_add_group.html', context={'project_id': project_id, 'project': project, 'form': form})
+    else:
+        form = ProjectAddGroupForm()
+        return render(request, 'slat/project_add_group.html', context={'project_id': project_id, 'project': project, 'form': form})
+    
+class ProjectRemoveGroupForm(Form):
+    groupid = CharField()
+    
+@login_required
+def project_remove_group(request, project_id):
+    project = Project.objects.get(pk=project_id)
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
+        raise PermissionDenied
+
+    if request.method == 'POST':
+        form = ProjectRemoveGroupForm(request.POST)
+        form.is_valid()
+        try:
+            group = Group.objects.get(name=form.cleaned_data['groupid'])
+            group.DenyAccess(project)
+            return HttpResponseRedirect(reverse('slat:project', args=(project_id,)))
+        except:
+            form.message = "Group {} not found.".format(form.cleaned_data['groupid'])
+            return render(request, 'slat/project_remove_group.html', 
+                          context={'project_id': project_id, 
+                                   'project': project, 
+                                   'form': form})
+            
+    else:
+        form = ProjectRemoveGroupForm()
+        form.fields['groupid'].widget = Select()
+        groups = []
+        for permissions in ProjectGroupPermissions.objects.filter(project=project):
+            group = permissions.group
+            groups.append([group.name, group.name])
+        form.fields['groupid'].widget.choices = groups
+        return render(request, 'slat/project_remove_group.html',
+                      context={'project_id': project_id,
+                               'project': project, 
+                               'form': form})
+
+def password_change(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            print("VALID")
+            user = form.save()
+            update_session_auth_hash(request, user)  # Important!
+            messages.success(request, 'Your password was successfully updated!')
+            return HttpResponseRedirect(reverse('slat:index'))
+    else:
+        form = PasswordChangeForm(request.user)
+
+    return render(request, 'slat/password_change.html', {
+        'form': form
+    })
+

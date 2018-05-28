@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
-from slat.models import Profile, Project, Level, EDP, Component_Group
+from slat.models import Profile, Project, Level, EDP, Component_Group, \
+    Group
 from slat.component_models import ComponentsTab
 from slat.views import make_demo, make_example_2
 
@@ -24,6 +25,12 @@ def run():
               'password': 'maltesefalcon', 
               'first_name': 'Samuel',
               'last_name': 'Spade',
+              'organization': 'Spade & Archer'},
+             {'username': 'miles', 
+              'email': 'milesarcher@spadeandarcher.com', 
+              'password': 'samspartner', 
+              'first_name': 'Miles',
+              'last_name': 'Archer',
               'organization': 'Spade & Archer'},
              {'username': 'marlowe',
               'email': 'marlowe@marlowe.com',
@@ -99,6 +106,25 @@ def run():
         project.title_text = "Sherlock's Project"
         project.save()
 
+    # Create a group
+    if len(Group.objects.filter(name="Spade & Archer")) == 0:
+        group = Group(name="Spade & Archer")
+        group.save()
 
-    
+        group.AddMember(samspade)
+
+        milesarcher = User.objects.get(username='miles')
+        group.AddMember(milesarcher)
+
+        project = Project.objects.get(title_text="Sam Spade's Demo Project")
+        group.GrantAccess(project)
+        group.save()
+
+    if len(Group.objects.filter(name="Everyone")) == 0:
+        everyone = Group(name="Everyone")
+        everyone.save()
+
+        for user in User.objects.filter(is_staff=False):
+            everyone.AddMember(user)
+        
     

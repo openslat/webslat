@@ -1,0 +1,27 @@
+{% extends "base_site.html" %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
+{{ form.media }}
+
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} slat {% endblock %}
+{% block title %}WebSLAT Project {{ project.title_text }}{% endblock %}
+{% block content_title %}{{ project.title_text }}{% endblock %}
+{% block content %}
+<form action="{% url 'slat:project_add_group' project_id %}" method="post">
+    {% csrf_token %}
+    {{ form }}
+<input type="submit" value="Submit" class="normal"/>
+</form>
+
+{% if form.message %}
+<br/>
+{{ form.message }}
+<br/>
+{% endif %}
+
+<br/>    
+<a href="{% url 'slat:project' project_id %}">Return to Project</a><br />
+<a href="{% url 'slat:index' %}">Return to Project List</a>
+{% endblock %}

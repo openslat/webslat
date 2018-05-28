@@ -1,0 +1,19 @@
+{% extends "base_site.html" %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
+{{ form.media }}
+
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} slat {% endblock %}
+{% block title %}WebSLAT Page Not Found{% endblock %}
+{% block content_title %}Page Not Found{% endblock %}
+{% block content %}
+<p>404: Page Does Not Exist</p>
+<p>
+  The page you requested does not exist. If you believe this is an error,
+  please contact the 
+  <a href="mailto:openslat@gmail.com">WebSLAT administrator</a>.
+</p>
+{% endblock %}
+

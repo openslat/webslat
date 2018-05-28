@@ -103,28 +103,48 @@ class Project(models.Model):
     sd_ln_cost_demolition = models.FloatField(null=True, blank=True)
 
     def AssignRole(self, user, role):
-        try: 
-            permissions = ProjectPermissions.objects.get(project=self, user=user)
-        except ProjectPermissions.DoesNotExist:
-            permissions = ProjectPermissions(project=self, user=user)
-        finally:
-            permissions.role = role
-            permissions.save()
+        if role == ProjectUserPermissions.ROLE_NONE:
+            try: 
+                permissions = ProjectUserPermissions.objects.get(project=self, user=user)
+                permissions.delete()
+            except ProjectUserPermissions.DoesNotExist:
+                # Do nothing; permission is already missing from table
+                None
+        else:
+            try: 
+                permissions = ProjectUserPermissions.objects.get(project=self, user=user)
+            except ProjectUserPermissions.DoesNotExist:
+                permissions = ProjectUserPermissions(project=self, user=user)
+            finally:
+                permissions.role = role
+                permissions.save()
 
     def GetRole(self, user):
         try: 
-            permissions = ProjectPermissions.objects.get(project=self, user=user)
+            permissions = ProjectUserPermissions.objects.get(project=self, user=user)
             return permissions.role
-        except ProjectPermissions.DoesNotExist:
-            return ProjectPermissions.ROLE_NONE
+        except ProjectUserPermissions.DoesNotExist:
+            return ProjectUserPermissions.ROLE_NONE
 
     def CanRead(self, user):
         role = self.GetRole(user)
-        return (role != ProjectPermissions.ROLE_NONE)
+        if role != ProjectUserPermissions.ROLE_NONE:
+            return True
+
+        for group in Group.objects.all():
+            if group.HasAccess(self) and group.IsMember(user):
+                return True
+        return False
 
     def CanWrite(self, user):
         role = self.GetRole(user)
-        return role in [ProjectPermissions.ROLE_FULL]
+        if role != ProjectUserPermissions.ROLE_NONE:
+            return True
+
+        for group in Group.objects.all():
+            if group.HasAccess(self) and group.IsMember(user):
+                return True
+        return False
 
     def _make_model(self):
         structure = pyslat.structure(self.id)
@@ -174,7 +194,7 @@ class Project(models.Model):
         level = Level.objects.get(project=self, level=floor)
         return level.label
 
-class ProjectPermissions(models.Model):
+class ProjectUserPermissions(models.Model):
     ROLE_FULL = 'O'
     ROLE_NONE = 'N'
     ROLE_CHOICES = {
@@ -185,6 +205,50 @@ class ProjectPermissions(models.Model):
     project = models.ForeignKey(Project, on_delete=CASCADE, blank=False, null=False)
     user = models.ForeignKey(User, on_delete=CASCADE, blank=False, null=False)
     role = models.CharField(max_length=1, choices=ROLE_CHOICES, default=ROLE_NONE)
+
+class Group(models.Model):
+    name = models.CharField(max_length=20, blank=False, null=False, unique=True)
+
+    def IsMember(self, user):
+        try:
+            GroupMember.objects.get(group=self, user=user)
+            return True
+        except GroupMember.DoesNotExist:
+            return False
+        
+    def AddMember(self, user):
+        if not self.IsMember(user):
+            GroupMember(group=self, user=user).save()
+        else:
+            print("Already in group")
+            
+    def RemoveMember(self, user):
+        if self.IsMember(user):
+            GroupMember.objects.get(group=self, user=user).delete()
+
+    def HasAccess(self, project):
+        try:
+            ProjectGroupPermissions.objects.get(project=project, group=self)
+            return True
+        except ProjectGroupPermissions.DoesNotExist:
+            return False
+    
+    def GrantAccess(self, project):
+        if not self.HasAccess(project):
+            ProjectGroupPermissions(project=project, group=self).save()
+    
+    def DenyAccess(self, project):
+        if self.HasAccess(project):
+            ProjectGroupPermissions.objects.get(project=project, group=self).delete()
+            
+class GroupMember(models.Model):
+    group = models.ForeignKey(Group, on_delete=CASCADE, blank=False, null=False)
+    user = models.ForeignKey(User, on_delete=CASCADE, blank=False, null=False)
+
+class ProjectGroupPermissions(models.Model):
+    project = models.ForeignKey(Project, on_delete=CASCADE, blank=False, null=False)
+    group = models.ForeignKey(Group, on_delete=CASCADE, blank=False, null=False)
+
     
 class Level(models.Model):
     project = models.ForeignKey(Project, on_delete=CASCADE, blank=False, null=False)
@@ -725,3 +789,10 @@ class ProfileForm(ModelForm):
     class Meta:
         model = Profile
         fields = ('organization',)    
+
+class GroupForm(ModelForm):
+    class Meta:
+        model = Group
+        fields = '__all__'
+        
+        

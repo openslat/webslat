@@ -44,13 +44,30 @@
     {% endfor %}
     </ul>
     <br/>
-    <a href="{% url 'slat:project_add_user' form.instance.id %}"  class="link_button">Add User</a>
-    {% if users|length > 1 %}
-    <a href="{% url 'slat:project_remove_user' form.instance.id %}"  class="link_button">Remove User</a>
+    {% if can_add %}
+      <a href="{% url 'slat:project_add_user' form.instance.id %}"  class="link_button">Add User</a>
+      {% if users|length > 1 %}
+      <a href="{% url 'slat:project_remove_user' form.instance.id %}"  class="link_button">Remove User</a>
+      {% endif %}
     {% endif %}
     </details>
     {% endif %}
     <br/>
+    {% if groups %}
+      <details>
+      <summary>Allowed Groups</summary>
+      <ul>
+      {% for group in groups %}
+          <li>{{ group.name }}</li>
+      {% endfor %}
+      </ul>
+      <br/>
+      {% if can_add %}
+        <a href="{% url 'slat:project_add_group' form.instance.id %}"  class="link_button">Add Group</a>
+        <a href="{% url 'slat:project_remove_group' form.instance.id %}"  class="link_button">Remove Group</a>
+      {% endif %}
+      </details>
+    {% endif %}
     {% if form.instance.id %}
      <input type="submit" value="Submit Changes" class="normal"/>
     {% else %}

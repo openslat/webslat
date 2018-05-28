@@ -33,27 +33,36 @@
       </div>
 	{% block usertools %}
         {% if has_permission %}
-        <div id="user-tools">
-          {% block welcome-msg %}
-          {% trans 'Welcome,' %}
-          <strong>{% firstof user.get_short_name user.get_username %}</strong>.
-          {% endblock %}
-          {% block userlinks %}
-          {% if site_url %}
-          <a href="{{ site_url }}">{% trans 'View site' %}</a> /
+          <div id="user-tools">
+            {% block welcome-msg %}
+            {% trans 'Welcome,' %}
+            <strong>{% firstof user.get_short_name user.get_username %}</strong>.
+            {% endblock %}
+            {% block userlinks %}
+            {% if site_url %}
+            <a href="{{ site_url }}">{% trans 'View site' %}</a> /
+            {% endif %}
+            {% if user.is_active and user.is_staff %}
+            {% url 'django-admindocs-docroot' as docsroot %}
+            {% if docsroot %}
+            <a href="{{ docsroot }}">{% trans 'Documentation' %}</a> /
+            {% endif %}
+            {% endif %}
+            {% if user.has_usable_password %}
+            <a href="{% url 'admin:password_change' %}">{% trans 'Change password' %}</a> /
+            {% endif %}
+            <a href="{% url 'admin:logout' %}">{% trans 'Log out' %}</a>
+            {% endblock %}
+          </div>
+        {% else %}
+          <!-- Normal user -->
+          {% if request.user.is_authenticated %}
+            <div id="user-tools" style="font-size:x-large">
+              You are logged in as <i><b>{{ request.user.username }}</b></i>.
+              <a href="{% url 'slat:index' %}" class="link_button">Home</a>
+              <a href="{% url 'logout' %}" class="link_button">Logout</a>
+            </div>
           {% endif %}
-          {% if user.is_active and user.is_staff %}
-          {% url 'django-admindocs-docroot' as docsroot %}
-          {% if docsroot %}
-          <a href="{{ docsroot }}">{% trans 'Documentation' %}</a> /
-          {% endif %}
-          {% endif %}
-          {% if user.has_usable_password %}
-          <a href="{% url 'admin:password_change' %}">{% trans 'Change password' %}</a> /
-          {% endif %}
-          <a href="{% url 'admin:logout' %}">{% trans 'Log out' %}</a>
-          {% endblock %}
-        </div>
         {% endif %}
         {% endblock %}
         {% block nav-global %}{% endblock %}
@@ -87,10 +96,6 @@
       <!-- END Content -->
 
       {% block footer %}<div id="footer"></div>{% endblock %}
-      {% if request.user.is_authenticated %}
-          <br/>
-          <a href="{% url 'logout' %}" class="link_button">Logout</a>
-      {% endif %}
     </div>
     <!-- END Container -->
 
