@@ -152,9 +152,9 @@ class PermissionTestCase(TestCase):
 
         # Check the list of projects:
         self.assertEqual(len(pq('ul').children()), 3)
-        self.assertEqual(pq('ul').children().eq(0).text(), "Phil Marlowe's First Project")
-        self.assertEqual(pq('ul').children().eq(1).text(), "Phil Marlowe's Second Project")
-        self.assertEqual(pq('ul').children().eq(2).text(), "Sam Spade's Empty Project")
+        self.assertEqual(pq('ul').children().eq(0).text(), "Sam Spade's Empty Project")
+        self.assertEqual(pq('ul').children().eq(1).text(), "Phil Marlowe's First Project")
+        self.assertEqual(pq('ul').children().eq(2).text(), "Phil Marlowe's Second Project")
 
         # Sam should still see all his projects:
         response = c.post('/login/?next=/slat/', {'username': 'samspade', 'password': 'maltesefalcon'})
@@ -205,9 +205,9 @@ class PermissionTestCase(TestCase):
 
         # Check the list of projects:
         self.assertEqual(len(pq('ul').children()), 3)
-        self.assertEqual(pq('ul').children().eq(0).text(), "Phil Marlowe's First Project")
-        self.assertEqual(pq('ul').children().eq(1).text(), "Phil Marlowe's Second Project")
-        self.assertEqual(pq('ul').children().eq(2).text(), "Sam Spade's Empty Project")
+        self.assertEqual(pq('ul').children().eq(0).text(), "Sam Spade's Empty Project")
+        self.assertEqual(pq('ul').children().eq(1).text(), "Phil Marlowe's First Project")
+        self.assertEqual(pq('ul').children().eq(2).text(), "Phil Marlowe's Second Project")
 
         # Sam should no longer see this project:
         response = c.post('/login/?next=/slat/', {'username': 'samspade', 'password': 'maltesefalcon'})
