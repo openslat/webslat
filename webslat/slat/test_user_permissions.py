@@ -93,9 +93,10 @@ class PermissionTestCase(TestCase):
         self.assertEqual(pq('title').text(), 'WebSLAT Project List')
 
         # Check the list of projects:
+        projects = list(map(lambda x: x.text_content().strip(), pq('ul').children()))
         self.assertEqual(len(pq('ul').children()), 2)
-        self.assertEqual(pq('ul').children().eq(0).text(), "Sam Spade's Demo Project")
-        self.assertEqual(pq('ul').children().eq(1).text(), "Sam Spade's Empty Project")
+        self.assertTrue( "Sam Spade's Demo Project" in projects)
+        self.assertTrue( "Sam Spade's Empty Project" in projects)
 
         # Log in as Philip Marlowe:
         response = c.post('/login/?next=/slat/', {'username': 'marlowe', 'password': 'thebigsleep'})
@@ -105,13 +106,14 @@ class PermissionTestCase(TestCase):
         # Should redirect to the login page:
         response = c.get('/slat/')
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        pq = PyQuery(response.content)
         self.assertEqual(pq('title').text(), 'WebSLAT Project List')
 
         # Check the list of projects:
-        self.assertEqual(len(pq('ul').children()), 2)
-        self.assertEqual(pq('ul').children().eq(0).text(), "Phil Marlowe's First Project")
-        self.assertEqual(pq('ul').children().eq(1).text(), "Phil Marlowe's Second Project")
+        pq = PyQuery(response.content)
+        projects = list(map(lambda x: x.text_content().strip(), pq('ul').children()))
+        self.assertEqual(len(projects), 2)
+        self.assertTrue( "Phil Marlowe's First Project" in projects)
+        self.assertTrue( "Phil Marlowe's Second Project" in projects)
 
         # Log in as Sherlock Holmes:
         response = c.post('/login/?next=/slat/', {'username': 'holmes', 'password': 'elementary'})
@@ -125,8 +127,10 @@ class PermissionTestCase(TestCase):
         self.assertEqual(pq('title').text(), 'WebSLAT Project List')
 
         # Check the list of projects:
-        self.assertEqual(len(pq('ul').children()), 1)
-        self.assertEqual(pq('ul').children().eq(0).text(), "Sherlock's Project")
+        pq = PyQuery(response.content)
+        projects = list(map(lambda x: x.text_content().strip(), pq('ul').children()))
+        self.assertEqual(len(projects), 1)
+        self.assertTrue( "Sherlock's Project" in projects)
 
 
     def test_access_changes(self):
@@ -151,10 +155,12 @@ class PermissionTestCase(TestCase):
         self.assertEqual(pq('title').text(), 'WebSLAT Project List')
 
         # Check the list of projects:
-        self.assertEqual(len(pq('ul').children()), 3)
-        self.assertEqual(pq('ul').children().eq(0).text(), "Sam Spade's Empty Project")
-        self.assertEqual(pq('ul').children().eq(1).text(), "Phil Marlowe's First Project")
-        self.assertEqual(pq('ul').children().eq(2).text(), "Phil Marlowe's Second Project")
+        pq = PyQuery(response.content)
+        projects = list(map(lambda x: x.text_content().strip(), pq('ul').children()))
+        self.assertEqual(len(projects), 3)
+        self.assertTrue( "Sam Spade's Empty Project" in projects)
+        self.assertTrue( "Phil Marlowe's First Project" in projects)
+        self.assertTrue( "Phil Marlowe's Second Project" in projects)
 
         # Sam should still see all his projects:
         response = c.post('/login/?next=/slat/', {'username': 'samspade', 'password': 'maltesefalcon'})
@@ -168,9 +174,11 @@ class PermissionTestCase(TestCase):
         self.assertEqual(pq('title').text(), 'WebSLAT Project List')
 
         # Check the list of projects:
-        self.assertEqual(len(pq('ul').children()), 2)
-        self.assertEqual(pq('ul').children().eq(0).text(), "Sam Spade's Demo Project")
-        self.assertEqual(pq('ul').children().eq(1).text(), "Sam Spade's Empty Project")
+        pq = PyQuery(response.content)
+        projects = list(map(lambda x: x.text_content().strip(), pq('ul').children()))
+        self.assertEqual(len(projects), 2)
+        self.assertTrue( "Sam Spade's Demo Project" in projects)
+        self.assertTrue( "Sam Spade's Empty Project" in projects)
 
         # Sherlock still sees only his own projects:
         response = c.post('/login/?next=/slat/', {'username': 'holmes', 'password': 'elementary'})
@@ -184,8 +192,10 @@ class PermissionTestCase(TestCase):
         self.assertEqual(pq('title').text(), 'WebSLAT Project List')
 
         # Check the list of projects:
-        self.assertEqual(len(pq('ul').children()), 1)
-        self.assertEqual(pq('ul').children().eq(0).text(), "Sherlock's Project")
+        pq = PyQuery(response.content)
+        projects = list(map(lambda x: x.text_content().strip(), pq('ul').children()))
+        self.assertEqual(len(projects), 1)
+        self.assertTrue( "Sherlock's Project" in projects)
 
         # Remove access from Sam:
         Project.objects.get(title_text="Sam Spade's Empty Project").AssignRole(
@@ -204,13 +214,15 @@ class PermissionTestCase(TestCase):
         self.assertEqual(pq('title').text(), 'WebSLAT Project List')
 
         # Check the list of projects:
-        self.assertEqual(len(pq('ul').children()), 3)
-        self.assertEqual(pq('ul').children().eq(0).text(), "Sam Spade's Empty Project")
-        self.assertEqual(pq('ul').children().eq(1).text(), "Phil Marlowe's First Project")
-        self.assertEqual(pq('ul').children().eq(2).text(), "Phil Marlowe's Second Project")
+        projects = list(map(lambda x: x.text_content().strip(), pq('ul').children()))
+        self.assertEqual(len(projects), 3)
+        self.assertTrue("Sam Spade's Empty Project" in projects)
+        self.assertTrue("Phil Marlowe's First Project" in projects)
+        self.assertTrue("Phil Marlowe's Second Project" in projects)
 
         # Sam should no longer see this project:
-        response = c.post('/login/?next=/slat/', {'username': 'samspade', 'password': 'maltesefalcon'})
+        response = c.post('/login/?next=/slat/', 
+                          {'username': 'samspade', 'password': 'maltesefalcon'})
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
 
@@ -221,8 +233,10 @@ class PermissionTestCase(TestCase):
         self.assertEqual(pq('title').text(), 'WebSLAT Project List')
 
         # Check the list of projects:
-        self.assertEqual(len(pq('ul').children()), 1)
-        self.assertEqual(pq('ul').children().eq(0).text(), "Sam Spade's Demo Project")
+        pq = PyQuery(response.content)
+        projects = list(map(lambda x: x.text_content().strip(), pq('ul').children()))
+        self.assertEqual(len(projects), 1)
+        self.assertTrue( "Sam Spade's Demo Project" in projects)
 
         # Sherlock still sees only his own projects:
         response = c.post('/login/?next=/slat/', {'username': 'holmes', 'password': 'elementary'})
@@ -236,8 +250,10 @@ class PermissionTestCase(TestCase):
         self.assertEqual(pq('title').text(), 'WebSLAT Project List')
 
         # Check the list of projects:
-        self.assertEqual(len(pq('ul').children()), 1)
-        self.assertEqual(pq('ul').children().eq(0).text(), "Sherlock's Project")
+        pq = PyQuery(response.content)
+        projects = list(map(lambda x: x.text_content().strip(), pq('ul').children()))
+        self.assertEqual(len(projects), 1)
+        self.assertTrue( "Sherlock's Project" in projects)
 
     def test_url_munging(self):
         """Make sure projects are protected against URL editing"""
