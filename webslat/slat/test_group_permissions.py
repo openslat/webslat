@@ -1,4 +1,5 @@
 import pyslat
+import re
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from slat.models import Profile, Project, \
@@ -167,9 +168,6 @@ class GroupTestCase(TestCase):
         self.assertTrue(group2.IsMember(self.marlowe))
         self.assertTrue(group2.IsMember(self.holmes))
 
-
-
-
     def test_project_addess(self):
         """Create a groups, and test user permissions based on group membership."""
         group1 = Group(name="Group #1")
@@ -228,3 +226,184 @@ class GroupTestCase(TestCase):
         group1.DenyAccess(sams_demo_project)
         self.assertFalse(sams_demo_project.CanRead(self.marlowe))
         self.assertFalse(sams_demo_project.CanWrite(self.marlowe))
+
+    def test_web_membership(self):        
+        """Create a group, and add a some members. Make sure the group
+        page shows the correct members, and that each user is correctly shown
+        as a member/non-member."""
+        
+        group1 = Group(name="Group #1")
+        group1.save()
+        
+        c = Client()
+        # Log in as Sam Spade:
+        response = c.post('/login/?next=/slat/',
+                          {'username': 'samspade', 
+                           'password': 'maltesefalcon'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
+        
+        # Go to Sam's home page, and check the list of groups:
+        response = c.get('/slat/')
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        pq = PyQuery(response.content)
+        groups = []
+        for child in pq('ul').children():
+            if re.compile("^/slat/group/").match(child.getchildren()[0].get('href')):
+                groups.append(child.text_content().strip())
+        self.assertEqual(len(groups), 0)
+
+        # Should be denied access to the group page, because Sam's not a member:
+        group_id = Group.objects.get(name="Group #1").id
+        response = c.get('/slat/group/{}'.format(group_id))
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+
+        # Add Sam to the group, and make sure he shows up on the group's page,
+        # and that the group shows up on his:
+        group1.AddMember(self.samspade)
+
+        # Go to Sam's home page, and check the list of groups:
+        response = c.get('/slat/')
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        pq = PyQuery(response.content)
+        groups = []
+        for child in pq('ul').children():
+            if re.compile("^/slat/group/").match(child.getchildren()[0].get('href')):
+                groups.append(child.text_content().strip())
+        self.assertEqual(len(groups), 1)
+        self.assertTrue("Group #1" in groups)
+
+        # Should be allowed access to the group page, now that Sam's a member:
+        group_id = Group.objects.get(name="Group #1").id
+        response = c.get('/slat/group/{}'.format(group_id))
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        pq = PyQuery(response.content)
+        members = list(map(lambda x: x.text_content(), pq('ul').children()))
+        self.assertEqual(len(members), 1)
+        self.assertTrue("samspade" in members)
+
+        # Other users should *not* be able to access the page:
+        # Try Philip Marlowe first
+        response = c.post('/login/?next=/slat/',
+                          {'username': 'marlowe', 
+                           'password': 'thebigsleep'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
+        
+        # Go to Phil's home page, and check the list of groups:
+        response = c.get('/slat/')
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        pq = PyQuery(response.content)
+        groups = []
+        for child in pq('ul').children():
+            if re.compile("^/slat/group/").match(child.getchildren()[0].get('href')):
+                groups.append(child.text_content().strip())
+        self.assertEqual(len(groups), 0)
+        
+        # Should be denied access to the group page, because Sam's not a member:
+        group_id = Group.objects.get(name="Group #1").id
+        response = c.get('/slat/group/{}'.format(group_id))
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+
+        # Now try Sherlock Holmes first
+        response = c.post('/login/?next=/slat/',
+                          {'username': 'holmes', 
+                           'password': 'elementary'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
+        
+        # Go to Sherlock's home page, and check the list of groups:
+        response = c.get('/slat/')
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        pq = PyQuery(response.content)
+        groups = []
+        for child in pq('ul').children():
+            if re.compile("^/slat/group/").match(child.getchildren()[0].get('href')):
+                groups.append(child.text_content().strip())
+        self.assertEqual(len(groups), 0)
+        
+        # Should be denied access to the group page, because Sam's not a member:
+        group_id = Group.objects.get(name="Group #1").id
+        response = c.get('/slat/group/{}'.format(group_id))
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+
+        # Make sure Phil doesn't have access to Sam Spade's Demo Project:
+        response = c.post('/login/?next=/slat/',
+                          {'username': 'marlowe', 
+                           'password': 'thebigsleep'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
+        
+        # Go to Phil's home page, and check the list of projects:
+        response = c.get('/slat/')
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        pq = PyQuery(response.content)
+        projects = []
+        for child in pq('ul').children():
+            if re.compile("^/slat/project/").match(child.getchildren()[0].get('href')):
+                projects.append(child.text_content().strip())
+        self.assertFalse("Sam Spade's Demo Project" in projects)
+        
+        # Log in as Sam, and add Phil to the group:
+        response = c.post('/login/?next=/slat/',
+                          {'username': 'samspade', 
+                           'password': 'maltesefalcon'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
+
+        response = c.post('/slat/group/{}/add_user'.format(group_id), {'userid': 'marlowe'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+
+        # Log in as Phil, and check group list:
+        response = c.post('/login/?next=/slat/',
+                          {'username': 'marlowe', 
+                           'password': 'thebigsleep'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
+
+        # Go to Phil's home page, and check the project list--should *not* have
+        # access to project yet, as it hasn't been added to the group:
+        response = c.get('/slat/')
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        pq = PyQuery(response.content)
+        projects = []
+        for child in pq('ul').children():
+            if re.compile("^/slat/project/").match(child.getchildren()[0].get('href')):
+                projects.append(child.text_content().strip())
+        self.assertFalse("Sam Spade's Demo Project" in projects)
+
+        # ... but Phil should now be in the group:
+        groups = []
+        for child in pq('ul').children():
+            if re.compile("^/slat/group/").match(child.getchildren()[0].get('href')):
+                groups.append(child.text_content().strip())
+        self.assertTrue("Group #1" in groups)
+
+        # As Sam, add the project to the group:
+        response = c.post('/login/?next=/slat/',
+                          {'username': 'samspade', 
+                           'password': 'maltesefalcon'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
+
+        project_id = Project.objects.get(title_text="Sam Spade's Demo Project").id
+        response = c.post('/slat/project/{}/add_group'.format(project_id), {'groupid': 'Group #1'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+
+        # Log in as Phil, and check that he now as access:
+        response = c.post('/login/?next=/slat/',
+                          {'username': 'marlowe', 
+                           'password': 'thebigsleep'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
+
+        response = c.get('/slat/')
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        pq = PyQuery(response.content)
+        projects = []
+        for child in pq('ul').children():
+            if re.compile("^/slat/project/").match(child.getchildren()[0].get('href')):
+                projects.append(child.text_content().strip())
+        self.assertTrue("Sam Spade's Demo Project" in projects)
+        self.assertFalse("Sam Spade's Empty Project" in projects)

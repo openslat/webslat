@@ -2001,21 +2001,17 @@ def project_add_user(request, project_id):
         raise PermissionDenied
 
     if request.method == 'POST':
-        print("POST")
         form = ProjectAddUserForm(request.POST)
         form.is_valid()
-        print(form.cleaned_data['userid'])
         try:
             user = User.objects.get(username=form.cleaned_data['userid'])
             project.AssignRole(user, ProjectUserPermissions.ROLE_FULL)
             return HttpResponseRedirect(reverse('slat:project', args=(project_id,)))
         except:
-            print("EXCEPTION")
             form.message = "User {} not found.".format(form.cleaned_data['userid'])
             return render(request, 'slat/project_add_user.html', context={'project_id': project_id, 'project': project, 'form': form})
             
     else:
-        print("GET")
         form = ProjectAddUserForm()
         return render(request, 'slat/project_add_user.html', context={'project_id': project_id, 'project': project, 'form': form})
     
@@ -2042,7 +2038,6 @@ def project_remove_user(request, project_id):
                                                                              'form': form})
             
     else:
-        print("GET")
         form = ProjectRemoveUserForm()
         form.fields['userid'].widget = Select()
         users = []
@@ -2066,15 +2061,12 @@ def group(request, group_id=None):
 
         
     if request.method == 'POST':
-        print("POSTING")
         if group:
-            print("GROUP")
             form = GroupForm(request.POST,
                              group,
                              initial=model_to_dict(group))
             form.instance.id = group_id
         else:
-            print("NO GROUP")
             form = GroupForm(request.POST)
 
         if not group or form.has_changed():
@@ -2112,21 +2104,17 @@ def group_add_user(request, group_id):
         raise PermissionDenied
 
     if request.method == 'POST':
-        print("POST")
         form = GroupAddUserForm(request.POST)
         form.is_valid()
-        print(form.cleaned_data['userid'])
         try:
             user = User.objects.get(username=form.cleaned_data['userid'])
             group.AddMember(user)
             return HttpResponseRedirect(reverse('slat:group', args=(group_id,)))
         except:
-            print("EXCEPTION")
             form.message = "User {} not found.".format(form.cleaned_data['userid'])
             return render(request, 'slat/group_add_user.html', context={'group_id':group.id, 'group': group, 'form': form})
             
     else:
-        print("GET")
         form = GroupAddUserForm()
         return render(request, 'slat/group_add_user.html', context={'group_id':group.id, 'group': group, 'form': form})
     
@@ -2182,7 +2170,6 @@ def project_add_group(request, project_id):
     if request.method == 'POST':
         form = ProjectAddGroupForm(request.POST)
         form.is_valid()
-        print(form.cleaned_data['groupid'])
         try:
             group = Group.objects.get(name=form.cleaned_data['groupid'])
             group.GrantAccess(project)
@@ -2234,7 +2221,6 @@ def password_change(request):
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, request.POST)
         if form.is_valid():
-            print("VALID")
             user = form.save()
             update_session_auth_hash(request, user)  # Important!
             messages.success(request, 'Your password was successfully updated!')
