@@ -355,6 +355,11 @@ class GroupTestCase(TestCase):
         response = c.post('/slat/group/{}/add_user'.format(group_id), {'userid': 'marlowe'})
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
 
+        # Try adding a non-existent user to the group:
+        response = c.post('/slat/group/{}/add_user'.format(group_id), {'userid': 'wolfe'})
+        self.assertTrue(re.compile("User wolfe not found.").search(str(response.content)))
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        
         # Log in as Phil, and check group list:
         response = c.post('/login/?next=/slat/',
                           {'username': 'marlowe', 
@@ -407,3 +412,117 @@ class GroupTestCase(TestCase):
                 projects.append(child.text_content().strip())
         self.assertTrue("Sam Spade's Demo Project" in projects)
         self.assertFalse("Sam Spade's Empty Project" in projects)
+
+        # Log in as Holmes, and create another group. Add Sam to the group.
+        # Sam can give the group access to his project--now Holmes has access.
+        # Holmes adds Phil to the group; # now Phil has access. 
+        # Phil removes Holmes from the group; Holmes no longer has access
+        ## Log in as Holmes
+        response = c.post('/login/?next=/slat/',
+                          {'username': 'holmes', 
+                           'password': 'elementary'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
+
+        ## Create the groups
+        response = c.post('/slat/group', {'name': 'Sherlock\'s Friends'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+
+        ## Make sure no one else is in the group:
+        sherlocks_friends = Group.objects.get(name="Sherlock's Friends")
+        self.assertTrue(sherlocks_friends.IsMember(self.holmes))
+        self.assertFalse(sherlocks_friends.IsMember(self.samspade))
+        self.assertFalse(sherlocks_friends.IsMember(self.marlowe))
+
+        ## Add Sam to the group:
+        response = c.post('/slat/group/{}/add_user'.format(sherlocks_friends.id),
+                          {'userid': 'samspade'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+
+        ## Sam gives the group permission to access his project:
+        response = c.post('/login/?next=/slat/',
+                          {'username': 'samspade', 
+                           'password': 'maltesefalcon'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
+        
+        empty_project_id = Project.objects.get(title_text="Sam Spade's Empty Project").id
+        response = c.post('/slat/project/{}/add_group'.format(empty_project_id),
+                          {'groupid': "Sherlock's Friends"})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+
+        ## Log in as Holmes, and confirm Holmes has access:
+        response = c.post('/login/?next=/slat/',
+                          {'username': 'holmes', 
+                           'password': 'elementary'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
+        
+        ## Go to Sherlock's home page, and check the list of projects:
+        response = c.get('/slat/')
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        pq = PyQuery(response.content)
+        projects = []
+        for child in pq('ul').children():
+            if re.compile("^/slat/project/").match(child.getchildren()[0].get('href')):
+                projects.append(child.text_content().strip())
+        self.assertEqual(len(projects), 2)
+        self.assertTrue("Sherlock's Project" in projects)
+        self.assertTrue("Sam Spade's Empty Project" in projects)
+
+        ## Go to Phil's home page, and make sure he can't see the project:
+        response = c.post('/login/?next=/slat/',
+                          {'username': 'marlowe', 
+                           'password': 'thebigsleep'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
+
+        response = c.get('/slat/')
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        pq = PyQuery(response.content)
+        projects = []
+        for child in pq('ul').children():
+            if re.compile("^/slat/project/").match(child.getchildren()[0].get('href')):
+                projects.append(child.text_content().strip())
+        self.assertFalse("Sam Spade's Empty Project" in projects)
+        
+        ## As Sam, add Phil to the group:
+        response = c.post('/login/?next=/slat/',
+                          {'username': 'samspade', 
+                           'password': 'maltesefalcon'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
+
+        response = c.post('/slat/group/{}/add_user'.format(sherlocks_friends.id),
+                          {'userid': 'marlowe'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+
+        ## Now Phil should have access:
+        response = c.post('/login/?next=/slat/',
+                          {'username': 'marlowe', 
+                           'password': 'thebigsleep'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertIsInstance(response, django.http.response.HttpResponseRedirect)
+
+        response = c.get('/slat/')
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        pq = PyQuery(response.content)
+        projects = []
+        for child in pq('ul').children():
+            if re.compile("^/slat/project/").match(child.getchildren()[0].get('href')):
+                projects.append(child.text_content().strip())
+        self.assertTrue("Sam Spade's Empty Project" in projects)
+        
+
+        # More tests to perform:
+        # - Add another group; make sure permissions don't get confused
+        # - Remove user from a group
+        # - Non-owner can't change permissions (i.e, someone who only has
+        #   access by virtue of belonging to a group)
+        # - When non-owner adds a member to a group, new member should have
+        #   appropriate permissions
+        # - When removing self from group, go back to your home page
+        # - When removing someone else from a group, go back to the group page
+
+        
+
