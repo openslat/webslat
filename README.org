@@ -190,9 +190,11 @@ served via Apache.
 		   matplotlib \
 		   scipy \
 		   django \
-		   django-graphos \
+		   django-jchart \
 		   django-autocomplete-light \
-                   django-extensions
+                   django-extensions \
+                   seaborn \
+                   pyquery
                pip3 install django-registration
                pip3 install --upgrade django
 	       deactivate

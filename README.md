@@ -43,13 +43,13 @@ served via Apache.
         
         # If we've used the key with an earlier VM,
         # remove it:
-        ssh-keygen -f "/home/mag109/.ssh/known_hosts" \
-        	   -R [127.0.0.1]:3022
+        ssh-keygen -f "/home/mike/.ssh/known_hosts" \
+                   -R [127.0.0.1]:3022
         
         # Install the key in the VM:
         ssh-copy-id -o "StrictHostKeyChecking no" \
-        	    -i ~/.ssh/vm \
-        	    -p 3022 webslat-user@127.0.0.1
+                    -i ~/.ssh/vm \
+                    -p 3022 webslat-user@127.0.0.1
 
 8.  Run these commands on the VM as root. (I can't figure out how to do this from
     a script on the host machine).
@@ -82,23 +82,24 @@ served via Apache.
     
         echo \
              'if [[ -e SLAT ]]; then
-        	  cd SLAT/linux
-        	  git pull
+                  cd SLAT/linux
+                  git pull
               else
-        	  git clone \
-        	  http://github.com/mikelygee/SLAT
-        	  cd SLAT/linux
+                  git clone \
+                  http://github.com/mikelygee/SLAT
+                  cd SLAT/linux
               fi;
               make' |
              ssh -i ~/.ssh/vm -p 3022 \
-        	 webslat-user@127.0.0.1 |
+                 webslat-user@127.0.0.1 |
              tail -5
+
 10. Add the search paths to `.bashrc`, if they aren't already there;
     
         echo \
             "if ! grep PYTHONPATH .profile; then
-        	 echo export LD_LIBRARY_PATH=~/SLAT/linux/lib >> .profile
-        	 echo export PYTHONPATH=~/SLAT/linux/lib >> .profile
+                 echo export LD_LIBRARY_PATH=~/SLAT/linux/lib >> .profile
+                 echo export PYTHONPATH=~/SLAT/linux/lib >> .profile
              fi
         " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 | tail -5
 
@@ -107,73 +108,169 @@ served via Apache.
         echo "cd SLAT/linux/bin
                ./unit_tests
         " | ssh -i ~/.ssh/vm -p 3022 \
-        	webslat-user@127.0.0.1 2>&1 | tail -5
+                webslat-user@127.0.0.1 2>&1 | tail -5
 
-1.  Run the C++ example2 binary:
+12. Run the C++ example2 binary:
     
         echo "cd SLAT/parser/example2
-        	 ../../linux/bin/example2
+                 ../../linux/bin/example2
         " | ssh -i ~/.ssh/vm -p 3022 \
-        	webslat-user@127.0.0.1 2>&1 | tail -5
-2.  Run the example2 Python script:
+                webslat-user@127.0.0.1 2>&1 | tail -5
+
+13. Run the example2 Python script:
     
         echo "cd SLAT/parser/example2
-        	 ./example2.py
+                 ./example2.py
         " | ssh -i ~/.ssh/vm -p 3022 \
-        	webslat-user@127.0.0.1 2>&1 | tail -5
+                webslat-user@127.0.0.1 2>&1 | tail -5
 
-1.  Run the example2 SLAT script:
+14. Run the example2 SLAT script:
     
         echo "cd SLAT/parser/example2
-        	 ../../linux/scripts/SlatInterpreter.py \
-        	      example2.slat
+                 ../../linux/scripts/SlatInterpreter.py \
+                      example2.slat
         " | ssh -i ~/.ssh/vm -p 3022 \
-        	webslat-user@127.0.0.1 2>&1 | tail -10
+                webslat-user@127.0.0.1 2>&1 | tail -10
 
-2.  Run these commands on the VM as root. (I can't figure out how to do this from
+15. Run these commands on the VM as root. (I can't figure out how to do this from
     a script on the host machine).
     
     This will install the packages needed for `WebSLAT`:
     
         apt-get -y install gfortran \
-        	gsl-bin \
-        	liblapack-dev \
-        	libfreetype6-dev \
-        	python3-tk \
-        	links2
+                gsl-bin \
+                liblapack-dev \
+                libfreetype6-dev \
+                python3-tk \
+                links2
         pip3 install virtualenv
-3.  Set up a virtual python environment
+16. Set up a virtual python environment
     
         echo "virtualenv webslat-env
-        	 source webslat-env/bin/activate
-        	 pip3 install numpy \
-        	     matplotlib \
-        	     scipy \
-        	     django \
-        	     django-graphos
-        	 deactivate
+                 source webslat-env/bin/activate
+                 pip3 install numpy \
+                     matplotlib \
+                     scipy \
+                     django \
+                     django-jchart \
+                     django-autocomplete-light \
+                     django-extensions \
+                     seaborn \
+                     pyquery
+                 pip3 install django-registration
+                 pip3 install --upgrade django
+                 deactivate
         " | ssh -i ~/.ssh/vm -p 3022 \
-        	webslat-user@127.0.0.1 2>&1 | tail -10
+                webslat-user@127.0.0.1 2>&1 | tail -10
 
-1.  Copy the `webslat` files to the VM, since they aren't yet on `github`:
+17. Copy the `webslat` files to the VM:
     
         echo "git clone \
-        	  http://github.com/mikelygee/webslat
+                  http://github.com/mikelygee/webslat
         " | ssh -i ~/.ssh/vm -p 3022 \
-        	webslat-user@127.0.0.1 2>&1 | tail -10
-2.  Copy the `graphos` templates to the `slat` directory:
+                webslat-user@127.0.0.1 2>&1 | tail -10
+
+18. Copy the `graphos` templates to the `slat` directory:
     
-        echo "cd .local/lib/python3.5/site-packages/graphos/templates
+        echo "cd ~/webslat-env/lib/python3.5/site-packages/graphos/templates
               cp -r graphos/ ~/webslat/webslat/slat/templates
         " | ssh -i ~/.ssh/vm -p 3022 \
-        	webslat-user@127.0.0.1 2>&1 | tail -10
-
-1.  Test the `django` server:
+                webslat-user@127.0.0.1 2>&1 | tail -10
+19. Initialise the databse:
     As `webslat-user` on the VM, run:
     
         source webslat-env/bin/activate
         cd webslat/webslat
         python3 manage.py migrate
+
+20. Run the test scripts:
+    As `webslat-user` on the VM, run:
+    
+        python3 manage.py test
+
+21. Seed the databse:
+    As `webslat-user` on the VM, run:
+    
+        python3 manage.py runscript seed_system
+    
+    This will populate the database with several users and projects:
+    
+    <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+    
+    
+    <colgroup>
+    <col  class="org-left" />
+    
+    <col  class="org-left" />
+    
+    <col  class="org-left" />
+    
+    <col  class="org-left" />
+    </colgroup>
+    <thead>
+    <tr>
+    <th scope="col" class="org-left">User ID</th>
+    <th scope="col" class="org-left">Password</th>
+    <th scope="col" class="org-left">Admin?</th>
+    <th scope="col" class="org-left">Projects</th>
+    </tr>
+    </thead>
+    
+    <tbody>
+    <tr>
+    <td class="org-left">slat-admin</td>
+    <td class="org-left">swordfish</td>
+    <td class="org-left">X</td>
+    <td class="org-left">&#xa0;</td>
+    </tr>
+    </tbody>
+    
+    <tbody>
+    <tr>
+    <td class="org-left">samspade</td>
+    <td class="org-left">maltesefalcon</td>
+    <td class="org-left">&#xa0;</td>
+    <td class="org-left">Sam Spade's Demo Project</td>
+    </tr>
+    
+    
+    <tr>
+    <td class="org-left">&#xa0;</td>
+    <td class="org-left">&#xa0;</td>
+    <td class="org-left">&#xa0;</td>
+    <td class="org-left">Sam Spade's Other Demo Project</td>
+    </tr>
+    </tbody>
+    
+    <tbody>
+    <tr>
+    <td class="org-left">marlowe</td>
+    <td class="org-left">thebigsleep</td>
+    <td class="org-left">&#xa0;</td>
+    <td class="org-left">Phil Marlowe's First Project</td>
+    </tr>
+    
+    
+    <tr>
+    <td class="org-left">&#xa0;</td>
+    <td class="org-left">&#xa0;</td>
+    <td class="org-left">&#xa0;</td>
+    <td class="org-left">Phil Marlowe's Second Project</td>
+    </tr>
+    </tbody>
+    
+    <tbody>
+    <tr>
+    <td class="org-left">holmes</td>
+    <td class="org-left">elementary</td>
+    <td class="org-left">&#xa0;</td>
+    <td class="org-left">Sherlock's Project</td>
+    </tr>
+    </tbody>
+    </table>
+22. Test the `django` server:
+    As `webslat-user` on the VM, run:
+    
         python3 manage.py runserver 0:8000
     
     In a separate session, run:
@@ -183,37 +280,38 @@ served via Apache.
     to confirm the server is working.
     
     Quit `links2` and kill the server.
-2.  User `apache2` to serve `webslat`. First, as `root` on the VM, run:
+23. User `apache2` to serve `webslat`. First, as `root` on the VM, run:
     
         apt-get -y install apache2 \
             libapache2-mod-wsgi-py3
-3.  Make sure the `apache2` process can read the database file.
+24. Make sure the `apache2` process can read the database file.
     1.  Assign appropriate permissions:
         
             echo "chmod 664 webslat/webslat/db.sqlite3
                   chmod 775 webslat/webslat
+                  chmod --recursive 744 webslat/webslat/slat/static
             " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 2>&1 | tail -10
-
-1.  Assign the files to the `www-data` group. As root on the VM, run:
     
-        chown :www-data /home/webslat-user/webslat/webslat/db.sqlite3
-        chown :www-data /home/webslat-user/webslat/webslat
-
-1.  Edit `webslat/webslat/webslat/settings.py`
+    2.  Assign the files to the `www-data` group. As root on the VM, run:
+        
+            chown :www-data /home/webslat-user/webslat/webslat/db.sqlite3
+            chown :www-data /home/webslat-user/webslat/webslat
+            chown --recursive :www-data /home/webslat-user/webslat/webslat/slat/static
+25. Edit `webslat/webslat/webslat/settings.py`
     1.  Set:
         
             ALLOWED_HOSTS = ['localhost', '127.0.0.1', '127.0.1.1']
     2.  Set:
         
             STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
-2.  Create the static files:
+26. Create the static files:
     
         echo "source webslat-env/bin/activate
               cd webslat/webslat
              ./manage.py collectstatic
         " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 2>&1 | tail -10
 
-3.  As `root` on the VM, edit `/etc/apache2/sites-available/000-default.conf`, by
+27. As `root` on the VM, edit `/etc/apache2/sites-available/000-default.conf`, by
     adding, inside the `<VirtualHost...>` tag:
     
           Alias /static /home/webslat-user/webslat/webslat/static
@@ -223,7 +321,7 @@ served via Apache.
         
           <Directory /home/webslat-user/webslat/webslat/webslat>
             <Files wsgi.py>
-        	Require all granted
+                Require all granted
             </Files>
         </Directory>
         
@@ -236,11 +334,11 @@ served via Apache.
         apache2ctl configtest
     
     to check the configuration file.
-4.  Install `libslat` where `apache2` can find it. As `root`, on the VM, run:
+28. Install `libslat` where `apache2` can find it. As `root`, on the VM, run:
     
         ln -s /home/webslat-user/SLAT/linux/lib/libslat.so /usr/local/lib
         ldconfig
-5.  Restart the server. As `root`, on the VM, run:
+29. Restart the server. As `root`, on the VM, run:
     
         systemctl restart apache2
 
@@ -253,34 +351,34 @@ To update OpenSLAT and WebSLAT without creating a new image:
              git pull
              make' |
              ssh -i ~/.ssh/vm -p 3022 \
-        	 webslat-user@127.0.0.1 |
+                 webslat-user@127.0.0.1 |
              tail -5
 
-2.  Update WebSLAT:
+1.  Update WebSLAT:
     
         echo \
             'cd webslat
              git pull
              ' |
              ssh -i ~/.ssh/vm -p 3022 \
-        	 webslat-user@127.0.0.1 |
+                 webslat-user@127.0.0.1 |
              tail -5
 
-3.  Run migrations:
+1.  Run migrations:
     
         echo "source webslat-env/bin/activate
               cd webslat/webslat
              yes yes | ./manage.py migrate
         " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 2>&1 | tail -10
 
-4.  Update the static files:
+1.  Update the static files:
     
         echo "source webslat-env/bin/activate
               cd webslat/webslat
              yes yes | ./manage.py collectstatic
         " | ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1 2>&1 | tail -10
 
-5.  Restart the server. As `root`, on the VM, run:
+1.  Restart the server. As `root`, on the VM, run:
     
         systemctl restart apache2
 
