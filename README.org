@@ -313,17 +313,17 @@ served via Apache.
     #+RESULTS:
     #+begin_example
     Using existing test database for alias 'default'...
-    Using existing test database for alias 'constants_db'...
     Using existing test database for alias 'components_db'...
+    Using existing test database for alias 'constants_db'...
     System check identified no issues (0 silenced).
     ...........
     ----------------------------------------------------------------------
-    Ran 11 tests in 9.015s
+    Ran 11 tests in 8.926s
 
     OK
     Preserving test database for alias 'default'...
-    Preserving test database for alias 'constants_db'...
     Preserving test database for alias 'components_db'...
+    Preserving test database for alias 'constants_db'...
     #+end_example
 
 24. Seed the databse:
@@ -350,6 +350,8 @@ served via Apache.
     |------------+---------------+--------+--------------------------------|
     | samspade   | maltesefalcon |        | Sam Spade's Demo Project       |
     |            |               |        | Sam Spade's Other Demo Project |
+    |------------+---------------+--------+--------------------------------|
+    | miles      | samspartner   |        |                                |
     |------------+---------------+--------+--------------------------------|
     | marlowe    | thebigsleep   |        | Phil Marlowe's First Project   |
     |            |               |        | Phil Marlowe's Second Project  |
