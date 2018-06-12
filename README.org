@@ -44,7 +44,7 @@ served via Apache.
    Then click ~Create~
 5. Enable port forwarding:
    - host port 3022 to VM port 22    # For ssh
-   - host port 3080 to VM port 8000  # For server
+   - host port 3080 to VM port 80    # For server
 6. Power on the VM. Boot from =~/Downloads/debian-9.0.0-amd64-netinst.iso=. Run
    the graphical installer.
    - hostname :: WebSLAT
@@ -299,7 +299,7 @@ served via Apache.
 
    #+RESULTS:
 
-22. Run the test scripts:
+23. Run the test scripts:
    #+ATTR_LATEX: :options language=bash-remote
    #+HEADER: :dir /ssh:webslat-vm:
    #+BEGIN_SRC bash :results output :eval ask
@@ -325,8 +325,7 @@ served via Apache.
     Preserving test database for alias 'components_db'...
     #+end_example
 
-
-23. Seed the databse:
+24. Seed the databse:
    #+ATTR_LATEX: :options language=bash-remote
    #+HEADER: :dir /ssh:webslat-vm:
    #+BEGIN_SRC bash :results output :eval ask
@@ -356,7 +355,7 @@ served via Apache.
     |------------+---------------+--------+--------------------------------|
     | holmes     | elementary    |        | Sherlock's Project             |
     |------------+---------------+--------+--------------------------------|
-24. Test the ~django~ server:
+25. Test the ~django~ server:
     As ~webslat-user~ on the VM, run:
    #+ATTR_LATEX: :options language=bash-remote
     #+BEGIN_SRC bash :results output
@@ -374,7 +373,7 @@ served via Apache.
     to confirm the server is working.
 
     Quit ~w3m~ and kill the server.
-25. User ~apache2~ to serve ~webslat~. First, run:
+26. User ~apache2~ to serve ~webslat~. First, run:
    #+ATTR_LATEX: :options language=bash-remote
    #+HEADER: :dir /ssh:webslat-vm:
    #+BEGIN_SRC bash :eval ask :results output
@@ -384,7 +383,7 @@ served via Apache.
 
    #+RESULTS:
 
-26. Make sure the ~apache2~ process can read the database file.
+27. Make sure the ~apache2~ process can read the database file.
     1. Assign appropriate permissions:
        #+ATTR_LATEX: :options language=bash-remote
        #+HEADER: :dir /ssh:webslat-vm:
@@ -407,7 +406,7 @@ served via Apache.
 
        #+RESULTS:
 
-27. Edit ~webslat/webslat/webslat/settings.py~
+28. Edit ~webslat/webslat/webslat/settings.py~
     1. Set =ALLOWED_HOSTS=:
        #+HEADER: :dir /ssh:webslat-vm:
        #+BEGIN_SRC bash :results output :eval ask
@@ -426,7 +425,7 @@ served via Apache.
 
        #+RESULTS:
 
-28. Create the static files:
+29. Create the static files:
    #+ATTR_LATEX: :options language=bash-remote
    #+HEADER: :dir /ssh:webslat-vm:
    #+BEGIN_SRC bash :results output :eval ask
@@ -438,11 +437,14 @@ served via Apache.
 
     #+RESULTS:
 
-29. As ~root~ on the VM, edit ~/etc/apache2/sites-available/000-default.conf~, by
+30. As ~root~ on the VM, edit ~/etc/apache2/sites-available/000-default.conf~, by
     adding, inside the ~<VirtualHost...>~ tag:
+    #+ATTR_LATEX: :options language=bash-remote
+    #+HEADER: :dir /ssh:webslat-vm:
     #+BEGIN_SRC bash :eval ask
-      if [ $(grep webslat-user -c ~/000-default.conf) == 0 ]; then 
-          sed -ie 's|</VirtualHost>|\
+      if [ $(grep webslat-user -c /etc/apache2/sites-available/000-default.conf) == 0 ]
+      then 
+          sudo sed -ie 's|</VirtualHost>|\
               Alias /static /home/webslat-user/webslat/webslat/static \
                 <Directory /home/webslat-user/webslat/webslat/static>\
                   Require all granted\
@@ -457,7 +459,7 @@ served via Apache.
               WSGIDaemonProcess webslat python-home=/home/webslat-user/webslat-env python-path=/home/webslat-user/webslat/webslat:/home/webslat-user/SLAT/linux/lib\
               WSGIProcessGroup webslat\
               WSGIScriptAlias / /home/webslat-user/webslat/webslat/webslat/wsgi.py\
-      </VirtualHost>|' ~/000-default.conf
+      </VirtualHost>|' /etc/apache2/sites-available/000-default.conf
       fi
     #+END_SRC
 
@@ -473,7 +475,8 @@ served via Apache.
     #+RESULTS:
     : Syntax OK
 
-30. Install ~libslat~ where ~apache2~ can find it. Run:
+
+31. Install ~libslat~ where ~apache2~ can find it. Run:
    #+ATTR_LATEX: :options language=bash-remote-root
    #+HEADER: :dir /ssh:webslat-vm:
    #+BEGIN_SRC bash :eval ask :results output
@@ -483,7 +486,7 @@ served via Apache.
 
     #+RESULTS:
 
-31. Restart the server:
+32. Restart the server:
    #+ATTR_LATEX: :options language=bash-remote
    #+HEADER: :dir /ssh:webslat-vm:
    #+BEGIN_SRC bash :eval ask :results output
@@ -491,7 +494,15 @@ served via Apache.
     #+END_SRC
 
     #+RESULTS:
-    
+
+33. Connect from the browser:
+   #+ATTR_LATEX: :options language=bash-local
+   #+BEGIN_SRC bash :eval ask :results output
+     firefox http://localhost:3080
+    #+END_SRC
+
+    #+RESULTS:
+        
 To update OpenSLAT and WebSLAT without creating a new image:
 1. Update OpenSLAT from git, and build:
    #+ATTR_LATEX: :options language=bash-remote
