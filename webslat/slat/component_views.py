@@ -8,10 +8,6 @@ from django.urls import reverse
 from django.forms import modelformset_factory, ValidationError, HiddenInput
 from .nzs import *
 from math import *
-from graphos.sources.model import SimpleDataSource
-from graphos.sources.model import ModelDataSource
-from graphos.renderers.gchart import LineChart
-
 from  .models import *
 from .component_models import *
 from slat.constants import *

@@ -76,9 +76,6 @@ served via Apache.
    #+END_SRC
 
    #+RESULTS:
-   : # Host [127.0.0.1]:3022 found: line 20
-   : /home/mag109/.ssh/known_hosts updated.
-   : Original contents retained as /home/mag109/.ssh/known_hosts.old
    : 
    : Number of key(s) added: 1
    : 
@@ -102,6 +99,7 @@ served via Apache.
    #+END_SRC
 
    #+RESULTS:
+
 9. Test ~ssh~:
    #+ATTR_LATEX: :options language=bash-remote
    #+HEADER: :dir /ssh:webslat-vm:
@@ -131,6 +129,7 @@ served via Apache.
     #+RESULTS:
     : webslat-user
     : root
+
 
 12. Run these commands:
 
@@ -285,6 +284,8 @@ served via Apache.
    #+BEGIN_SRC bash :results output :eval ask
      git clone http://github.com/mikelygee/webslat
     #+END_SRC
+
+    #+RESULTS:
 
 22. Initialise the databse:
    As ~webslat-user~ on the VM, run:
