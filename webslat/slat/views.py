@@ -62,6 +62,10 @@ class IMCostChart(Chart):
                 columns.append('Demolition')
             if im_func.CollapseRate():
                 columns.append('Collapse')
+
+            # Suppress legend if only one line
+            if (len(columns) == 2):
+                self.legend = Legend(display=False)
                         
             data = [columns]
 
