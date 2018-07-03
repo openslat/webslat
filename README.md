@@ -47,12 +47,12 @@ served via Apache.
         # If we've used the key with an earlier VM,
         # remove it:
         ssh-keygen -f "$HOME/.ssh/known_hosts" \
-                   -R [127.0.0.1]:3022
+        	   -R [127.0.0.1]:3022
         
         # Install the key in the VM:
         ssh-copy-id -o "StrictHostKeyChecking no" \
-                    -i ~/.ssh/vm \
-                    -p 3022 webslat-user@127.0.0.1
+        	    -i ~/.ssh/vm \
+        	    -p 3022 webslat-user@127.0.0.1
 
 8.  Configure `ssh` to use the correct port and user name by default:
     
@@ -64,7 +64,7 @@ served via Apache.
             User     webslat-user
             Port     3022
             Hostname 127.0.0.1" \
-                 >> ~/.ssh/config
+        	 >> ~/.ssh/config
         fi
 
 9.  Test `ssh`:
@@ -82,7 +82,7 @@ served via Apache.
         whoami
         sudo whoami
 
-1.  Run these commands:
+12. Run these commands:
     
     This will install the packages needed to build and run `OpenSLAT`:
     
@@ -109,51 +109,51 @@ served via Apache.
         
          sudo pip3 install antlr4-python3-runtime numpy typing
 
-2.  Build the libraries:
+13. Build the libraries:
     
         if [[ -e SLAT ]]; then
             cd SLAT/linux
             git pull
         else
             git clone \
-                http://github.com/mikelygee/SLAT
+        	http://github.com/mikelygee/SLAT
             cd SLAT/linux
         fi;
         make
 
-3.  Add the search paths to `.profile`, if they aren't already there;
+14. Add the search paths to `.profile`, if they aren't already there;
     
         if ! grep -q PYTHONPATH .profile; then
             echo export LD_LIBRARY_PATH=~/SLAT/linux/lib >> .profile
             echo export PYTHONPATH=~/SLAT/linux/lib >> .profile
         fi
 
-4.  Run the unit tests:
+15. Run the unit tests:
     
         source .profile
         cd SLAT/linux/bin
         ./unit_tests
 
-5.  Run the C++ example2 binary:
+16. Run the C++ example2 binary:
     
         source .profile
         cd SLAT/parser/example2
         ../../linux/bin/example2
 
-6.  Run the example2 Python script:
+17. Run the example2 Python script:
     
         source .profile
         cd SLAT/parser/example2
         ./example2.py
 
-7.  Run the example2 SLAT script:
+18. Run the example2 SLAT script:
     
         source .profile
         cd SLAT/parser/example2
         ../../linux/scripts/SlatInterpreter.py \
             example2.slat
 
-8.  Run these commands:
+19. Run these commands:
     
     This will install the packages needed for `WebSLAT`:
     
@@ -165,11 +165,28 @@ served via Apache.
              w3m
         sudo pip3 install virtualenv
 
-9.  Copy the `webslat` files to the VM:
+20. Set up a virtual python environment
+    
+        virtualenv webslat-env
+        source webslat-env/bin/activate
+        pip3 install numpy \
+             matplotlib \
+             scipy \
+             django \
+             django-jchart \
+             django-autocomplete-light \
+             django-extensions \
+             seaborn \
+             pyquery
+        pip3 install django-registration
+        pip3 install --upgrade django
+        deactivate
+
+21. Copy the `webslat` files to the VM:
     
         git clone http://github.com/mikelygee/webslat
 
-10. Initialise the databse:
+22. Initialise the databse:
     As `webslat-user` on the VM, run:
     
         source .profile
@@ -177,105 +194,106 @@ served via Apache.
         cd webslat/webslat
         python3 manage.py migrate
 
-11. Run the test scripts:
+23. Run the test scripts:
     
         source .profile
         source webslat-env/bin/activate
         cd webslat/webslat
         ./runtests.sh 2>&1
 
-12. Seed the databse:
+24. Seed the databse:
     
         source .profile
         source webslat-env/bin/activate
         cd webslat/webslat
         python3 manage.py runscript seed_system
-    
-    This will populate the database with several users and projects:
-    
-    <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
-    
-    
-    <colgroup>
-    <col  class="org-left" />
-    
-    <col  class="org-left" />
-    
-    <col  class="org-left" />
-    
-    <col  class="org-left" />
-    </colgroup>
-    <thead>
-    <tr>
-    <th scope="col" class="org-left">User ID</th>
-    <th scope="col" class="org-left">Password</th>
-    <th scope="col" class="org-left">Admin?</th>
-    <th scope="col" class="org-left">Projects</th>
-    </tr>
-    </thead>
-    
-    <tbody>
-    <tr>
-    <td class="org-left">slat-admin</td>
-    <td class="org-left">swordfish</td>
-    <td class="org-left">X</td>
-    <td class="org-left">&#xa0;</td>
-    </tr>
-    </tbody>
-    
-    <tbody>
-    <tr>
-    <td class="org-left">samspade</td>
-    <td class="org-left">maltesefalcon</td>
-    <td class="org-left">&#xa0;</td>
-    <td class="org-left">Sam Spade's Demo Project</td>
-    </tr>
-    
-    
-    <tr>
-    <td class="org-left">&#xa0;</td>
-    <td class="org-left">&#xa0;</td>
-    <td class="org-left">&#xa0;</td>
-    <td class="org-left">Sam Spade's Other Demo Project</td>
-    </tr>
-    </tbody>
-    
-    <tbody>
-    <tr>
-    <td class="org-left">miles</td>
-    <td class="org-left">samspartner</td>
-    <td class="org-left">&#xa0;</td>
-    <td class="org-left">&#xa0;</td>
-    </tr>
-    </tbody>
-    
-    <tbody>
-    <tr>
-    <td class="org-left">marlowe</td>
-    <td class="org-left">thebigsleep</td>
-    <td class="org-left">&#xa0;</td>
-    <td class="org-left">Phil Marlowe's First Project</td>
-    </tr>
-    
-    
-    <tr>
-    <td class="org-left">&#xa0;</td>
-    <td class="org-left">&#xa0;</td>
-    <td class="org-left">&#xa0;</td>
-    <td class="org-left">Phil Marlowe's Second Project</td>
-    </tr>
-    </tbody>
-    
-    <tbody>
-    <tr>
-    <td class="org-left">holmes</td>
-    <td class="org-left">elementary</td>
-    <td class="org-left">&#xa0;</td>
-    <td class="org-left">Sherlock's Project</td>
-    </tr>
-    </tbody>
-    </table>
-13. Test the `django` server:
+
+This will populate the database with several users and projects:
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">User ID</th>
+<th scope="col" class="org-left">Password</th>
+<th scope="col" class="org-left">Admin?</th>
+<th scope="col" class="org-left">Projects</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td class="org-left">slat-admin</td>
+<td class="org-left">swordfish</td>
+<td class="org-left">X</td>
+<td class="org-left">&#xa0;</td>
+</tr>
+</tbody>
+
+<tbody>
+<tr>
+<td class="org-left">samspade</td>
+<td class="org-left">maltesefalcon</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Sam Spade's Demo Project</td>
+</tr>
+
+
+<tr>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Sam Spade's Other Demo Project</td>
+</tr>
+</tbody>
+
+<tbody>
+<tr>
+<td class="org-left">miles</td>
+<td class="org-left">samspartner</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+</tr>
+</tbody>
+
+<tbody>
+<tr>
+<td class="org-left">marlowe</td>
+<td class="org-left">thebigsleep</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Phil Marlowe's First Project</td>
+</tr>
+
+
+<tr>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Phil Marlowe's Second Project</td>
+</tr>
+</tbody>
+
+<tbody>
+<tr>
+<td class="org-left">holmes</td>
+<td class="org-left">elementary</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Sherlock's Project</td>
+</tr>
+</tbody>
+</table>
+
+1.  Test the `django` server:
     As `webslat-user` on the VM, run:
     
         # Can't run this from this file, because =runserver= won't return.
@@ -290,12 +308,12 @@ served via Apache.
     to confirm the server is working.
     
     Quit `w3m` and kill the server.
-14. User `apache2` to serve `webslat`. First, run:
+2.  User `apache2` to serve `webslat`. First, run:
     
         sudo apt-get -y install apache2 \
              libapache2-mod-wsgi-py3
 
-15. Make sure the `apache2` process can read the database file.
+3.  Make sure the `apache2` process can read the database file.
     1.  Assign appropriate permissions:
         
             chmod 664 webslat/webslat/db.sqlite3
@@ -308,7 +326,7 @@ served via Apache.
             sudo chown :www-data /home/webslat-user/webslat/webslat
             sudo chown --recursive :www-data /home/webslat-user/webslat/webslat/slat/static
 
-16. Edit `webslat/webslat/webslat/settings.py`
+4.  Edit `webslat/webslat/webslat/settings.py`
     1.  Set `ALLOWED_HOSTS`:
         
             sed -ie "s/ALLOWED_HOSTS.*$/ALLOWED_HOSTS=['localhost', '127.0.0.1', '127.0.1.1']/" \
@@ -319,33 +337,33 @@ served via Apache.
             sed -ie "s/STATIC_ROOT.*/STATIC_ROOT = os.path.join(BASE_DIR, 'static\/')/" \
                 webslat/webslat/webslat/settings.py
 
-17. Create the static files:
+5.  Create the static files:
     
         source .profile
         source webslat-env/bin/activate
         cd webslat/webslat
         ./manage.py collectstatic
 
-18. As `root` on the VM, edit `/etc/apache2/sites-available/000-default.conf`, by
+6.  As `root` on the VM, edit `/etc/apache2/sites-available/000-default.conf`, by
     adding, inside the `<VirtualHost...>` tag:
     
         if [ $(grep webslat-user -c /etc/apache2/sites-available/000-default.conf) == 0 ]
         then 
             sudo sed -ie 's|</VirtualHost>|\
-                Alias /static /home/webslat-user/webslat/webslat/static \
-                  <Directory /home/webslat-user/webslat/webslat/static>\
-                    Require all granted\
-                </Directory>\
+        	Alias /static /home/webslat-user/webslat/webslat/static \
+        	  <Directory /home/webslat-user/webslat/webslat/static>\
+        	    Require all granted\
+        	</Directory>\
         \
-                <Directory /home/webslat-user/webslat/webslat/webslat>\
-                  <Files wsgi.py>\
-                      Require all granted\
-                  </Files>\
-                </Directory>\
+        	<Directory /home/webslat-user/webslat/webslat/webslat>\
+        	  <Files wsgi.py>\
+        	      Require all granted\
+        	  </Files>\
+        	</Directory>\
         \
-                WSGIDaemonProcess webslat python-home=/home/webslat-user/webslat-env python-path=/home/webslat-user/webslat/webslat:/home/webslat-user/SLAT/linux/lib\
-                WSGIProcessGroup webslat\
-                WSGIScriptAlias / /home/webslat-user/webslat/webslat/webslat/wsgi.py\
+        	WSGIDaemonProcess webslat python-home=/home/webslat-user/webslat-env python-path=/home/webslat-user/webslat/webslat:/home/webslat-user/SLAT/linux/lib\
+        	WSGIProcessGroup webslat\
+        	WSGIScriptAlias / /home/webslat-user/webslat/webslat/webslat/wsgi.py\
         </VirtualHost>|' /etc/apache2/sites-available/000-default.conf
         fi
     
@@ -353,16 +371,16 @@ served via Apache.
     
         sudo apache2ctl configtest 2>&1
 
-1.  Install `libslat` where `apache2` can find it. Run:
+7.  Install `libslat` where `apache2` can find it. Run:
     
         sudo ln -s /home/webslat-user/SLAT/linux/lib/libslat.so /usr/local/lib
         sudo ldconfig
 
-2.  Restart the server:
+8.  Restart the server:
     
         sudo systemctl restart apache2
 
-3.  Connect from the browser:
+9.  Connect from the browser:
     
         firefox http://localhost:3080
 
@@ -374,26 +392,26 @@ To update OpenSLAT and WebSLAT without creating a new image:
         git pull
         make
 
-1.  Update WebSLAT:
+2.  Update WebSLAT:
     
         cd webslat
         git pull
 
-1.  Run migrations:
+3.  Run migrations:
     
         source .profile
         source webslat-env/bin/activate
         cd webslat/webslat
         yes yes | ./manage.py migrate
 
-2.  Update the static files:
+4.  Update the static files:
     
         source .profile
         source webslat-env/bin/activate
         cd webslat/webslat
         yes yes | ./manage.py collectstatic
 
-1.  Restart the server:
+5.  Restart the server:
     
         sudo systemctl restart apache2
 
