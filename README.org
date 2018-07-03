@@ -75,14 +75,6 @@ served via Apache.
 		 -p 3022 webslat-user@127.0.0.1 
    #+END_SRC
 
-   #+RESULTS:
-   : 
-   : Number of key(s) added: 1
-   : 
-   : Now try logging into the machine, with:   "ssh -o 'StrictHostKeyChecking no' -p '3022' 'webslat-user@127.0.0.1'"
-   : and check to make sure that only the key(s) you wanted were added.
-   : 
-
 8. Configure =ssh= to use the correct port and user name by default:
    #+ATTR_LATEX: :options language=bash-local
    #+BEGIN_SRC bash :results output :eval ask
@@ -98,17 +90,12 @@ served via Apache.
      fi
    #+END_SRC
 
-   #+RESULTS:
-
 9. Test ~ssh~:
    #+ATTR_LATEX: :options language=bash-remote
    #+HEADER: :dir /ssh:webslat-vm:
    #+BEGIN_SRC bash :eval ask :results output 
    whoami
    #+END_SRC
-
-   #+RESULTS:
-   : webslat-user
 
 10. Give ~webslat-user~ ~sudo~ privileges, without requiring a password. On the
     VM, as ~root~, run:
@@ -125,11 +112,6 @@ served via Apache.
     whoami
     sudo whoami
     #+END_SRC
-
-    #+RESULTS:
-    : webslat-user
-    : root
-
 
 12. Run these commands:
 
@@ -161,8 +143,6 @@ served via Apache.
      sudo pip3 install antlr4-python3-runtime numpy typing
     #+END_SRC
 
-    #+RESULTS:
-
 13. Build the libraries:
     #+ATTR_LATEX: :options language=bash-remote
     #+HEADER: :dir /ssh:webslat-vm:
@@ -177,8 +157,6 @@ served via Apache.
       fi;
       make
      #+END_SRC
-
-     #+RESULTS:
 
 14. Add the search paths to ~.profile~, if they aren't already there;
    #+ATTR_LATEX: :options language=bash-remote
@@ -201,11 +179,6 @@ served via Apache.
      ./unit_tests
     #+END_SRC
 
-    #+RESULTS:
-    : Running 58 test cases...
-    : Structure: IM Changed; clearing cache.
-    : Structure: IM Changed; clearing cache.
-
 16. Run the C++ example2 binary:
    #+ATTR_LATEX: :options language=bash-remote
    #+HEADER: :dir /ssh:webslat-vm:
@@ -214,8 +187,6 @@ served via Apache.
      cd SLAT/parser/example2
      ../../linux/bin/example2
     #+END_SRC
-
-    #+RESULTS:
 
 17. Run the example2 Python script:
    #+ATTR_LATEX: :options language=bash-remote
@@ -226,8 +197,6 @@ served via Apache.
      ./example2.py
     #+END_SRC
 
-    #+RESULTS:
-
 18. Run the example2 SLAT script:
    #+ATTR_LATEX: :options language=bash-remote
    #+HEADER: :dir /ssh:webslat-vm:
@@ -237,8 +206,6 @@ served via Apache.
      ../../linux/scripts/SlatInterpreter.py \
          example2.slat
     #+END_SRC
-
-    #+RESULTS:
 
 19. Run these commands:
 
@@ -255,22 +222,21 @@ served via Apache.
      sudo pip3 install virtualenv
   #+END_SRC
 
-  #+RESULTS:
 20. Set up a virtual python environment
    #+ATTR_LATEX: :options language=bash-remote
    #+HEADER: :dir /ssh:webslat-vm:
-   #+BEGIN_SRC bash :results output :eval ask
+   #+BEGIN_SRC bash :eval ask :results output
      virtualenv webslat-env
      source webslat-env/bin/activate
      pip3 install numpy \
-          matplotlib \
-          scipy \
-          django \
-          django-jchart \
-          django-autocomplete-light \
-          django-extensions \
-          seaborn \
-          pyquery
+	  matplotlib \
+	  scipy \
+	  django \
+	  django-jchart \
+	  django-autocomplete-light \
+	  django-extensions \
+	  seaborn \
+	  pyquery
      pip3 install django-registration
      pip3 install --upgrade django
      deactivate
@@ -311,20 +277,6 @@ served via Apache.
     #+END_SRC
 
     #+RESULTS:
-    #+begin_example
-    Using existing test database for alias 'default'...
-    Using existing test database for alias 'components_db'...
-    Using existing test database for alias 'constants_db'...
-    System check identified no issues (0 silenced).
-    ...........
-    ----------------------------------------------------------------------
-    Ran 11 tests in 8.926s
-
-    OK
-    Preserving test database for alias 'default'...
-    Preserving test database for alias 'components_db'...
-    Preserving test database for alias 'constants_db'...
-    #+end_example
 
 24. Seed the databse:
    #+ATTR_LATEX: :options language=bash-remote
@@ -336,12 +288,6 @@ served via Apache.
       python3 manage.py runscript seed_system
     #+END_SRC
 
-    #+RESULTS:
-    : slat-admin
-    : samspade
-    : miles
-    : marlowe
-    : holmes
 
     This will populate the database with several users and projects:
     | User ID    | Password      | Admin? | Projects                       |
@@ -478,7 +424,6 @@ served via Apache.
     #+RESULTS:
     : Syntax OK
 
-
 31. Install ~libslat~ where ~apache2~ can find it. Run:
    #+ATTR_LATEX: :options language=bash-remote-root
    #+HEADER: :dir /ssh:webslat-vm:
@@ -520,7 +465,6 @@ To update OpenSLAT and WebSLAT without creating a new image:
     : Already up-to-date.
     : make: Nothing to be done for 'all'.
 
-
 2. Update WebSLAT:
    #+ATTR_LATEX: :options language=bash-remote
    #+HEADER: :dir /ssh:webslat-vm:
@@ -531,7 +475,6 @@ To update OpenSLAT and WebSLAT without creating a new image:
 
    #+RESULTS:
    : Already up-to-date.
-
 
 3. Run migrations:
    #+ATTR_LATEX: :options language=bash-remote
@@ -554,7 +497,6 @@ To update OpenSLAT and WebSLAT without creating a new image:
     #+END_SRC
 
     #+RESULTS:
-
 
 5. Restart the server:
    #+ATTR_LATEX: :options language=bash-remote
