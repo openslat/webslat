@@ -395,10 +395,9 @@ class IM(models.Model):
                 y.append(1/r)
                 x.append(C(self.nzs.soil_class,
                            self.nzs.period,
-                           r, 0.13, None
-#                           self.nzs.location.z,
-#                           self.nzs.location.min_distance))
-                ))
+                           r, 
+                           self.nzs.location.z,
+                           self.nzs.location.min_distance))
             im_func = pyslat.im(self.id, pyslat.detfn('<nzs>', 'loglog', [x.copy(), y.copy()]))
             if y[-1] > project.rarity:
                 im_func.set_plot_max(x[-1])

@@ -36,6 +36,43 @@ import seaborn as sns
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
+class IMPDFChart(Chart):
+    chart_type = 'line'
+    legend = False
+    scales = {
+        'xAxes': [Axes(type='linear', position='bottom')],
+    }
+
+    def __init__(self, project):
+        super(IMPDFChart, self).__init__()
+        self.pdf = []
+
+        # This was copied from earlier code, which calculated the data,
+        # then passed it to the chart. This can be cleaned up to 
+        # eliminate intermediate variables and streamline the process.
+        if project.IM and len(project.model().ComponentsByEDP()) > 0:
+            building = project.model()
+            im_func = project.IM.model()
+                
+            xlimit = im_func.plot_max()*5
+
+            headings = ['IM', 'PDF']
+
+            N = 50
+            for i in range(N + 1):
+                im = i/N * xlimit
+                self.pdf.append({'x': im, 'y': building.pdf(im)})
+
+    def get_datasets(self, *args, **kwargs):
+        datasets = [DataSet(
+            type='line',
+            label='PDF',
+            data=self.pdf,
+            borderColor=rgba(255,99,132,1.0),
+            backgroundColor=rgba(0,0,0,0)
+        )]
+        return datasets
+    
 class IMCostChart(Chart):
     chart_type = 'line'
     scales = {
@@ -159,7 +196,7 @@ class ExpectedLoss_Over_Time_Chart(Chart):
             self.data.append({'x': year, 'y': loss})
         
         if isnan(building.getRebuildCost().mean()):
-            title = "EAL=${}\nDiscount rate = {}%".format(building.AnnualCost().mean(), 100 * rate)
+            title = "EAL=${}\nDiscount rate = {}%".format(round(building.AnnualCost().mean()), 100 * rate)
         else:
             title = "EAL=${}\n({} % of rebuild cost)\nDiscount rate = {}%".format(
                 round(building.AnnualCost().mean()),
@@ -536,6 +573,7 @@ def demo(request):
 @login_required
 def project(request, project_id=None):
     chart = None
+    pdf_chart = None
     if request.method == 'POST':
         if project_id:
             project = Project.objects.get(pk=project_id)
@@ -591,6 +629,7 @@ def project(request, project_id=None):
             form = ProjectForm(instance=project, initial=model_to_dict(project))
             
             chart = IMCostChart(project)
+            pdf_chart = IMPDFChart(project)
                 
             levels = project.num_levels()
             levels_form = None
@@ -609,6 +648,7 @@ def project(request, project_id=None):
                                                  'levels': levels, 
                                                  'levels_form': levels_form, 
                                                  'chart': chart,
+                                                 'pdfchart': pdf_chart,
                                                  'users': users, 
                                                  'groups': groups,
                                                  'can_add': can_add})
