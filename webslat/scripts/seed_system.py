@@ -67,8 +67,9 @@ def run():
     # Create some demo projects
     samspade = User.objects.get(username='samspade')
     if len(Project.objects.filter(title_text="Sam Spade's Demo Project")) == 0:
-        project = make_demo(samspade)
-        project.title_text = "Sam Spade's Demo Project"
+        project = make_demo(samspade, 
+                            "Sam Spade's Demo Project", 
+                            "A demo project")
         project.save()
         
         # Add a component group with a cost adjustment and comment
@@ -85,19 +86,22 @@ def run():
         group.save()
 
     if len(Project.objects.filter(title_text="Sam Spade's Other Demo Project")) == 0:
-        project = make_demo(samspade)
-        project.title_text = "Sam Spade's Other Demo Project"
+        project = make_demo(samspade, 
+                            "Sam Spade's Other Demo Project",
+                            "Anothe demo project")
         project.save()
 
     marlowe = User.objects.get(username='marlowe')
     if len(Project.objects.filter(title_text="Phil Marlowe's First Project")) == 0:
-        project = make_demo(marlowe)
-        project.title_text = "Phil Marlowe's First Project"
+        project = make_demo(marlowe, 
+                            "Phil Marlowe's First Project",
+                            "A demo project")
         project.save()
 
     if len(Project.objects.filter(title_text="Phil Marlowe's Second Project")) == 0:
-        project = make_demo(marlowe)
-        project.title_text = "Phil Marlowe's Second Project"
+        project = make_demo(marlowe, 
+                            "Phil Marlowe's Second Project",
+                            "A second demo project")
         project.save()
 
     if len(Project.objects.filter(title_text="Sherlock's Project")) == 0:

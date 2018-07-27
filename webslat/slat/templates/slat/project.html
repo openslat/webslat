@@ -2,6 +2,7 @@
 {% load i18n static %}
 {% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
 {{ form.media }}
+{{ form1.media }}
 
 {% endblock %}
 
@@ -9,33 +10,54 @@
 {% block title %}WebSLAT Project {{ form.instance.title_text }}{% endblock %}
 {% block content_title %}{{ form.instance.title_text }}{% endblock %}
 {% block content %}
+<script type="text/JavaScript">
+<!--
+
+function Refresh( ) {
+    var e = document.getElementById("id_project_type")
+    var d = e.value
+    if (d == "DEMO") {
+        document.getElementById("case_demo").style.display="block";
+    } else {
+        document.getElementById("case_demo").style.display="none";
+    }
+    if (d == "EMPTY") {
+        document.getElementById("case_empty").style.display="block";
+        document.getElementById("id_levels").setAttribute("required", "")
+    } else {
+        document.getElementById("case_empty").style.display="none";
+        document.getElementById("id_levels").removeAttribute("required")
+    }
+    if (d == "ETABS") {
+        document.getElementById("case_etabs").style.display="block";
+        document.getElementById("id_strength").setAttribute("required", "")
+        document.getElementById("id_path").setAttribute("required", "")
+    } else {
+        document.getElementById("case_etabs").style.display="none";
+        document.getElementById("id_strength").removeAttribute("required")
+        document.getElementById("id_path").removeAttribute("required")
+    }
+}
+// --!>
+</script>
 {% if form.instance.id %}
-<form action="{% url 'slat:project' form.instance.id %}" method="post">
-{% else %}
-<p>Create a Project</P>
-<form action="{% url 'slat:project' %}" method="post">
-{% endif %} 
+  <form action="{% url 'slat:project' form.instance.id %}" method="post">
     {% csrf_token %}
-    <table class="loose"><tr class="loose"><td class="loose"> <label for="id_title_text"> Title </label></td><td class="loose"> {{ form.title_text }}</td></tr>
+    <table class="loose">
+      <tr class="loose"><td class="loose"> <label for="id_title_text"> Title </label></td><td class="loose"> {{ form.title_text }}</td></tr>
       <tr class="loose"><td class="loose"><label for="id_description_text"> Description </label></td><td class="loose">{{ form.description_text }}</td></tr>
       <tr class="loose"><td class="loose"><label for="id_rarity"> Frequency: </td><td class="loose"> 1 in {{form.rarity }} years.</td></tr>
-    {% if levels %}
-      <tr class="loose"><td class="loose"><label for="id_levels"> Levels </label></td><td class="loose">{{ levels }}</td></tr>
-    {% endif %}
-    {% if levels_form %}
-      <tr class="loose"><td class="loose"><label for="id_levels"> Levels </label></td><td class="loose">{{ levels_form.levels }}</td></tr>
-    {% endif %}
-      </table>
-    {{ form.IM }}
-    <details>
-    <summary>Demolition and Collapse Parameters</summary>
-    <table border="1"><tr><th>Event</th><th>mean(IM)</th><th>sd(ln(IM))</th><th>mean(Cost)</th><th>sd(ln(Cost))</th></tr>
-    <tr><th>Collapse</th><td> {{ form.mean_im_collapse }} </td><td> {{ form.sd_ln_im_collapse }} </td><td> {{ form.mean_cost_collapse }} </td><td> {{ form.sd_ln_cost_collapse }} </td></tr>
-    <tr><th>Demolition</th><td> {{ form.mean_im_demolition }} </td><td> {{ form.sd_ln_im_demolition }} </td><td> {{ form.mean_cost_demolition }} </td><td> {{ form.sd_ln_cost_demolition }} </td></tr>
     </table>
-    </details>
+    <p><b>Demolition and Collapse Parameters</b></p>
+    <table class="loose" border="1">
+      <tr><th>Event</th><th>mean(IM)</th><th>sd(ln(IM))</th><th>mean(Cost)</th><th>sd(ln(Cost))</th></tr>
+      <tr><th>Collapse</th><td> {{ form.mean_im_collapse }} </td><td> {{ form.sd_ln_im_collapse }} </td>
+        <td> {{ form.mean_cost_collapse }} </td><td> {{ form.sd_ln_cost_collapse }} </td></tr>
+      <tr><th>Demolition</th><td> {{ form.mean_im_demolition }} </td><td> {{ form.sd_ln_im_demolition }} </td>
+        <td> {{ form.mean_cost_demolition }} </td><td> {{ form.sd_ln_cost_demolition }} </td></tr>
+    </table>
+    {{ form.IM }}
     <br/>
-    {% if users %}
     <details>
     <summary>Allowed Users</summary>
     <ul>
@@ -51,9 +73,7 @@
       {% endif %}
     {% endif %}
     </details>
-    {% endif %}
     <br/>
-    {% if groups %}
       <details>
       <summary>Allowed Groups</summary>
       <ul>
@@ -67,16 +87,44 @@
         <a href="{% url 'slat:project_remove_group' form.instance.id %}"  class="link_button">Remove Group</a>
       {% endif %}
       </details>
-    {% endif %}
-    {% if form.instance.id %}
      <input type="submit" value="Submit Changes" class="normal"/>
-    {% else %}
-     <table><tr><td style="vertical-align:middle">
-               <input type="submit" value="Create Project" class="normal"/>
-           </td><td style="vertical-align:bottom">
-               <a href="{% url 'slat:index' %}"  class="link_button">Cancel</a>
-           </td></tr></table>
-     {% endif %}
+{% else %}
+  <p>Create a Project</P>
+  <form enctype="multipart/form-data" action="{% url 'slat:project' %}" method="post">
+  {% csrf_token %}
+  <table class="loose">
+    <tr class="loose"><td class="loose"> <label for="id_title_text"> Title </label></td><td class="loose"> {{ form1.title }}</td></tr>
+    <tr class="loose"><td class="loose"><label for="id_description_text"> Description </label></td><td class="loose">{{ form1.description }}</td></tr>
+  </table>
+  {{ project_type_form }}
+  <div id="case_demo" style="display:none">
+      <p>Click the "Create Project" button to populate the project
+        based on the Red Book building.</p>
+    </div>
+    <div id="case_empty" style="display:none">
+      <table class="loose">
+        <tr class="loose"><td class="loose"><label for="id_rarity"> Frequency: </td><td class="loose"> 1 in {{form2.rarity }} years.</td></tr>
+        <tr class="loose"><td class="loose"><label for="id_levels"> Levels </label></td><td class="loose">{{ form2.levels }}</td></tr>
+      </table>
+      <p><b>Demolition and Collapse Parameters</b></p>
+      <table class="loose" border="1">
+        <tr><th>Event</th><th>mean(IM)</th><th>sd(ln(IM))</th><th>mean(Cost)</th><th>sd(ln(Cost))</th></tr>
+        <tr><th>Collapse</th><td> {{ form2.mean_im_collapse }} </td><td> {{ form2.sd_ln_im_collapse }} </td>
+          <td> {{ form2.mean_cost_collapse }} </td><td> {{ form2.sd_ln_cost_collapse }} </td></tr>
+        <tr><th>Demolition</th><td> {{ form2.mean_im_demolition }} </td><td> {{ form2.sd_ln_im_demolition }} </td>
+          <td> {{ form2.mean_cost_demolition }} </td><td> {{ form2.sd_ln_cost_demolition }} </td></tr>
+      </table>
+    </div>
+    <div id="case_etabs" style="display:none">
+      {{ form3.as_p }}
+    </div>
+    <table>
+      <tr><td style="vertical-align:middle">
+        <input type="submit" value="Create Project" class="normal"/>
+      </td><td style="vertical-align:bottom">
+        <a href="{% url 'slat:index' %}"  class="link_button">Cancel</a>
+     </td></tr></table>
+{% endif %} 
 </form>
 
     {% if chart %} 

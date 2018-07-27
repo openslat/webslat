@@ -57,8 +57,9 @@ class GroupTestCase(TestCase):
         self.samspade = User.objects.get(username='samspade')
 
         if len(Project.objects.filter(title_text="Sam Spade's Demo Project")) == 0:
-            project = make_demo(self.samspade)
-            project.title_text = "Sam Spade's Demo Project"
+            project = make_demo(self.samspade,
+                                "Sam Spade's Demo Project",
+                                "This is Sam's demo project.")
             project.save()
 
         if len(Project.objects.filter(title_text="Sam Spade's Empty Project")) == 0:
@@ -71,19 +72,22 @@ class GroupTestCase(TestCase):
 
         self.marlowe = User.objects.get(username='marlowe')
         if len(Project.objects.filter(title_text="Phil Marlowe's First Project")) == 0:
-            project = make_demo(self.marlowe)
-            project.title_text = "Phil Marlowe's First Project"
+            project = make_demo(self.marlowe, 
+                                "Phil Marlowe's First Project",
+                                "This is Marlowe's first project.")
             project.save()
 
         if len(Project.objects.filter(title_text="Phil Marlowe's Second Project")) == 0:
-            project = make_demo(self.marlowe)
-            project.title_text = "Phil Marlowe's Second Project"
+            project = make_demo(self.marlowe,
+                                "Phil Marlowe's Second Project",
+                                "This is Marlowe's second project.")
             project.save()
 
         if len(Project.objects.filter(title_text="Sherlock's Project")) == 0:
             self.holmes = User.objects.get(username='holmes')
-            project = make_demo(self.holmes)
-            project.title_text = "Sherlock's Project"
+            project = make_demo(self.holmes,
+                                "Sherlock's Project",
+                                "This is Sherlock's project.")
             project.save()
 
     def test_group_create(self):

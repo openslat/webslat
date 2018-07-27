@@ -49,8 +49,9 @@ class PermissionTestCase(TestCase):
         samspade = User.objects.get(username='samspade')
 
         if len(Project.objects.filter(title_text="Sam Spade's Demo Project")) == 0:
-            project = make_demo(samspade)
-            project.title_text = "Sam Spade's Demo Project"
+            project = make_demo(samspade, 
+                                "Sam Spade's Demo Project",
+                                "This is Sam's demo project.")
             project.save()
 
         if len(Project.objects.filter(title_text="Sam Spade's Empty Project")) == 0:
@@ -63,19 +64,22 @@ class PermissionTestCase(TestCase):
 
         marlowe = User.objects.get(username='marlowe')
         if len(Project.objects.filter(title_text="Phil Marlowe's First Project")) == 0:
-            project = make_demo(marlowe)
-            project.title_text = "Phil Marlowe's First Project"
+            project = make_demo(marlowe, 
+                                "Phil Marlowe's First Project",
+                                "This is Marlowes' first project.")
             project.save()
 
         if len(Project.objects.filter(title_text="Phil Marlowe's Second Project")) == 0:
-            project = make_demo(marlowe)
-            project.title_text = "Phil Marlowe's Second Project"
+            project = make_demo(marlowe, 
+                                "Phil Marlowe's Second Project",
+                                "This is Marlowe's second project.")
             project.save()
 
         if len(Project.objects.filter(title_text="Sherlock's Project")) == 0:
             holmes = User.objects.get(username='holmes')
-            project = make_demo(holmes)
-            project.title_text = "Sherlock's Project"
+            project = make_demo(holmes, 
+                                "Sherlock's Project",
+                                "This is Sherlock's project.")
             project.save()
 
     def test_default_access(self):

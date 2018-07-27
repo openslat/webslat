@@ -608,6 +608,60 @@ class Component_Group(models.Model):
         return result
 
     
+class ProjectFormPart1(Form):
+    def __init__(self, request=None, initial=None):
+        super(Form, self).__init__(request, initial=initial)
+        self.fields['description']=CharField(max_length=200, widget=Textarea(attrs={'cols': 50, 'rows': 4, 'title': "Enter the description"}))
+        self.fields['title']=CharField(max_length=50, widget=TextInput(attrs={'title': 'Enter the title text here.'}))
+
+class ProjectFormPart2(Form):
+    def __init__(self, request=None, initial=None):
+        super(Form, self).__init__(request, initial=initial)
+        self.fields['rarity']= ChoiceField(
+            widget=Select(
+            attrs={'title': "The rate-of-exceedence of the rarest event we are interested in displaying."}),
+                                           choices=Project.FREQUENCY_CHOICES)
+        self.fields['levels'] = IntegerField()
+        self.fields['mean_im_collapse'] = FloatField(widget=NumberInput(attrs={'title': 'The mean IM value at which collapse occurs.'}), required=False)
+        self.fields['sd_ln_im_collapse'] = FloatField(widget=NumberInput(attrs={'title': 'The standard deviation of log(IM) at which collapse occurs.'}), required=False)
+        self.fields['mean_cost_collapse'] = FloatField(widget=NumberInput(attrs={'title': 'The mean cost of collapse.'}), required=False)
+        self.fields['sd_ln_cost_collapse'] = FloatField(widget=NumberInput(attrs={'title': 'The standard deviation of log(cost) of collapse.'}), required=False)
+        self.fields['mean_im_demolition'] = FloatField(widget=NumberInput(attrs={'title': 'The mean IM value at which demolition occurs.'}), required=False)
+        self.fields['sd_ln_im_demolition'] = FloatField(widget=NumberInput(attrs={'title': 'The standard deviation of log(IM) at which demolition occurs.'}), required=False)
+        self.fields['mean_cost_demolition'] = FloatField(widget=NumberInput(attrs={'title': 'The mean cost of demolition.'}), required=False)
+        self.fields['sd_ln_cost_demolition'] = FloatField(widget=NumberInput(attrs={'title': 'The standard deviation of log(cost) of demolition.'}), required=False)
+
+class ProjectFormPart3(Form):
+    FRAME_CHOICES = (
+        ("Braced", "Braced"),
+        ("Moment", "Moment"),
+        ("Wall", "Wall"))
+    
+    def __init__(self, request=None, 
+                 initial={'return_period': '500',
+                          'strength': 1.0,
+                          'soil_class': 'C',
+                          'location': 'Christchurch',
+                          'frame_type': 'Moment'}):
+        super(ProjectFormPart3, self).__init__(request, initial=initial)
+        self.fields['frame_type'].widget.attrs['title'] = 'The frame type of the structure.'
+        self.fields['return_period'].label = 'Return period (years)'
+        self.fields['return_period'].widget.attrs['title'] = 'The return period (years)'
+        self.fields['strength'].widget.attrs['title'] = 'The strength ratio at the design level of spectral acceleration.'
+        self.fields['path'].widget.attrs['title'] = 'The Excel file exported from ETABS.'
+        self.fields['soil_class'].widget.attrs['title'] = 'The soil class at the building site.'
+        self.fields['location'].widget.attrs['title'] = 'The location of the building site.'
+
+    frame_type = ChoiceField(choices= FRAME_CHOICES)
+    return_period = ChoiceField(choices=list(map(lambda x: [x, x], R_defaults)))
+    strength = FloatField()
+    path = FileField()
+    soil_class = ChoiceField(choices=NZ_Standard_Curve.SOIL_CLASS_CHOICES)
+    location_choices = []
+    for location in Location.objects.all():
+        location_choices.append([location.location, location.location])
+    location = ChoiceField(choices=location_choices)
+        
 class ProjectForm(ModelForm):
     class Meta:
         model = Project

@@ -11,6 +11,7 @@ from django.forms import modelformset_factory, ValidationError, HiddenInput
 from django.forms.models import model_to_dict
 from django.core.exceptions import PermissionDenied
 from .nzs import *
+from .etabs import ImportETABS
 from math import *
 from dal import autocomplete
 from django.template import RequestContext
@@ -312,10 +313,10 @@ def index(request):
     context = { 'project_list': project_list, 'group_list': group_list}
     return render(request, 'slat/index.html', context)
 
-def make_demo(user):
+def make_demo(user, title, description):
     project = Project()
-    setattr(project, 'title_text', "This is a demo project")
-    setattr(project, 'description_text', "Describe this project...")
+    setattr(project, 'title_text', title)
+    setattr(project, 'description_text', description)
     setattr(project, 'rarity', 1/500)
     project.save()
 
@@ -566,93 +567,193 @@ def make_example_2(user):
 
 @login_required
 def demo(request):
-    make_demo(request.user)
+    print("> demo()")
+    print("Method: {}".format(request.method))
+    form = ProjectForm(request.POST)
+    print("Form.is_valid(): {}".format(form.is_valid()))
+    print("Form.cleaned_data: {}".format(form.cleaned_data))
+    print("Request: {}".format(request))
+    print("< demo()")
+    #make_demo(request.user)
     return HttpResponseRedirect(reverse('slat:index'))
     
+class ProjectCreateTypeForm(Form):
+    project_type = ChoiceField(choices=[(None, "-------------"),
+                                        ("DEMO", "Demo Project"),
+                                        ("EMPTY", "Empty Project"),
+                                        ("ETABS", "ETABS Project")])
 
 @login_required
 def project(request, project_id=None):
+    # Initialize everything we'll send to the template:
+    form = None
+    levels = None
+    users = None
+    groups = None
+    can_add = None
+    project_type_form = None
+    form1 = None
+    form2 = None
+    form3 = None
     chart = None
     pdf_chart = None
-    if request.method == 'POST':
-        if project_id:
-            project = Project.objects.get(pk=project_id)
-            form = ProjectForm(request.POST, Project.objects.get(pk=project_id), initial=model_to_dict(project))
-            form.instance.id = project_id
-        else:
-            project = None
-            form = ProjectForm(request.POST)
+
+    # Four cases to consider:
+    #     - GET with no project id: create a blank form for a new project
+    #     - GET with a project id: create a form for the existing project
+    #     - POST with no project id: create new project, from the form data
+    #     - POST with project id: update existing project, from the form data
+    #
+    if request.method == 'GET' and not project_id:
+        # Create a blank form for a new project
+        form = ProjectForm()
+        form1 = ProjectFormPart1()
+        form2 = ProjectFormPart2()
+        form3 = ProjectFormPart3()
+        levels = None
+        levels_form = LevelsForm()
+        users = None
+        groups = None
+        can_add = False
+        project_type_form = ProjectCreateTypeForm()
+        project_type_form.fields['project_type'].widget.attrs['onchange'] = 'Refresh()'
+        
+        return render(request, 'slat/project.html', { 
+                'form': form,
+                'form1': form1, 
+                'form2': form2, 
+                'form3': form3, 
+                'levels': levels, 
+                'chart': chart,
+                'pdfchart': pdf_chart,
+                'users': users, 
+                'groups': groups,
+                'can_add': can_add,
+                'project_type_form': project_type_form})
+    elif request.method == 'GET' and project_id:
+        # Fetch an existing project
+        project = get_object_or_404(Project, pk=project_id)
+        if not project.CanRead(request.user):
+            raise PermissionDenied
+                
+        can_add = project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL
+        form = ProjectForm(instance=project, initial=model_to_dict(project))
+        
+        chart = IMCostChart(project)
+        pdf_chart = IMPDFChart(project)
+        
+        levels = project.num_levels()
+        levels_form = None
+        users = list(ProjectUserPermissions.objects.filter(project=project, role=ProjectUserPermissions.ROLE_FULL))
+        groups = []
+        for g in ProjectGroupPermissions.objects.filter(project=project):
+            groups.append(g.group)
+
+        return render(request, 'slat/project.html', { 
+            'form': form,
+            'form1': form1, 
+            'form2': form2, 
+            'form3': form3, 
+            'levels': levels, 
+            'chart': chart,
+            'pdfchart': pdf_chart,
+            'users': users, 
+            'groups': groups,
+            'can_add': can_add,
+            'project_type_form': project_type_form})
+    
+    elif request.method == 'POST' and not project_id:
+        # Create a new project from the form
+        project = None
+        form1 = ProjectFormPart1(request.POST)
+        form1.is_valid()
+        title = form1.cleaned_data["title"]
+        description = form1.cleaned_data["description"]
+        project_type_form = ProjectCreateTypeForm(request.POST)
+        if project_type_form.is_valid():
+            project_type = project_type_form.cleaned_data["project_type"]
+            
+            if project_type == "DEMO":
+                project = make_demo(request.user, title, description)
+            elif project_type == "EMPTY":
+                form2 = ProjectFormPart2(request.POST)
+                if (form2.is_valid()):
+                    rarity = form2.cleaned_data["rarity"]
+                    levels = form2.cleaned_data["levels"]
+                    project = Project()
+                    setattr(project, 'title_text', title)
+                    setattr(project, 'description_text', description)
+                    setattr(project, 'rarity', 1/500)
+                    project.save()
+                    for l in range(levels + 1):
+                        if l == 0:
+                            label = "Ground Floor"
+                        elif l == levels:
+                            label = "Roof"
+                        else:
+                            label = "Floor #{}".format(l + 1)
+                            level = Level(project=project, level=l, label=label)
+                            level.save()
+            elif project_type == "ETABS":
+                form3 = ProjectFormPart3(request.POST, request.FILES)
+                if (form3.is_valid()):
+                    strength = form3.cleaned_data["strength"]
+                    path = form3.cleaned_data["path"]
+                    location = form3.cleaned_data["location"]
+                    soil_class = form3.cleaned_data["soil_class"]
+                    return_period = int(form3.cleaned_data["return_period"])
+                    frame_type = form3.cleaned_data["frame_type"]
+                    project = ImportETABS(title, description, strength,
+                                          path, location, soil_class,
+                                          return_period, frame_type)
+                else:
+                    print("INVALID")
+                    print(form3.errors)
+                    
+                    return render(request, 'slat/project.html', { 
+                        'form': form,
+                        'form1': form1, 
+                        'form2': form2, 
+                        'form3': form3, 
+                        'levels': levels, 
+                        'chart': chart,
+                        'pdfchart': pdf_chart,
+                        'users': users, 
+                        'groups': groups,
+                        'can_add': can_add,
+                        'project_type_form': project_type_form})
+
+        project.AssignRole(request.user, ProjectUserPermissions.ROLE_FULL)
+        return HttpResponseRedirect(reverse('slat:project', args=(project.id,)))
+    elif request.method == 'POST' and project_id:
+        # Update existing project from form
+        project = Project.objects.get(pk=project_id)
+        form = ProjectForm(request.POST, Project.objects.get(pk=project_id), initial=model_to_dict(project))
+        form.instance.id = project_id
 
         if not form.is_valid():
             print("INVALID")
             print(form.errors)
-
-        if form.is_valid():
-            form.save()
-
-            if not project_id:
-                project = form.instance
-
-                levels_form = LevelsForm(request.POST)
-                levels_form.is_valid()
-                levels = levels_form.cleaned_data['levels']
-                for l in range(levels + 1):
-                    level = Level(project=project, level=l, label="Level #{}".format(l))
-                    level.save()
-                
-                    EDP(project=project,
-                        level=level,
-                        type=EDP.EDP_TYPE_ACCEL).save()
-                    if l > 0:
-                        EDP(project=project,
-                            level=level,
-                            type=EDP.EDP_TYPE_DRIFT).save()
-                
-            if project_id and form.has_changed() and project.IM:
-                project.IM._make_model()
-                for edp in EDP.objects.filter(project=project):
-                    edp._make_model()
-                project._make_model()
-                
-            project.AssignRole(request.user, ProjectUserPermissions.ROLE_FULL)
-
-            return HttpResponseRedirect(reverse('slat:project', args=(form.instance.id,)))
-
-    else:
-        # If the project exists, use it to populate the form:
-        if project_id:
-            project = get_object_or_404(Project, pk=project_id)
-            if not project.CanRead(request.user):
-                raise PermissionDenied
-                
-            can_add = project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL
-            form = ProjectForm(instance=project, initial=model_to_dict(project))
-            
-            chart = IMCostChart(project)
-            pdf_chart = IMPDFChart(project)
-                
-            levels = project.num_levels()
-            levels_form = None
-            users = list(ProjectUserPermissions.objects.filter(project=project, role=ProjectUserPermissions.ROLE_FULL))
-            groups = []
-            for g in ProjectGroupPermissions.objects.filter(project=project):
-                groups.append(g.group)
+            return render(request, 'slat/project.html', { 
+                'form': form,
+                'form1': form1, 
+                'form2': form2, 
+                'form3': form3, 
+                'levels': levels, 
+                'chart': chart,
+                'pdfchart': pdf_chart,
+                'users': users, 
+                'groups': groups,
+                'can_add': can_add,
+                'project_type_form': project_type_form})
+    
         else:
-            form = ProjectForm()
-            levels = None
-            levels_form = LevelsForm()
-            users = None
-            groups = None
-            can_add = False
-    return render(request, 'slat/project.html', {'form': form, 
-                                                 'levels': levels, 
-                                                 'levels_form': levels_form, 
-                                                 'chart': chart,
-                                                 'pdfchart': pdf_chart,
-                                                 'users': users, 
-                                                 'groups': groups,
-                                                 'can_add': can_add})
-
+            form.save()
+            return HttpResponseRedirect(reverse('slat:project', args=(form.instance.id,)))
+    else:
+        # This should never happen!
+        raise(ValueError("Unknown method or project_id"))
+   
 @login_required
 def hazard(request, project_id):
     # If the project doesn't exist, generate a 404:
@@ -855,7 +956,7 @@ def nlh_edit(request, project_id):
         project.IM = hazard
         project.save()
 
-        return HttpResponseRedirect(reverse('slat:nlh', args=(project_id)))
+        return HttpResponseRedirect(reverse('slat:nlh', args=(project_id,)))
     else:
         if hazard and hazard.nlh:
             form = NLHForm(instance=hazard.nlh)
@@ -1148,7 +1249,7 @@ def im_nzs_edit(request, project_id):
         project.IM = hazard
         project.save()
 
-        return HttpResponseRedirect(reverse('slat:nzs', args=(project_id)))
+        return HttpResponseRedirect(reverse('slat:nzs', args=(project_id,)))
     
     else:
         if hazard and hazard.nzs:
