@@ -26,7 +26,10 @@ SECRET_KEY = 'am-t+0fp%z2j^+r^1vafuku5&9x8bgr^6s+!r3^))ndg3$54i0'
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-
+BROKER_URL = 'amqp://guest:guest@localhost//'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
 
 # Application definition
 
