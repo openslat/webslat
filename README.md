@@ -47,12 +47,12 @@ served via Apache.
         # If we've used the key with an earlier VM,
         # remove it:
         ssh-keygen -f "$HOME/.ssh/known_hosts" \
-        	   -R [127.0.0.1]:3022
+                   -R [127.0.0.1]:3022
         
         # Install the key in the VM:
         ssh-copy-id -o "StrictHostKeyChecking no" \
-        	    -i ~/.ssh/vm \
-        	    -p 3022 webslat-user@127.0.0.1
+                    -i ~/.ssh/vm \
+                    -p 3022 webslat-user@127.0.0.1
 
 8.  Configure `ssh` to use the correct port and user name by default:
     
@@ -64,7 +64,7 @@ served via Apache.
             User     webslat-user
             Port     3022
             Hostname 127.0.0.1" \
-        	 >> ~/.ssh/config
+                 >> ~/.ssh/config
         fi
 
 9.  Test `ssh`:
@@ -116,7 +116,7 @@ served via Apache.
             git pull
         else
             git clone \
-        	http://github.com/mikelygee/SLAT
+                http://github.com/mikelygee/SLAT
             cd SLAT/linux
         fi;
         make
@@ -177,7 +177,9 @@ served via Apache.
              django-autocomplete-light \
              django-extensions \
              seaborn \
-             pyquery
+             pyquery \
+             xlrd \
+             pandas
         pip3 install django-registration
         pip3 install --upgrade django
         deactivate
@@ -350,20 +352,20 @@ This will populate the database with several users and projects:
         if [ $(grep webslat-user -c /etc/apache2/sites-available/000-default.conf) == 0 ]
         then 
             sudo sed -ie 's|</VirtualHost>|\
-        	Alias /static /home/webslat-user/webslat/webslat/static \
-        	  <Directory /home/webslat-user/webslat/webslat/static>\
-        	    Require all granted\
-        	</Directory>\
+                Alias /static /home/webslat-user/webslat/webslat/static \
+                  <Directory /home/webslat-user/webslat/webslat/static>\
+                    Require all granted\
+                </Directory>\
         \
-        	<Directory /home/webslat-user/webslat/webslat/webslat>\
-        	  <Files wsgi.py>\
-        	      Require all granted\
-        	  </Files>\
-        	</Directory>\
+                <Directory /home/webslat-user/webslat/webslat/webslat>\
+                  <Files wsgi.py>\
+                      Require all granted\
+                  </Files>\
+                </Directory>\
         \
-        	WSGIDaemonProcess webslat python-home=/home/webslat-user/webslat-env python-path=/home/webslat-user/webslat/webslat:/home/webslat-user/SLAT/linux/lib\
-        	WSGIProcessGroup webslat\
-        	WSGIScriptAlias / /home/webslat-user/webslat/webslat/webslat/wsgi.py\
+                WSGIDaemonProcess webslat python-home=/home/webslat-user/webslat-env python-path=/home/webslat-user/webslat/webslat:/home/webslat-user/SLAT/linux/lib\
+                WSGIProcessGroup webslat\
+                WSGIScriptAlias / /home/webslat-user/webslat/webslat/webslat/wsgi.py\
         </VirtualHost>|' /etc/apache2/sites-available/000-default.conf
         fi
     

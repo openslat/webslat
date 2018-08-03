@@ -236,7 +236,9 @@ served via Apache.
 	  django-autocomplete-light \
 	  django-extensions \
 	  seaborn \
-	  pyquery
+	  pyquery \
+          xlrd \
+          pandas
      pip3 install django-registration
      pip3 install --upgrade django
      deactivate
