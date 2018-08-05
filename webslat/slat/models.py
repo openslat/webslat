@@ -849,3 +849,14 @@ class GroupForm(ModelForm):
         fields = '__all__'
         
         
+class Celery_Calcu(models.Model):
+    n = models.CharField(max_length=10)
+
+from django import forms
+class Celery_UserForm(forms.ModelForm):
+    class Meta:
+        model = Celery_Calcu
+        fields = [
+            "n",
+        ]
+    

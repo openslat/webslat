@@ -1,0 +1,77 @@
+#+Title:     Celery Sandbox
+#+AUTHOR:    Michael Gauland
+#+EMAIL:     michael.gauland@canterbury.ac.nz
+#+DATE:      {{{time(%Y-%m-%d %H:%M)}}}
+#+OPTIONS:   H:6 num:t toc:nil \n:nil @:t ::t |:t ^:{} -:t f:t *:t <:t ':t
+#+LATEX_HEADER: \usepackage{unicode-math}
+#+LATEX_HEADER: \usepackage{fontspec}
+#+LATEX_HEADER: \setmainfont{Liberation Serif}
+#+LATEX_HEADER: \setmonofont{Liberation Mono}
+#+LATEX_HEADER: \lstset{keywordstyle=\color{blue}\bfseries}
+#+LATEX_HEADER: \lstset{stringstyle=\color{green}\bfseries}
+#+LATEX_HEADER: \lstset{frame=shadowbox}
+#+LATEX_HEADER: \lstset{basicstyle=\ttfamily}
+#+LATEX_HEADER: \definecolor{mygray}{gray}{0.8}
+#+LATEX_HEADER: \lstset{rulesepcolor=\color{mygray}}
+#+LATEX_HEADER: \lstdefinelanguage{sh}{rulecolor=\color{green},rulesepcolor=\color{mygray},frameround=ffff,backgroundcolor=\color{white}}
+#+LATEX_HEADER: \lstdefinelanguage{fundamental}{basicstyle=\ttfamily\scriptsize,rulesepcolor=\color{cyan},frameround=tttt,backgroundcolor=\color{white},breaklines=true}
+#+LATEX_HEADER: \input{../julia-listings.tex}
+#+PROPERTY: header-args :eval always :exports both
+#+PROPERTY: header-args:python :tangle yes
+
+Trying to get an example working with celery.
+#+begin_src sh :results output
+celery -A celery_tasks worker 2>&1 > celery_log.txt &
+#+end_src
+
+#+RESULTS:
+: sh: 1: celery: not found
+
+#+begin_src python :results output :session p-celery
+import celery_tasks
+from slat.tasks import add
+result = add.delay(3, 97)
+print("Ready: {}".format(result.ready()))
+print("Wait: {}".format(result.wait()))
+print("Ready: {}".format(result.ready()))
+print("Result: {}".format(result.result))
+#+end_src
+
+#+RESULTS:
+: Ready: False
+: Wait: 100
+: Ready: True
+: Result: 100
+
+
+#+begin_src python :results output :session p-celery
+from slat.tasks import fft_random
+result = fft_random.delay(100)
+print("Ready: {}".format(result.ready()))
+print("Wait: {}".format(result.wait()))
+print("Ready: {}".format(result.ready()))
+print("Result: {}".format(result.result))
+#+end_src
+
+#+RESULTS:
+: Ready: False
+: Wait: 0.9017059455340457
+: Ready: True
+: Result: 0.9017059455340457
+
+#+begin_src python :results output :session p-celery
+job_id = fft_random.delay(10000).id
+print("Job ID: {}".format(job_id))
+#+end_src
+
+#+RESULTS:
+: Job ID: d5566875-1bc3-408b-8d89-9b3c045cc37b
+
+
+#+begin_src python :results output :session p-celery
+job = fft_random.AsyncResult(job_id)
+print("Job: {}".format(job.result or job.state))
+#+end_src
+
+#+RESULTS:
+: Job: 0.7816273773224358

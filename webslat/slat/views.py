@@ -4,7 +4,7 @@ import pyslat
 import re
 import numpy as np
 from scipy.optimize import fsolve
-from django.http import Http404, HttpResponseRedirect, HttpResponseForbidden
+from django.http import Http404, HttpResponseRedirect, HttpResponseForbidden, HttpResponse
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.forms import modelformset_factory, ValidationError, HiddenInput
@@ -2377,3 +2377,44 @@ def password_change(request):
         'form': form
     })
 
+import celery_tasks
+import json
+from .tasks import add,fft_random
+def celery_poll_state(request):
+    """ A view to report the progress to the user """
+    data = 'Fail'
+    if request.is_ajax():
+        if 'task_id' in request.POST.keys() and request.POST['task_id']:
+            task_id = request.POST['task_id']
+            task = fft_random.AsyncResult(task_id)
+            data = task.result or task.state
+        else:
+            data = 'No task_id in the request'
+    else:
+        data = 'This is not an ajax request'
+
+    json_data = json.dumps(data)
+    return HttpResponse(json_data, content_type='application/json')
+
+def celery_index(request):
+    print(" > index()")
+#    print("app: {}".format(app))
+    if 'job' in request.GET:
+        job_id = request.GET['job']
+        job = fft_random.AsyncResult(job_id)
+        data = job.result or job.state
+        context = {
+            'data':data,
+            'task_id':job_id,
+        }
+        return render(request,"slat/celery_show_t.html",context)
+    elif 'n' in request.GET:
+        n = request.GET['n']
+        job = fft_random.delay(int(n))
+        return HttpResponseRedirect(reverse('slat:celery_index') + '?job=' + job.id)
+    else:
+        form = Celery_UserForm()
+        context = {
+            'form':form,
+        }
+        return render(request,"slat/celery_post_form.html",context)
