@@ -2379,30 +2379,43 @@ def password_change(request):
 
 import celery_tasks
 import json
-from .tasks import add,fft_random
+from .tasks import add,fft_random, celery_ImportETABS
 def celery_poll_state(request):
     """ A view to report the progress to the user """
+    print("> celery_poll_state()")
     data = 'Fail'
     if request.is_ajax():
+        print("is ajax")
         if 'task_id' in request.POST.keys() and request.POST['task_id']:
+            print("id in keys")
             task_id = request.POST['task_id']
             task = fft_random.AsyncResult(task_id)
+            print("task_id: {}".format(task_id))
+            print(task)
+            print(task.result)
+            print(task.state)
+            task = celery_ImportETABS.AsyncResult(task_id)
+            print(task)
+            print(task.result)
+            print(task.state)
+            print("......")
             data = task.result or task.state
         else:
+            print("No task_id in the request")
             data = 'No task_id in the request'
     else:
+        print("Not an ajax request")
         data = 'This is not an ajax request'
 
     json_data = json.dumps(data)
     return HttpResponse(json_data, content_type='application/json')
 
 def celery_index(request):
-    print(" > index()")
-#    print("app: {}".format(app))
     if 'job' in request.GET:
         job_id = request.GET['job']
         job = fft_random.AsyncResult(job_id)
         data = job.result or job.state
+        print("*** {}: {}".format(job, data))
         context = {
             'data':data,
             'task_id':job_id,
@@ -2410,7 +2423,17 @@ def celery_index(request):
         return render(request,"slat/celery_show_t.html",context)
     elif 'n' in request.GET:
         n = request.GET['n']
-        job = fft_random.delay(int(n))
+        if n == '-1':
+            job = celery_ImportETABS.delay("This is my title",
+                                           "This is the description",
+                                           1.0,
+                                           "/home/mag109/notes/UCQC/180626_ETABS outputs.xlsx",
+                                           "Christchurch",
+                                           "C",
+                                           500,
+                                           "Moment")
+        else:
+            job = fft_random.delay(int(n))
         return HttpResponseRedirect(reverse('slat:celery_index') + '?job=' + job.id)
     else:
         form = Celery_UserForm()
