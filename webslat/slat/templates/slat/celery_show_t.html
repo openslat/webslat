@@ -15,6 +15,10 @@
 <p>
   Your Task is <span id="user-count"></span>!
 </p>
+<p>
+  Messages:<br/>
+  <pre><span id="message"></span></pre>
+</p>
 
 <div class="status"></div>
    {% if task_id %}
@@ -44,17 +48,20 @@
             csrfmiddlewaretoken: "{{csrf_token}}",
         },
         success: function(result) {
+                 console.log(result);
+
                     if (result.process_percent == null || result.process_percent == undefined) {
                         willstop = 1;
                         document.getElementById("user-count").textContent="DONE";
                         jQuery('.bar').css({'width': 100 + '%'});
                         jQuery('.bar').html(100 + '%');
                         document.getElementById('returnBtn').style.visibility = 'visible';
-
+                        window.location.href = result;
                        } else {
                          jQuery('.bar').css({'width': result.process_percent + '%'});
                          jQuery('.bar').html(result.process_percent + '%');
                          document.getElementById("user-count").textContent="PROCRESSING";
+                         document.getElementById("message").textContent=result.message;
                        };
                     }
       });
