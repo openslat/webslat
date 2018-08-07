@@ -33,6 +33,7 @@ from datetime import datetime, timedelta
 from jchart import Chart
 from jchart.config import Axes, DataSet, rgba, ScaleLabel, Legend, Title
 import seaborn as sns
+import pickle
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -698,14 +699,22 @@ def project(request, project_id=None):
                 form3 = ProjectFormPart3(request.POST, request.FILES)
                 if (form3.is_valid()):
                     strength = form3.cleaned_data["strength"]
-                    path = form3.cleaned_data["path"]
+                    path = request.FILES['path'].file
+                    print(dir(request.FILES["path"]))
+                    print("PATH: {}".format(path))
+                    print("PATH TYPE: {}".format(path))
                     location = form3.cleaned_data["location"]
                     soil_class = form3.cleaned_data["soil_class"]
                     return_period = int(form3.cleaned_data["return_period"])
                     frame_type = form3.cleaned_data["frame_type"]
-                    project = ImportETABS(title, description, strength,
-                                          path, location, soil_class,
-                                          return_period, frame_type)
+                    job = celery_ImportETABS.delay(
+                        title, description, strength,
+                        path, #pickle.dumps(path), 
+                        location, soil_class,
+                        return_period, frame_type,
+                        request.user.id)
+                    return HttpResponseRedirect(
+                        reverse('slat:celery_index') + '?job=' + job.id)
                 else:
                     print("INVALID")
                     print(form3.errors)
@@ -2378,7 +2387,6 @@ def password_change(request):
     })
 
 import celery_tasks
-import json
 from .tasks import add,fft_random, celery_ImportETABS
 def celery_poll_state(request):
     """ A view to report the progress to the user """
@@ -2393,9 +2401,9 @@ def celery_poll_state(request):
     else:
         data = 'This is not an ajax request'
 
-    json_data = json.dumps(data)
+    pickle_data = pickle.dumps(data)
 
-    return HttpResponse(json_data, content_type='application/json')
+    return HttpResponse(pickle_data, content_type='application/pickle')
 
 def celery_index(request):
     if 'job' in request.GET:

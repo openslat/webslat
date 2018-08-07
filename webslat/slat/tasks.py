@@ -2,6 +2,7 @@ from celery import shared_task,current_task
 from numpy import random
 from scipy.fftpack import fft
 from django.urls import reverse
+import pickle
 
 @shared_task
 def fft_random(n):
@@ -29,6 +30,7 @@ import pandas as pd
 import numpy as np
 from  .models import *
 from functools import reduce
+import tempfile
 
 @shared_task
 def celery_ImportETABS(title, description, strength, path,
@@ -41,7 +43,17 @@ def celery_ImportETABS(title, description, strength, path,
                               meta={'process_percent': 50,
                                     'message': "\n".join(messages) + "\nStarting"})
     project = Project()
-    xl_workbook = pd.ExcelFile(path)
+    #xl_workbook = pd.ExcelFile(pickle.loads(path))
+    print("---PATH: {}".format(path))
+    print("---PATH TYPE: {}".format(type(path)))
+    print("---PATH DIR: {}".format(dir(path)))
+    print(len(path.read()))
+    path.seek(0)
+    temp = tempfile.NamedTemporaryFile()
+    temp.write(path.read())
+    temp.seek(0)
+    xl_workbook = pd.ExcelFile(temp.name)
+    print("---Workbook: {}".format(xl_workbook))
     setattr(project, 'title_text', title)
     setattr(project, 'description_text', description)
     setattr(project, 'rarity', 1.0/return_period)
