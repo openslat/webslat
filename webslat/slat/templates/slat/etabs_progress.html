@@ -1,0 +1,58 @@
+{% extends "base_site.html" %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
+{{ form.media }}
+{{ form1.media }}
+
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} slat {% endblock %}
+{% block title %}WebSLAT Project {{ form.instance.title_text }}{% endblock %}
+{% block content_title %}{{ form.instance.title_text }}{% endblock %}
+{% block content %}
+<p><b>ETABS PROGRESS PAGE</b></p>
+<p>
+  Your Task is <span id="user-count"></span>!
+</p>
+<p>
+  Messages:<br/>
+  <pre><span id="message"></span></pre>
+</p>
+
+<input id="returnBtn" type=button value="Previous Page" style="visibility:hidden; margin-top:10px;"onClick="javascript:history.go(-1);">
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+<script type="text/javascript">
+   var poll_xhr;
+  (function(){
+    var poll = function(){
+      var json_dump = "{{ data }}";
+      var task_id = "{{task_id}}";
+
+      console.log(task_id);
+      poll_xhr = $.ajax({
+        url:'celery_poll_state',
+        type: 'POST',
+        data: {
+            task_id: task_id,
+            csrfmiddlewaretoken: "{{csrf_token}}",
+        },
+       success: function(result) {
+             if (typeof(result) == 'string') {
+                        window.location.href = result;
+             } else {
+                 document.getElementById("user-count").textContent="PROCRESSING";
+                 document.getElementById("message").textContent=result.message;
+             };
+       }
+      });
+    };
+
+    var refreshIntervalId = setInterval(function() {
+      poll();
+    },500);
+
+
+  })();
+</script>
+{% endblock %}

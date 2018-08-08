@@ -11,7 +11,6 @@ from django.forms import modelformset_factory, ValidationError, HiddenInput
 from django.forms.models import model_to_dict
 from django.core.exceptions import PermissionDenied
 from .nzs import *
-from .etabs import ImportETABS
 from math import *
 from dal import autocomplete
 from django.template import RequestContext
@@ -33,7 +32,10 @@ from datetime import datetime, timedelta
 from jchart import Chart
 from jchart.config import Axes, DataSet, rgba, ScaleLabel, Legend, Title
 import seaborn as sns
-import pickle
+import json
+import celery_tasks
+from .tasks import ImportETABS
+import celery
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -584,6 +586,7 @@ class ProjectCreateTypeForm(Form):
                                         ("EMPTY", "Empty Project"),
                                         ("ETABS", "ETABS Project")])
 
+import tempfile
 @login_required
 def project(request, project_id=None):
     # Initialize everything we'll send to the template:
@@ -700,21 +703,27 @@ def project(request, project_id=None):
                 if (form3.is_valid()):
                     strength = form3.cleaned_data["strength"]
                     path = request.FILES['path'].file
-                    print(dir(request.FILES["path"]))
+                    print(dir(path))
                     print("PATH: {}".format(path))
                     print("PATH TYPE: {}".format(path))
+                    contents = path.read()
+                    print("LEN: {}".format(len(contents)))
                     location = form3.cleaned_data["location"]
                     soil_class = form3.cleaned_data["soil_class"]
                     return_period = int(form3.cleaned_data["return_period"])
                     frame_type = form3.cleaned_data["frame_type"]
-                    job = celery_ImportETABS.delay(
+                    temp = tempfile.NamedTemporaryFile(delete=False)
+                    temp.write(contents)
+                    temp.close()
+
+                    job = ImportETABS.delay(
                         title, description, strength,
-                        path, #pickle.dumps(path), 
+                        temp.name,
                         location, soil_class,
                         return_period, frame_type,
                         request.user.id)
                     return HttpResponseRedirect(
-                        reverse('slat:celery_index') + '?job=' + job.id)
+                        reverse('slat:etabs_progress') + '?job=' + job.id)
                 else:
                     print("INVALID")
                     print(form3.errors)
@@ -2386,53 +2395,30 @@ def password_change(request):
         'form': form
     })
 
-import celery_tasks
-from .tasks import add,fft_random, celery_ImportETABS
 def celery_poll_state(request):
     """ A view to report the progress to the user """
     data = 'Fail'
     if request.is_ajax():
         if 'task_id' in request.POST.keys() and request.POST['task_id']:
             task_id = request.POST['task_id']
-            task = celery_ImportETABS.AsyncResult(task_id)
-            data = task.result or task.state
+            task = ImportETABS.AsyncResult(task_id)
+            data = task.result or task.data
         else:
             data = 'No task_id in the request'
     else:
         data = 'This is not an ajax request'
 
-    pickle_data = pickle.dumps(data)
+    json_data = json.dumps(data)
 
-    return HttpResponse(pickle_data, content_type='application/pickle')
+    return HttpResponse(json_data, content_type='application/json')
 
-def celery_index(request):
+def etabs_progress(request):
     if 'job' in request.GET:
         job_id = request.GET['job']
-        job = fft_random.AsyncResult(job_id)
+        job = ImportETABS.AsyncResult(job_id)
         data = job.result or job.state
         context = {
             'data':data,
             'task_id':job_id,
         }
-        return render(request,"slat/celery_show_t.html",context)
-    elif 'n' in request.GET:
-        n = request.GET['n']
-        if n == '-1':
-            job = celery_ImportETABS.delay("This is my title",
-                                           "This is the description",
-                                           1.0,
-                                           "/home/mag109/notes/UCQC/180626_ETABS outputs.xlsx",
-                                           "Christchurch",
-                                           "C",
-                                           500,
-                                           "Moment", 
-                                           request.user.id)
-        else:
-            job = fft_random.delay(int(n))
-        return HttpResponseRedirect(reverse('slat:celery_index') + '?job=' + job.id)
-    else:
-        form = Celery_UserForm()
-        context = {
-            'form':form,
-        }
-        return render(request,"slat/celery_post_form.html",context)
+        return render(request,"slat/etabs_progress.html",context)

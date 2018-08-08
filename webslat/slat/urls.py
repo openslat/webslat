@@ -63,6 +63,6 @@ urlpatterns = [
     url(r'^project/(?P<project_id>[0-9]+)/rename-level/(?P<level_id>[0-9]+)/$', views.rename_level, name='rename_level'),
     url(r'^component-autocomplete/$', views.ComponentAutocomplete.as_view(), name='component-autocomplete'),
     url(r'^component-description/(?P<component_key>[0-9]+)$', views.ComponentDescription, name='component-description'),
-    url(r'^celery$', views.celery_index,name='celery_index'),
+    url(r'^etabs_progress$', views.etabs_progress,name='etabs_progress'),
     url(r'^celery_poll_state$', views.celery_poll_state,name='celery_poll_state'),
 ]

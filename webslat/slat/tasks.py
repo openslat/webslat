@@ -2,57 +2,27 @@ from celery import shared_task,current_task
 from numpy import random
 from scipy.fftpack import fft
 from django.urls import reverse
-import pickle
-
-@shared_task
-def fft_random(n):
-    """
-    Brainless number crunching just to have a substantial task:
-    """
-    for i in range(n):
-        x = random.normal(0, 0.1, 2000)
-        y = fft(x)
-        if(i%30 == 0):
-            process_percent = int(100 * float(i) / float(n))
-            current_task.update_state(state='PROGRESS',
-                                      meta={'process_percent': process_percent})
-    return random.random()
-
-@shared_task
-def add(x,y):
-    for i in range(1000000000):
-        a = x+y
-    return x+y
-
+from django.contrib.auth.models import User
 from .etabs import *
-from  .models import *
-import pandas as pd
 import numpy as np
-from  .models import *
 from functools import reduce
-import tempfile
+from .models import *
+import pandas as pd
+import os
 
 @shared_task
-def celery_ImportETABS(title, description, strength, path,
+def ImportETABS(title, description, strength, path,
                        location, soil_class, return_period,
                        frame_type, user_id):
-    print("User id: {}".format(id))
+    print("User id: {}".format(user_id))
     print("User: {}".format(User.objects.get(id=user_id)))
     messages = []
-    current_task.update_state(state='PROGRESS', 
-                              meta={'process_percent': 50,
+    print("Current Task: {}".format(current_task))
+    current_task.update_state(meta={'process_percent': 10,
                                     'message': "\n".join(messages) + "\nStarting"})
     project = Project()
-    #xl_workbook = pd.ExcelFile(pickle.loads(path))
-    print("---PATH: {}".format(path))
-    print("---PATH TYPE: {}".format(type(path)))
-    print("---PATH DIR: {}".format(dir(path)))
-    print(len(path.read()))
-    path.seek(0)
-    temp = tempfile.NamedTemporaryFile()
-    temp.write(path.read())
-    temp.seek(0)
-    xl_workbook = pd.ExcelFile(temp.name)
+    print("Path: {}".format(path))
+    xl_workbook = pd.ExcelFile(path)
     print("---Workbook: {}".format(xl_workbook))
     setattr(project, 'title_text', title)
     setattr(project, 'description_text', description)
@@ -68,8 +38,7 @@ def celery_ImportETABS(title, description, strength, path,
     Ty = list(sheet.sort_values('UY', ascending=False)['Period'])[0]
 
     messages.append("Periods: {}, {}".format(Tx, Ty))
-    current_task.update_state(state='PROGRESS', 
-                              meta={'process_percent': 50,
+    current_task.update_state(meta={'process_percent': 20,
                                     'message': "\n".join(messages) + 
                                     "\nCreating hazard curve"})
 
@@ -85,8 +54,7 @@ def celery_ImportETABS(title, description, strength, path,
 
     messages.append("Created hazard curve for {}, soil class {}".format(
         location, soil_class))
-    current_task.update_state(state='PROGRESS', 
-                              meta={'process_percent': 50,
+    current_task.update_state(meta={'process_percent': 30,
                                     'message': "\n".join(messages) + 
                                     "\nDetermining design hazard."})
     # Figure out the design IM:
@@ -95,8 +63,7 @@ def celery_ImportETABS(title, description, strength, path,
                        hazard.model().getlambda(x[0]) - 1.0/return_period,
                        guess)[0]
     messages.append("Design IM: {}".format(design_im))
-    current_task.update_state(state='PROGRESS', 
-                              meta={'process_percent': 50,
+    current_task.update_state(meta={'process_percent': 40,
                                     'message': "\n".join(messages) + 
                                     "\nReading data."})
     # Get the names and heights of the stories from the ~Diaphragm Center of Mass
@@ -109,8 +76,7 @@ def celery_ImportETABS(title, description, strength, path,
                           filter(['Story', 'Z']).sort_values('Z')
     height_df = height_df.rename(index=str, columns={'Z': 'Height'})
     messages.append("Structure has {} stories.".format(len(height_df)))
-    current_task.update_state(state='PROGRESS', 
-                              meta={'process_percent': 50,
+    current_task.update_state(meta={'process_percent': 50,
                                     'message': "\n".join(messages) + 
                                     "\nCreating levels."})
 
@@ -184,8 +150,7 @@ def celery_ImportETABS(title, description, strength, path,
     accel_coefficients = get_correction_factors(num_floors,
                                                 frame_type, 
                                                 "Floor Acceleration")
-    current_task.update_state(state='PROGRESS', 
-                              meta={'process_percent': 50,
+    current_task.update_state(meta={'process_percent': 60,
                                     'message': "\n".join(messages) + 
                                     "\nCalculating dispersions."})
     for im in im_range:
@@ -205,8 +170,7 @@ def celery_ImportETABS(title, description, strength, path,
     for story in height_df['Story']:
         for im in im_range:
             current_task.update_state(
-                state='PROGRESS', 
-                meta={'process_percent': 50,
+                meta={'process_percent': 70,
                       'message': "\n".join(messages) + 
                       "\nCalculating demads for story {} at {}.".format(
                           story, im)})
@@ -246,8 +210,7 @@ def celery_ImportETABS(title, description, strength, path,
 
     messages.append("Created hazard curves.")
     current_task.update_state(
-        state='PROGRESS', 
-        meta={'process_percent': 50,
+        meta={'process_percent': 80,
               'message': "\n".join(messages) + 
               "\nCreating EDP: Ground level acceleration."})
     # Ground level acceleration matches the IM:
@@ -265,8 +228,7 @@ def celery_ImportETABS(title, description, strength, path,
     for l in range(1, num_floors+1):                               
         level = Level.objects.get(level=l, project=project)
         current_task.update_state(
-            state='PROGRESS', 
-            meta={'process_percent': 50,
+            meta={'process_percent': 90,
                   'message': "\n".join(messages) + 
                   "\nCreating EDP: {} drift.".format(level.label)})
         edp = EDP(project=project, level=level, type='D')
@@ -287,8 +249,7 @@ def celery_ImportETABS(title, description, strength, path,
         edp.interpolation_method = Interpolation_Method.objects.get(method_text="Linear")
         edp.save()
         current_task.update_state(
-            state='PROGRESS', 
-            meta={'process_percent': 50,
+            meta={'process_percent': 95,
                   'message': "\n".join(messages) + 
                   "\nCreating EDP: {} acceleration.".format(level.label)})
         for im in im_range:
@@ -304,10 +265,11 @@ def celery_ImportETABS(title, description, strength, path,
         ProjectUserPermissions.ROLE_FULL)
     messages.append("Done")
     current_task.update_state(
-        state='PROGRESS', 
-        meta={'process_percent': 75,
+        meta={'process_percent': 100,
               'message': "\n".join(messages)})
     #print(curves)
+    print("DONE")
+    os.remove(path)
     return(reverse('slat:project', args=(project.id,)))
     #return project.id
 
