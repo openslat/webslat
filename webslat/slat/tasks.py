@@ -15,6 +15,7 @@ def ImportETABS(title, description, strength, path,
                        location, soil_class, return_period,
                        frame_type, user_id):
     messages = []
+    print("path: {}".format(path))
     current_task.update_state(meta={'process_percent': 10,
                                     'message': "\n".join(messages) + "\nStarting"})
     project = Project()
