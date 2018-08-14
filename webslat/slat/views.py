@@ -714,7 +714,7 @@ def project(request, project_id=None):
                     tempdir = os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), "tmp")
                     temp = tempfile.NamedTemporaryFile(dir=tempdir, delete=False)
                     print("temp: {}".format(temp.name))
-                    logging.debug("temp: {}".format(temp.name))
+                    logging.error("temp: {}".format(temp.name))
 
                     temp.write(contents)
                     temp.close()
