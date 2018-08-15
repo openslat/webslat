@@ -27,7 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 BROKER_URL = 'amqp://guest:guest@localhost//'
-#BACKEND_URL = 'redis://localhost'
+BACKEND_URL = 'redis://localhost'
 CELERY_ACCEPT_CONTENT = ['json']
 #CELERY_ACCEPT_CONTENT = ['pickle']
 CELERY_TASK_SERIALIZER = 'json'
