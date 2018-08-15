@@ -711,11 +711,12 @@ def project(request, project_id=None):
                     return_period = int(form3.cleaned_data["return_period"])
                     frame_type = form3.cleaned_data["frame_type"]
                     
-                    tempdir = os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), "tmp")
+                    tempdir = os.path.join(
+                        os.path.split(
+                            os.path.split(
+                                os.path.abspath(__file__))[0])[0],
+                        "tmp")
                     temp = tempfile.NamedTemporaryFile(dir=tempdir, delete=False)
-                    print("temp: {}".format(temp.name))
-                    logging.error("temp: {}".format(temp.name))
-
                     temp.write(contents)
                     temp.close()
 
