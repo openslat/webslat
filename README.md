@@ -184,7 +184,8 @@ served via Apache.
              xlrd \
              pandas \
              celery \
-             django-celery
+             django-celery \
+             redis
         pip3 install django-registration
         pip3 install --upgrade django
         deactivate
@@ -219,14 +220,14 @@ served via Apache.
         cd webslat/webslat
         python3 manage.py migrate
 
-1.  Run the test scripts:
+7.  Run the test scripts:
     
         source .profile
         source webslat-env/bin/activate
         cd webslat/webslat
         ./runtests.sh 2>&1
 
-2.  Seed the databse:
+8.  Seed the databse:
     
         source .profile
         source webslat-env/bin/activate
@@ -317,7 +318,7 @@ served via Apache.
     </tr>
     </tbody>
     </table>
-3.  Test the `django` server:
+9.  Test the `django` server:
     As `webslat-user` on the VM, run:
     
         # Can't run this from this file, because =runserver= won't return.
@@ -332,12 +333,12 @@ served via Apache.
     to confirm the server is working.
     
     Quit `w3m` and kill the server.
-4.  User `apache2` to serve `webslat`. First, run:
+10. User `apache2` to serve `webslat`. First, run:
     
         sudo apt-get -y install apache2 \
              libapache2-mod-wsgi-py3
 
-5.  Make sure the `apache2` process can read the database file.
+11. Make sure the `apache2` process can read the database file.
     1.  Assign appropriate permissions:
         
             chmod 664 webslat/webslat/db.sqlite3
@@ -350,7 +351,7 @@ served via Apache.
             sudo chown :www-data /home/webslat-user/webslat/webslat
             sudo chown --recursive :www-data /home/webslat-user/webslat/webslat/slat/static
 
-6.  Edit `webslat/webslat/webslat/settings.py`
+12. Edit `webslat/webslat/webslat/settings.py`
     1.  Set `DEBUG` to `False`:
         
             sed -ie "s/DEBUG.*$/DEBUG = False/" \
@@ -366,14 +367,14 @@ served via Apache.
             sed -ie "s/STATIC_ROOT.*/STATIC_ROOT = os.path.join(BASE_DIR, 'static\/')/" \
                 webslat/webslat/webslat/settings.py
 
-7.  Create the static files:
+13. Create the static files:
     
         source .profile
         source webslat-env/bin/activate
         cd webslat/webslat
         ./manage.py collectstatic
 
-8.  As `root` on the VM, edit `/etc/apache2/sites-available/000-default.conf`, by
+14. As `root` on the VM, edit `/etc/apache2/sites-available/000-default.conf`, by
     adding, inside the `<VirtualHost...>` tag:
     
         if [ $(grep webslat-user -c /etc/apache2/sites-available/000-default.conf) == 0 ]
@@ -400,16 +401,16 @@ served via Apache.
     
         sudo apache2ctl configtest 2>&1
 
-9.  Install `libslat` where `apache2` can find it. Run:
+15. Install `libslat` where `apache2` can find it. Run:
     
         sudo ln -s /home/webslat-user/SLAT/linux/lib/libslat.so /usr/local/lib
         sudo ldconfig
 
-10. Restart the server:
+16. Restart the server:
     
         sudo systemctl restart apache2
 
-11. Connect from the browser:
+17. Connect from the browser:
     
         firefox http://localhost:3080
 

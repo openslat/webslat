@@ -260,7 +260,8 @@ served via Apache.
           xlrd \
           pandas \
           celery \
-          django-celery
+          django-celery \
+          redis
      pip3 install django-registration
      pip3 install --upgrade django
      deactivate
@@ -313,7 +314,6 @@ served via Apache.
      cd webslat/webslat
      python3 manage.py migrate
    #+END_SRC
-
 
 25. Run the test scripts:
    #+ATTR_LATEX: :options language=bash-remote
@@ -406,6 +406,8 @@ served via Apache.
          sed -ie "s/DEBUG.*$/DEBUG = False/" \
              webslat/webslat/webslat/settings.py
        #+END_SRC
+
+       #+RESULTS:
        
     1. Set =ALLOWED_HOSTS=:
        #+HEADER: :dir /ssh:webslat-vm:
@@ -465,7 +467,7 @@ served via Apache.
 
     Test the configuration:
     #+ATTR_LATEX: :options language=bash-remote
-   #+HEADER: :dir /ssh:webslat-vm:
+    #+HEADER: :dir /ssh:webslat-vm:
     #+BEGIN_SRC bash :eval ask :results output
       sudo apache2ctl configtest 2>&1
     #+END_SRC
