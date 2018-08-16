@@ -25,13 +25,12 @@ SECRET_KEY = 'am-t+0fp%z2j^+r^1vafuku5&9x8bgr^6s+!r3^))ndg3$54i0'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
-BROKER_URL = 'amqp://guest:guest@localhost//'
-BACKEND_URL = 'redis://localhost'
-CELERY_ACCEPT_CONTENT = ['json']
-#CELERY_ACCEPT_CONTENT = ['pickle']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
+ALLOWED_HOSTS=['localhost', '127.0.0.1', '127.0.1.1']
+broker_url = 'redis://localhost'
+backend_url = 'redis://localhost'
+celery_accept_content = ['json']
+celery_task_serializer = 'json'
+celery_result_serializer = 'json'
 
 # Application definition
 
@@ -147,7 +146,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(os.path.dirname(__file__), '../static')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 LOGIN_URL='/login'
 LOGIN_REDIRECT_URL= '/slat'
 LOGOUT_REDIRECT_URL='/login'
