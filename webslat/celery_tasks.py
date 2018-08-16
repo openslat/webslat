@@ -7,8 +7,8 @@ from django.conf import settings
 from celery import Celery
 
 app = Celery('slat',
-             backend='amqp',
-             broker='amqp://guest@localhost//')
+             backend='redis://localhost',
+             broker='redis://localhost')
 
 # This reads, e.g., CELERY_ACCEPT_CONTENT = ['json'] from settings.py:
 app.config_from_object('django.conf:settings')
