@@ -109,7 +109,7 @@ served via Apache.
         
          sudo pip3 install antlr4-python3-runtime numpy typing
 
-13. Build the libraries:
+1.  Build the libraries:
     
         if [[ -e SLAT ]]; then
             cd SLAT/linux
@@ -121,39 +121,39 @@ served via Apache.
         fi;
         make
 
-14. Add the search paths to `.profile`, if they aren't already there;
+2.  Add the search paths to `.profile`, if they aren't already there;
     
         if ! grep -q PYTHONPATH .profile; then
             echo export LD_LIBRARY_PATH=~/SLAT/linux/lib >> .profile
             echo export PYTHONPATH=~/SLAT/linux/lib >> .profile
         fi
 
-15. Run the unit tests:
+3.  Run the unit tests:
     
         source .profile
         cd SLAT/linux/bin
         ./unit_tests
 
-16. Run the C++ example2 binary:
+4.  Run the C++ example2 binary:
     
         source .profile
         cd SLAT/parser/example2
         ../../linux/bin/example2
 
-17. Run the example2 Python script:
+5.  Run the example2 Python script:
     
         source .profile
         cd SLAT/parser/example2
         ./example2.py
 
-18. Run the example2 SLAT script:
+1.  Run the example2 SLAT script:
     
         source .profile
         cd SLAT/parser/example2
         ../../linux/scripts/SlatInterpreter.py \
             example2.slat
 
-19. Run these commands:
+1.  Run these commands:
     
     This will install the packages needed for `WebSLAT`:
     
@@ -168,7 +168,7 @@ served via Apache.
              supervisor
         sudo pip3 install virtualenv
 
-20. Set up a virtual python environment
+2.  Set up a virtual python environment
     
         virtualenv webslat-env
         source webslat-env/bin/activate
@@ -189,25 +189,29 @@ served via Apache.
         pip3 install --upgrade django
         deactivate
 
-21. Copy the `webslat` files to the VM:
+3.  Copy the `webslat` files to the VM:
     
         git clone http://github.com/mikelygee/webslat
 
-22. Create a temporary directory. This is where `WebSLAT` will store temporary
+4.  Create a temporary directory. This is where `WebSLAT` will store temporary
     files, in particular for passing to the `celery` worker when importing
     `ETABS` data.
     
         mkdir webslat/webslat/tmp
-        chown :www-data webslat/webslat/tmp
-23. Install the config file to allow `supervisord` to start `celery`
-    automatically:
+        chmod 775 webslat/webslat/tmp
+        sudo chown :www-data webslat/webslat/tmp
+
+5.  Install the config file to allow `supervisord` to start `celery`
+    automatically, then restart the `supervisor` service to ensure that `celery`
+    is running.
     
         echo "[program:webslat-celery]
         command=/home/webslat-user/webslat/start-celery.sh
         user=www-data" > webslat-celery.conf
         sudo mv webslat-celery.conf /etc/supervisor/conf.d
+        sudo systemctl restart supervisor.service
 
-24. Initialise the databse:
+6.  Initialise the databse:
     As `webslat-user` on the VM, run:
     
         source .profile
@@ -215,106 +219,105 @@ served via Apache.
         cd webslat/webslat
         python3 manage.py migrate
 
-25. Run the test scripts:
+1.  Run the test scripts:
     
         source .profile
         source webslat-env/bin/activate
         cd webslat/webslat
         ./runtests.sh 2>&1
 
-26. Seed the databse:
+2.  Seed the databse:
     
         source .profile
         source webslat-env/bin/activate
         cd webslat/webslat
         python3 manage.py runscript seed_system
-
-This will populate the database with several users and projects:
-
-<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
-
-
-<colgroup>
-<col  class="org-left" />
-
-<col  class="org-left" />
-
-<col  class="org-left" />
-
-<col  class="org-left" />
-</colgroup>
-<thead>
-<tr>
-<th scope="col" class="org-left">User ID</th>
-<th scope="col" class="org-left">Password</th>
-<th scope="col" class="org-left">Admin?</th>
-<th scope="col" class="org-left">Projects</th>
-</tr>
-</thead>
-
-<tbody>
-<tr>
-<td class="org-left">slat-admin</td>
-<td class="org-left">swordfish</td>
-<td class="org-left">X</td>
-<td class="org-left">&#xa0;</td>
-</tr>
-</tbody>
-
-<tbody>
-<tr>
-<td class="org-left">samspade</td>
-<td class="org-left">maltesefalcon</td>
-<td class="org-left">&#xa0;</td>
-<td class="org-left">Sam Spade's Demo Project</td>
-</tr>
-
-
-<tr>
-<td class="org-left">&#xa0;</td>
-<td class="org-left">&#xa0;</td>
-<td class="org-left">&#xa0;</td>
-<td class="org-left">Sam Spade's Other Demo Project</td>
-</tr>
-</tbody>
-
-<tbody>
-<tr>
-<td class="org-left">miles</td>
-<td class="org-left">samspartner</td>
-<td class="org-left">&#xa0;</td>
-<td class="org-left">&#xa0;</td>
-</tr>
-</tbody>
-
-<tbody>
-<tr>
-<td class="org-left">marlowe</td>
-<td class="org-left">thebigsleep</td>
-<td class="org-left">&#xa0;</td>
-<td class="org-left">Phil Marlowe's First Project</td>
-</tr>
-
-
-<tr>
-<td class="org-left">&#xa0;</td>
-<td class="org-left">&#xa0;</td>
-<td class="org-left">&#xa0;</td>
-<td class="org-left">Phil Marlowe's Second Project</td>
-</tr>
-</tbody>
-
-<tbody>
-<tr>
-<td class="org-left">holmes</td>
-<td class="org-left">elementary</td>
-<td class="org-left">&#xa0;</td>
-<td class="org-left">Sherlock's Project</td>
-</tr>
-</tbody>
-</table>
-
-1.  Test the `django` server:
+    
+    This will populate the database with several users and projects:
+    
+    <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+    
+    
+    <colgroup>
+    <col  class="org-left" />
+    
+    <col  class="org-left" />
+    
+    <col  class="org-left" />
+    
+    <col  class="org-left" />
+    </colgroup>
+    <thead>
+    <tr>
+    <th scope="col" class="org-left">User ID</th>
+    <th scope="col" class="org-left">Password</th>
+    <th scope="col" class="org-left">Admin?</th>
+    <th scope="col" class="org-left">Projects</th>
+    </tr>
+    </thead>
+    
+    <tbody>
+    <tr>
+    <td class="org-left">slat-admin</td>
+    <td class="org-left">swordfish</td>
+    <td class="org-left">X</td>
+    <td class="org-left">&#xa0;</td>
+    </tr>
+    </tbody>
+    
+    <tbody>
+    <tr>
+    <td class="org-left">samspade</td>
+    <td class="org-left">maltesefalcon</td>
+    <td class="org-left">&#xa0;</td>
+    <td class="org-left">Sam Spade's Demo Project</td>
+    </tr>
+    
+    
+    <tr>
+    <td class="org-left">&#xa0;</td>
+    <td class="org-left">&#xa0;</td>
+    <td class="org-left">&#xa0;</td>
+    <td class="org-left">Sam Spade's Other Demo Project</td>
+    </tr>
+    </tbody>
+    
+    <tbody>
+    <tr>
+    <td class="org-left">miles</td>
+    <td class="org-left">samspartner</td>
+    <td class="org-left">&#xa0;</td>
+    <td class="org-left">&#xa0;</td>
+    </tr>
+    </tbody>
+    
+    <tbody>
+    <tr>
+    <td class="org-left">marlowe</td>
+    <td class="org-left">thebigsleep</td>
+    <td class="org-left">&#xa0;</td>
+    <td class="org-left">Phil Marlowe's First Project</td>
+    </tr>
+    
+    
+    <tr>
+    <td class="org-left">&#xa0;</td>
+    <td class="org-left">&#xa0;</td>
+    <td class="org-left">&#xa0;</td>
+    <td class="org-left">Phil Marlowe's Second Project</td>
+    </tr>
+    </tbody>
+    
+    <tbody>
+    <tr>
+    <td class="org-left">holmes</td>
+    <td class="org-left">elementary</td>
+    <td class="org-left">&#xa0;</td>
+    <td class="org-left">Sherlock's Project</td>
+    </tr>
+    </tbody>
+    </table>
+3.  Test the `django` server:
     As `webslat-user` on the VM, run:
     
         # Can't run this from this file, because =runserver= won't return.
@@ -329,12 +332,12 @@ This will populate the database with several users and projects:
     to confirm the server is working.
     
     Quit `w3m` and kill the server.
-2.  User `apache2` to serve `webslat`. First, run:
+4.  User `apache2` to serve `webslat`. First, run:
     
         sudo apt-get -y install apache2 \
              libapache2-mod-wsgi-py3
 
-3.  Make sure the `apache2` process can read the database file.
+5.  Make sure the `apache2` process can read the database file.
     1.  Assign appropriate permissions:
         
             chmod 664 webslat/webslat/db.sqlite3
@@ -347,25 +350,30 @@ This will populate the database with several users and projects:
             sudo chown :www-data /home/webslat-user/webslat/webslat
             sudo chown --recursive :www-data /home/webslat-user/webslat/webslat/slat/static
 
-4.  Edit `webslat/webslat/webslat/settings.py`
-    1.  Set `ALLOWED_HOSTS`:
+6.  Edit `webslat/webslat/webslat/settings.py`
+    1.  Set `DEBUG` to `False`:
+        
+            sed -ie "s/DEBUG.*$/DEBUG = False/" \
+                webslat/webslat/webslat/settings.py
+    
+    2.  Set `ALLOWED_HOSTS`:
         
             sed -ie "s/ALLOWED_HOSTS.*$/ALLOWED_HOSTS=['localhost', '127.0.0.1', '127.0.1.1']/" \
                 webslat/webslat/webslat/settings.py
     
-    2.  Set `STATIC_ROOT`:
+    3.  Set `STATIC_ROOT`:
         
             sed -ie "s/STATIC_ROOT.*/STATIC_ROOT = os.path.join(BASE_DIR, 'static\/')/" \
                 webslat/webslat/webslat/settings.py
 
-5.  Create the static files:
+7.  Create the static files:
     
         source .profile
         source webslat-env/bin/activate
         cd webslat/webslat
         ./manage.py collectstatic
 
-6.  As `root` on the VM, edit `/etc/apache2/sites-available/000-default.conf`, by
+8.  As `root` on the VM, edit `/etc/apache2/sites-available/000-default.conf`, by
     adding, inside the `<VirtualHost...>` tag:
     
         if [ $(grep webslat-user -c /etc/apache2/sites-available/000-default.conf) == 0 ]
@@ -392,16 +400,16 @@ This will populate the database with several users and projects:
     
         sudo apache2ctl configtest 2>&1
 
-7.  Install `libslat` where `apache2` can find it. Run:
+9.  Install `libslat` where `apache2` can find it. Run:
     
         sudo ln -s /home/webslat-user/SLAT/linux/lib/libslat.so /usr/local/lib
         sudo ldconfig
 
-8.  Restart the server:
+10. Restart the server:
     
         sudo systemctl restart apache2
 
-9.  Connect from the browser:
+11. Connect from the browser:
     
         firefox http://localhost:3080
 
