@@ -36,6 +36,9 @@ import json
 import celery_tasks
 from .tasks import ImportETABS
 import celery
+import tempfile
+import os, sys
+import logging
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -586,7 +589,6 @@ class ProjectCreateTypeForm(Form):
                                         ("EMPTY", "Empty Project"),
                                         ("ETABS", "ETABS Project")])
 
-import tempfile
 @login_required
 def project(request, project_id=None):
     # Initialize everything we'll send to the template:
@@ -703,16 +705,18 @@ def project(request, project_id=None):
                 if (form3.is_valid()):
                     strength = form3.cleaned_data["strength"]
                     path = request.FILES['path'].file
-                    print(dir(path))
-                    print("PATH: {}".format(path))
-                    print("PATH TYPE: {}".format(path))
                     contents = path.read()
-                    print("LEN: {}".format(len(contents)))
                     location = form3.cleaned_data["location"]
                     soil_class = form3.cleaned_data["soil_class"]
                     return_period = int(form3.cleaned_data["return_period"])
                     frame_type = form3.cleaned_data["frame_type"]
-                    temp = tempfile.NamedTemporaryFile(delete=False)
+                    
+                    tempdir = os.path.join(
+                        os.path.split(
+                            os.path.split(
+                                os.path.abspath(__file__))[0])[0],
+                        "tmp")
+                    temp = tempfile.NamedTemporaryFile(dir=tempdir, delete=False)
                     temp.write(contents)
                     temp.close()
 

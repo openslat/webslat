@@ -14,16 +14,12 @@ import os
 def ImportETABS(title, description, strength, path,
                        location, soil_class, return_period,
                        frame_type, user_id):
-    print("User id: {}".format(user_id))
-    print("User: {}".format(User.objects.get(id=user_id)))
     messages = []
-    print("Current Task: {}".format(current_task))
+    print("path: {}".format(path))
     current_task.update_state(meta={'process_percent': 10,
                                     'message': "\n".join(messages) + "\nStarting"})
     project = Project()
-    print("Path: {}".format(path))
     xl_workbook = pd.ExcelFile(path)
-    print("---Workbook: {}".format(xl_workbook))
     setattr(project, 'title_text', title)
     setattr(project, 'description_text', description)
     setattr(project, 'rarity', 1.0/return_period)
@@ -267,8 +263,6 @@ def ImportETABS(title, description, strength, path,
     current_task.update_state(
         meta={'process_percent': 100,
               'message': "\n".join(messages)})
-    #print(curves)
-    print("DONE")
     os.remove(path)
     return(reverse('slat:project', args=(project.id,)))
     #return project.id

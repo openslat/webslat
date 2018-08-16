@@ -162,7 +162,10 @@ served via Apache.
              liblapack-dev \
              libfreetype6-dev \
              python3-tk \
-             w3m
+             w3m \
+             rabbitmq-server \
+             redis-server \
+             supervisor
         sudo pip3 install virtualenv
 
 20. Set up a virtual python environment
@@ -179,7 +182,9 @@ served via Apache.
              seaborn \
              pyquery \
              xlrd \
-             pandas
+             pandas \
+             celery \
+             django-celery
         pip3 install django-registration
         pip3 install --upgrade django
         deactivate
@@ -188,7 +193,21 @@ served via Apache.
     
         git clone http://github.com/mikelygee/webslat
 
-22. Initialise the databse:
+22. Create a temporary directory. This is where `WebSLAT` will store temporary
+    files, in particular for passing to the `celery` worker when importing
+    `ETABS` data.
+    
+        mkdir webslat/webslat/tmp
+        chown :www-data webslat/webslat/tmp
+23. Install the config file to allow `supervisord` to start `celery`
+    automatically:
+    
+        echo "[program:webslat-celery]
+        command=/home/webslat-user/webslat/start-celery.sh
+        user=www-data" > webslat-celery.conf
+        sudo mv webslat-celery.conf /etc/supervisor/conf.d
+
+24. Initialise the databse:
     As `webslat-user` on the VM, run:
     
         source .profile
@@ -196,14 +215,14 @@ served via Apache.
         cd webslat/webslat
         python3 manage.py migrate
 
-23. Run the test scripts:
+25. Run the test scripts:
     
         source .profile
         source webslat-env/bin/activate
         cd webslat/webslat
         ./runtests.sh 2>&1
 
-24. Seed the databse:
+26. Seed the databse:
     
         source .profile
         source webslat-env/bin/activate

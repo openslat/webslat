@@ -218,7 +218,10 @@ served via Apache.
           liblapack-dev \
           libfreetype6-dev \
           python3-tk \
-          w3m
+          w3m \
+          rabbitmq-server \
+          redis-server \
+          supervisor
      sudo pip3 install virtualenv
   #+END_SRC
 
@@ -238,7 +241,9 @@ served via Apache.
 	  seaborn \
 	  pyquery \
           xlrd \
-          pandas
+          pandas \
+          celery \
+          django-celery
      pip3 install django-registration
      pip3 install --upgrade django
      deactivate
@@ -255,9 +260,31 @@ served via Apache.
 
     #+RESULTS:
 
-22. Initialise the databse:
+22. Create a temporary directory. This is where ~WebSLAT~ will store temporary
+    files, in particular for passing to the ~celery~ worker when importing
+    ~ETABS~ data.
+    #+ATTR_LATEX: :options language=bash-remote
+    #+HEADER: :dir /ssh:webslat-vm:
+    #+begin_src
+    mkdir webslat/webslat/tmp
+    chown :www-data webslat/webslat/tmp
+    #+end_src
+23. Install the config file to allow ~supervisord~ to start ~celery~
+    automatically:
+    #+ATTR_LATEX: :options language=bash-remote
+    #+HEADER: :dir /ssh:webslat-vm:
+    #+BEGIN_SRC bash :results output :eval ask
+    echo "[program:webslat-celery]
+    command=/home/webslat-user/webslat/start-celery.sh
+    user=www-data" > webslat-celery.conf
+    sudo mv webslat-celery.conf /etc/supervisor/conf.d
+    #+END_SRC    
+
+    #+RESULTS:
+
+24. Initialise the databse:
    As ~webslat-user~ on the VM, run:
-  #+ATTR_LATEX: :options language=bash-remote
+   #+ATTR_LATEX: :options language=bash-remote
    #+HEADER: :dir /ssh:webslat-vm:
    #+BEGIN_SRC bash :results output :eval ask
      source .profile
@@ -268,7 +295,7 @@ served via Apache.
 
    #+RESULTS:
 
-23. Run the test scripts:
+25. Run the test scripts:
    #+ATTR_LATEX: :options language=bash-remote
    #+HEADER: :dir /ssh:webslat-vm:
    #+BEGIN_SRC bash :results output :eval ask
@@ -280,7 +307,7 @@ served via Apache.
 
     #+RESULTS:
 
-24. Seed the databse:
+26. Seed the databse:
    #+ATTR_LATEX: :options language=bash-remote
    #+HEADER: :dir /ssh:webslat-vm:
    #+BEGIN_SRC bash :results output :eval ask
