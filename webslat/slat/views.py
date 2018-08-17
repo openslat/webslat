@@ -1708,7 +1708,7 @@ def level_cgroup(request, project_id, level_id, cg_id=None):
 
      if request.method == 'POST':
          if request.POST.get('cancel'):
-             return HttpResponseRedirect(reverse('slat:floor_cgroups', args=(project_id, floor_num)))
+             return HttpResponseRedirect(reverse('slat:level_cgroups', args=(project_id, level_id)))
 
          if request.POST.get('delete'):
              cg = Component_Group.objects.get(pk=cg_id)
@@ -1748,9 +1748,13 @@ def level_cgroup(request, project_id, level_id, cg_id=None):
          if cg_id:
              cg = get_object_or_404(Component_Group, pk=cg_id)
              demand_form = ComponentForm(initial=model_to_dict(cg), level=level_id)
+             print("Dict: {}".format(model_to_dict(cg)))
          else:
-             demand_form = ComponentForm(level=level_id)
-             
+             demand_form = ComponentForm(level=level_id, 
+                                         initial= {'component': None, 
+                                                   'cost_adj': 1.0, 
+                                                   'comment': '', 
+                                                   'quantity': None})
          return render(request, 'slat/level_cgroup.html', {'project': project,
                                                            'level': Level.objects.get(pk=level_id),
                                                            'cg_id': cg_id,
