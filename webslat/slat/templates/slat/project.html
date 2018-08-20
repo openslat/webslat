@@ -56,6 +56,7 @@ function Refresh( ) {
       <tr><th>Demolition</th><td> {{ form.mean_im_demolition }} </td><td> {{ form.sd_ln_im_demolition }} </td>
         <td> {{ form.mean_cost_demolition }} </td><td> {{ form.sd_ln_cost_demolition }} </td></tr>
     </table>
+    <input type="submit" value="Submit Changes" class="normal"/>
     {{ form.IM }}
     <br/>
     <details>
@@ -87,7 +88,6 @@ function Refresh( ) {
         <a href="{% url 'slat:project_remove_group' form.instance.id %}"  class="link_button">Remove Group</a>
       {% endif %}
       </details>
-     <input type="submit" value="Submit Changes" class="normal"/>
 {% else %}
   <p>Create a Project</P>
   <form enctype="multipart/form-data" action="{% url 'slat:project' %}" method="post">
@@ -127,19 +127,6 @@ function Refresh( ) {
 {% endif %} 
 </form>
 
-    {% if chart %} 
-        {{ chart.as_html }}
-    {% endif %}
-    {% if pdfchart %} 
-        {{ pdfchart.as_html }}
-    {% endif %}
-{% comment %}
-    {% if chart %} 
-        {{ chart.as_html }}
-    {% endif %}
-{% endcomment %}
-
-
 {% if form.instance.id %}
     <hr/>
     <table><tr><td>
@@ -159,6 +146,15 @@ function Refresh( ) {
     </form></td>
     </tr></table>
 {% endif %}
+
+    
+    {% if chart %} 
+        <p>Mean annual cost: {{ project.model.AnnualCost.mean | floatformat:2 }} (ln std dev: {{ project.model.AnnualCost.sd_ln | floatformat:2}}).</p>
+        {{ chart.as_html }}
+    {% endif %}
+    {% if pdfchart %} 
+        {{ pdfchart.as_html }}
+    {% endif %}
 
 <br/>    
 {% if form.instance.id %}

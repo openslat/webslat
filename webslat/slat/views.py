@@ -83,7 +83,9 @@ class IMPDFChart(Chart):
 class IMCostChart(Chart):
     chart_type = 'line'
     scales = {
-        'xAxes': [Axes(type='linear', position='bottom')],
+        'xAxes': [Axes(type='linear',
+                       position='bottom')],
+        'yAxes': [Axes(scaleLabel=ScaleLabel(display=True, labelString="Cost"))]
     }
 
     def __init__(self, project):
@@ -91,6 +93,10 @@ class IMCostChart(Chart):
         self.repair = []
         self.demolition = []
         self.collapse = []
+        if project.IM:
+            self.scales['xAxes'][0]['scaleLabel']=ScaleLabel(
+                display=True, 
+                labelString=project.IM.label())
 
         # This was copied from earlier code, which calculated the data,
         # then passed it to the chart. This can be cleaned up to 
@@ -644,9 +650,10 @@ def project(request, project_id=None):
                 
         can_add = project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL
         form = ProjectForm(instance=project, initial=model_to_dict(project))
-        
-        chart = IMCostChart(project)
-        pdf_chart = IMPDFChart(project)
+
+        if project.model().AnnualCost().mean() > 0:
+            chart = IMCostChart(project)
+            #pdf_chart = IMPDFChart(project)
         
         levels = project.num_levels()
         levels_form = None
@@ -666,6 +673,7 @@ def project(request, project_id=None):
             'users': users, 
             'groups': groups,
             'can_add': can_add,
+            'project': project,
             'project_type_form': project_type_form})
     
     elif request.method == 'POST' and not project_id:
@@ -746,7 +754,7 @@ def project(request, project_id=None):
                         'project_type_form': project_type_form})
 
         project.AssignRole(request.user, ProjectUserPermissions.ROLE_FULL)
-        return HttpResponseRedirect(reverse('slat:project', args=project.id,))
+        return HttpResponseRedirect(reverse('slat:project', args=(project.id,)))
     elif request.method == 'POST' and project_id:
         # Update existing project from form
         project = Project.objects.get(pk=project_id)
