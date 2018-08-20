@@ -708,6 +708,8 @@ def project(request, project_id=None):
                             label = "Floor #{}".format(l + 1)
                             level = Level(project=project, level=l, label=label)
                             level.save()
+                project.AssignRole(request.user, ProjectUserPermissions.ROLE_FULL)
+                return HttpResponseRedirect(reverse('slat:hazard_choose', args=(project.id,))) 
             elif project_type == "ETABS":
                 form3 = ProjectFormPart3(request.POST, request.FILES)
                 if (form3.is_valid()):

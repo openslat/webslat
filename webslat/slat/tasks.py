@@ -264,7 +264,7 @@ def ImportETABS(title, description, strength, path,
         meta={'process_percent': 100,
               'message': "\n".join(messages)})
     os.remove(path)
-    return(reverse('slat:project', args=(project.id,)))
+    return(reverse('slat:levels', args=(project.id,)))
     #return project.id
 
     
