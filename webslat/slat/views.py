@@ -209,7 +209,10 @@ class ExpectedLoss_Over_Time_Chart(Chart):
             self.data.append({'x': year, 'y': loss})
         
         if isnan(building.getRebuildCost().mean()):
-            title = "EAL=${}\nDiscount rate = {}%".format(round(building.AnnualCost().mean()), 100 * rate)
+            if isnan(building.AnnualCost().mean()):
+                title = "Missing data, somewhere; cost is NAN"
+            else:
+                title = "EAL=${}\nDiscount rate = {}%".format(round(building.AnnualCost().mean()), 100 * rate)
         else:
             title = "EAL=${}\n({} % of rebuild cost)\nDiscount rate = {}%".format(
                 round(building.AnnualCost().mean()),
@@ -577,18 +580,6 @@ def make_example_2(user):
     
     return project
 
-@login_required
-def demo(request):
-    print("> demo()")
-    print("Method: {}".format(request.method))
-    form = ProjectForm(request.POST)
-    print("Form.is_valid(): {}".format(form.is_valid()))
-    print("Form.cleaned_data: {}".format(form.cleaned_data))
-    print("Request: {}".format(request))
-    print("< demo()")
-    #make_demo(request.user)
-    return HttpResponseRedirect(reverse('slat:index'))
-    
 class ProjectCreateTypeForm(Form):
     project_type = ChoiceField(choices=[(None, "-------------"),
                                         ("DEMO", "Demo Project"),
@@ -706,8 +697,23 @@ def project(request, project_id=None):
                             label = "Roof"
                         else:
                             label = "Floor #{}".format(l + 1)
-                            level = Level(project=project, level=l, label=label)
-                            level.save()
+                        print("L: {}; Label: {}".format(l, label))
+                        level = Level(project=project, level=l, label=label)
+                        level.save()
+
+                        # Create empty demands:
+                        edp = EDP(project=project,
+                                  level=level,
+                                  type = EDP.EDP_TYPE_ACCEL)
+                        edp.save()
+
+                        if l != 0:
+                            edp = EDP(project=project,
+                                      level=level,
+                                      type = EDP.EDP_TYPE_DRIFT)
+                            edp.save()
+                            
+                                  
                 project.AssignRole(request.user, ProjectUserPermissions.ROLE_FULL)
                 return HttpResponseRedirect(reverse('slat:hazard_choose', args=(project.id,))) 
             elif project_type == "ETABS":

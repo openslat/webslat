@@ -17,7 +17,6 @@ urlpatterns = [
         auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
      url(r'^reset/done/$', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
     url(r'^$', views.index, name='index'),
-    url(r'^demo$', views.demo, name='demo'),
     url(r'^project/(?P<project_id>[0-9]+)$', views.project, name='project'),
     url(r'^project/(?P<project_id>[0-9]+)/add_user$', views.project_add_user, name='project_add_user'),
     url(r'^project/(?P<project_id>[0-9]+)/remove_user$', views.project_remove_user, name='project_remove_user'),

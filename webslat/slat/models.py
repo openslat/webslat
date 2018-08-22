@@ -16,6 +16,7 @@ from django.contrib.auth.models import User
 from django.db.models import CASCADE, PROTECT, SET_NULL, DO_NOTHING
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+import numpy as np
 import re
 
 def eprint(*args, **kwargs):
@@ -462,7 +463,18 @@ class EDP(models.Model):
 
     def _make_model(self):
         if not self.flavour:
-            return None
+            # Use an all-NAN function for the EDP, so any components attached to it
+            # will have a cost of NAN:x
+            mu = pyslat.detfn('<powercurve-mu>', 'power law', [np.nan, np.nan])
+            sigma = pyslat.detfn('<powercurve-sigma>', 'power law', [np.nan, np.nan])
+            prob_func = pyslat.probfn('<probfn>', 'lognormal',
+                                      [pyslat.LOGNORMAL_MU_TYPE.MEDIAN_X, mu],
+                                      [pyslat.LOGNORMAL_SIGMA_TYPE.SD_LN_X, sigma]) 
+            edp_func = pyslat.edp(self.id, self.project.IM.model(), prob_func)
+            eprint("edp_func: {}".format(edp_func))
+            eprint("  edp_func.plot_max: {}".format(edp_func.plot_max()))
+            eprint("  edp_func(0): {}".format(edp_func.Mean(0)))
+            exit
         elif self.flavour.id == EDP_FLAVOUR_POWERCURVE:
             mu = pyslat.detfn('<powercurve-mu>', 'power law', [self.powercurve.median_x_a,
                                                                self.powercurve.median_x_b])
