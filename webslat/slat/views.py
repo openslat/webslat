@@ -1875,9 +1875,23 @@ def levels(request, project_id):
         raise PermissionDenied
 
     levels = project.levels()
+    level_info = []
+    for level in levels:
+        accel = EDP.objects.get(project=project, level=level, type='A').flavour != None
+        if level.level > 0:
+            drift = EDP.objects.get(project=project, level=level, type='D').flavour != None
+        else:
+            drift = False
+        level_info.append({'label': level.label,
+                           'level': level.level,
+                           'id': level.id,
+                           'accel': accel, 
+                           'drift': drift})
     return render(request, 'slat/levels.html', 
                   {'project': project, 
+                   'level_info': level_info,
                    'levels': levels})
+
 @login_required
 def demand(request, project_id, level_id, type):
     project = get_object_or_404(Project, pk=project_id)
@@ -2093,6 +2107,7 @@ def ComponentDescription(request, component_key):
 
 @login_required
 def shift_level(request, project_id, level_id, shift):
+    print("> shift_level({}, {}, {})".format(project_id, level_id, shift))
     shift = int(shift)
     project = Project.objects.get(pk=project_id)
 
@@ -2129,7 +2144,7 @@ def shift_level(request, project_id, level_id, shift):
             print("Nowhere to go")
     else:
         print("??????")
-    return HttpResponseRedirect(reverse('slat:levels', args=(project_id)))
+    return HttpResponseRedirect(reverse('slat:levels', args=(project_id,)))
 
 @login_required
 def rename_level(request, project_id, level_id):
