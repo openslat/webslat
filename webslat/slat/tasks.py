@@ -10,12 +10,14 @@ from .models import *
 import pandas as pd
 import os
 
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
 @shared_task
 def ImportETABS(title, description, strength, path,
                        location, soil_class, return_period,
                        frame_type, user_id):
     messages = []
-    print("path: {}".format(path))
     current_task.update_state(meta={'process_percent': 10,
                                     'message': "\n".join(messages) + "\nStarting"})
     project = Project()
@@ -32,6 +34,7 @@ def ImportETABS(title, description, strength, path,
                           skiprows=(1)))
     Tx = list(sheet.sort_values('UX', ascending=False)['Period'])[0]
     Ty = list(sheet.sort_values('UY', ascending=False)['Period'])[0]
+    fundamental_period = (Tx + Ty) / 2.0
 
     messages.append("Periods: {}, {}".format(Tx, Ty))
     current_task.update_state(meta={'process_percent': 20,
@@ -41,7 +44,7 @@ def ImportETABS(title, description, strength, path,
     # Create the hazard curve, using the X period:
     nzs = NZ_Standard_Curve(location=Location.objects.get(location=location),
                             soil_class = soil_class,
-                            period = Tx)
+                            period = fundamental_period)
     nzs.save()
     hazard = IM(flavour = IM_Types.objects.get(pk=IM_TYPE_NZS), nzs = nzs)
     hazard.save()
@@ -154,7 +157,7 @@ def ImportETABS(title, description, strength, path,
         scale = im / design_im
         
         # Get dispersion factors:
-        dispersion = get_dispersion(Tx, scale)
+        dispersion = get_dispersion(fundamental_period, scale)
         dispersions = dispersions.append(
             pd.DataFrame(data=[[im, 
                                 float(dispersion[0]),
@@ -209,15 +212,26 @@ def ImportETABS(title, description, strength, path,
         meta={'process_percent': 80,
               'message': "\n".join(messages) + 
               "\nCreating EDP: Ground level acceleration."})
-    # Ground level acceleration matches the IM:
+    
+    # Ground level acceleration is calculated using NZS 1170, using a period of 0:
     level = Level.objects.get(level=0, project=project)
     edp = EDP(project=project, level=level, type='A')
     edp.flavour = EDP_Flavours.objects.get(pk=EDP_FLAVOUR_USERDEF);
     edp.interpolation_method = Interpolation_Method.objects.get(method_text="Linear")
     edp.save()
-    for im in im_range:
-        accel = im                                   
-        dispersion = dispersions.loc[lambda x: x['IM']==im]['βsd']
+    location_data = Location.objects.get(location=location)
+    for r in R_defaults:
+        im = C(soil_class,
+               fundamental_period, 
+               r, 
+               location_data.z,
+               location_data.min_distance)
+        accel = C(soil_class,
+                  0.0, 
+                  r, 
+                  location_data.z,
+                  location_data.min_distance)
+        dispersion = float(get_dispersion(fundamental_period, im / design_im)[0])
         EDP_Point(demand=edp, im=im, median_x=accel, sd_ln_x=dispersion).save()
 
     # Add drift and accelerations for above-ground levels:    
