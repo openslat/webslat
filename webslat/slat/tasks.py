@@ -18,8 +18,7 @@ def ImportETABS(title, description, strength, path,
                        location, soil_class, return_period,
                        frame_type, user_id):
     messages = []
-    current_task.update_state(meta={'process_percent': 10,
-                                    'message': "\n".join(messages) + "\nStarting"})
+    current_task.update_state(meta={'message': "\n".join(messages) + "\nStarting"})
     project = Project()
     xl_workbook = pd.ExcelFile(path)
     setattr(project, 'title_text', title)
@@ -37,8 +36,7 @@ def ImportETABS(title, description, strength, path,
     fundamental_period = (Tx + Ty) / 2.0
 
     messages.append("Periods: {}, {}".format(Tx, Ty))
-    current_task.update_state(meta={'process_percent': 20,
-                                    'message': "\n".join(messages) + 
+    current_task.update_state(meta={'message': "\n".join(messages) + 
                                     "\nCreating hazard curve"})
 
     # Create the hazard curve, using the X period:
@@ -53,17 +51,15 @@ def ImportETABS(title, description, strength, path,
 
     messages.append("Created hazard curve for {}, soil class {}".format(
         location, soil_class))
-    current_task.update_state(meta={'process_percent': 30,
-                                    'message': "\n".join(messages) + 
+    current_task.update_state(meta={ 'message': "\n".join(messages) + 
                                     "\nDetermining design hazard."})
     # Figure out the design IM:
     guess = hazard.model().plot_max()
     design_im = fsolve(lambda x: 
                        hazard.model().getlambda(x[0]) - 1.0/return_period,
                        guess)[0]
-    messages.append("Design IM: {}".format(design_im))
-    current_task.update_state(meta={'process_percent': 40,
-                                    'message': "\n".join(messages) + 
+    messages.append("Design IM: {:>5.3}".format(design_im))
+    current_task.update_state(meta={ 'message': "\n".join(messages) + 
                                     "\nReading data."})
     # Get the names and heights of the stories from the ~Diaphragm Center of Mass
     # Displa~ tab:
@@ -75,8 +71,7 @@ def ImportETABS(title, description, strength, path,
                           filter(['Story', 'Z']).sort_values('Z')
     height_df = height_df.rename(index=str, columns={'Z': 'Height'})
     messages.append("Structure has {} stories.".format(len(height_df)))
-    current_task.update_state(meta={'process_percent': 50,
-                                    'message': "\n".join(messages) + 
+    current_task.update_state(meta={ 'message': "\n".join(messages) + 
                                     "\nCreating levels."})
 
     # Create levels for the project:
@@ -149,8 +144,7 @@ def ImportETABS(title, description, strength, path,
     accel_coefficients = get_correction_factors(num_floors,
                                                 frame_type, 
                                                 "Floor Acceleration")
-    current_task.update_state(meta={'process_percent': 60,
-                                    'message': "\n".join(messages) + 
+    current_task.update_state(meta={ 'message': "\n".join(messages) + 
                                     "\nCalculating dispersions."})
     for im in im_range:
         # Calculate the dispersion values for each demand:
@@ -169,8 +163,7 @@ def ImportETABS(title, description, strength, path,
     for story in height_df['Story']:
         for im in im_range:
             current_task.update_state(
-                meta={'process_percent': 70,
-                      'message': "\n".join(messages) + 
+                meta={ 'message': "\n".join(messages) + 
                       "\nCalculating demads for story {} at {}.".format(
                           story, im)})
             # Calculate the linear (uncorrected) values for
@@ -209,8 +202,7 @@ def ImportETABS(title, description, strength, path,
 
     messages.append("Created hazard curves.")
     current_task.update_state(
-        meta={'process_percent': 80,
-              'message': "\n".join(messages) + 
+        meta={ 'message': "\n".join(messages) + 
               "\nCreating EDP: Ground level acceleration."})
     
     # Ground level acceleration is calculated using NZS 1170, using a period of 0:
@@ -238,8 +230,7 @@ def ImportETABS(title, description, strength, path,
     for l in range(1, num_floors+1):                               
         level = Level.objects.get(level=l, project=project)
         current_task.update_state(
-            meta={'process_percent': 90,
-                  'message': "\n".join(messages) + 
+            meta={ 'message': "\n".join(messages) + 
                   "\nCreating EDP: {} drift.".format(level.label)})
         edp = EDP(project=project, level=level, type='D')
         edp.flavour = EDP_Flavours.objects.get(pk=EDP_FLAVOUR_USERDEF);
@@ -259,8 +250,7 @@ def ImportETABS(title, description, strength, path,
         edp.interpolation_method = Interpolation_Method.objects.get(method_text="Linear")
         edp.save()
         current_task.update_state(
-            meta={'process_percent': 95,
-                  'message': "\n".join(messages) + 
+            meta={ 'message': "\n".join(messages) + 
                   "\nCreating EDP: {} acceleration.".format(level.label)})
         for im in im_range:
             accel = float(curves.loc[
@@ -275,8 +265,7 @@ def ImportETABS(title, description, strength, path,
         ProjectUserPermissions.ROLE_FULL)
     messages.append("Done")
     current_task.update_state(
-        meta={'process_percent': 100,
-              'message': "\n".join(messages)})
+        meta={ 'message': "\n".join(messages)})
     os.remove(path)
     return(reverse('slat:levels', args=(project.id,)))
     #return project.id
