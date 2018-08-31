@@ -1,0 +1,62 @@
+{% extends "base_site.html" %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
+{{ form.media }}
+{{ form1.media }}
+
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} slat {% endblock %}
+{% block title %}WebSLAT Project {{ form.instance.title_text }}{% endblock %}
+{% block content_title %}{{ form.instance.title_text }}{% endblock %}
+{% block content %}
+<p><b>Title: </b>{{ title }}</p>
+<p><b>Description: </b>{{ description }}</p>
+<p><b>Path: </b>{{ file_path }}</p>
+<p><b>Location: </b>{{ location }}</p>
+<p><b>Soil Class: </b>{{ soil_class }}</p>
+<p><b>Return Period: </b>{{ return_period }}</p>
+<p><b>Frame Type: </b>{{ frame_type }}</p>
+<hr/>
+<p><b>Period Units: </b>{{ period_units }}</p>
+<form action="{% url 'slat:etabs_confirm' %}" method="post">
+    {% csrf_token %}
+    <table>
+      <tr><th>Case</th>
+        <th>Mode</th>
+        <th>Period</th>
+        <th align='center'>UX</th>
+        <th align='center'>UY</th></tr>
+      {% for pc in period_choices %}
+          <tr><td>{{ pc.case }}</td>
+            <td align='right'>{{ pc.mode }}</td>
+            <td>{{ pc.period|floatformat:3 }}</td>
+          {% with forloop.counter|cut:" " as index %}
+            <td>{{ period_form.Tx|slice:index|last }}</td>
+            <td>{{ period_form.Ty|slice:index|last }}</td>
+          {% endwith %}
+          </tr>
+      {% endfor %}
+    </table>
+    <hr/>
+    <p><b>Height Unit: </b>{{ height_unit }}</p>
+    <table><tr><th>Story</th><th>Height</th></tr>
+    {% for level in heights %}
+      <tr><td>{{ level.Story }}</td><td>{{ level.Height}}</td></tr>
+    {% endfor %}
+    </table>
+    <hr/>
+    <p> Choose the 'Load Case/Combo' corresponding to the 'Equivalent Static' load 
+      case for story drift:</p>
+    {{ drift_case_form }}
+    <hr/>
+    <p><b>Acceleration Units:</b></p>
+    <p><b>X</b>: {{ x_accel_units }}</p>
+    <p><b>Y</b>: {{ y_accel_units }}</p>
+    <p> Choose the 'Load Case/Combo' corresponding to the 'Modal Analysis' load 
+      case for acceleration :</p>
+    {{ accel_case_form }}
+    <hr/>
+    <input type="submit" value="Submit" class="normal"/>
+</form>
+{% endblock %}

@@ -7,7 +7,7 @@ from scipy.optimize import fsolve
 from django.http import Http404, HttpResponseRedirect, HttpResponseForbidden, HttpResponse
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
-from django.forms import modelformset_factory, ValidationError, HiddenInput
+from django.forms import modelformset_factory, ValidationError, HiddenInput, RadioSelect
 from django.forms.models import model_to_dict
 from django.core.exceptions import PermissionDenied
 from .nzs import *
@@ -35,10 +35,12 @@ import seaborn as sns
 import json
 import celery_tasks
 from .tasks import ImportETABS
+from .etabs import ETABS_preprocess
 import celery
 import tempfile
 import os, sys
 import logging
+from django.template import Context, Template
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -586,6 +588,24 @@ class ProjectCreateTypeForm(Form):
                                         ("EMPTY", "Empty Project"),
                                         ("ETABS", "ETABS Project")])
 
+class Period_Form(Form):
+    def __init__(self, choices_x, choices_y):
+        super(Form, self).__init__()
+        self.fields['Tx']=ChoiceField(choices=choices_x, widget=RadioSelect)
+        self.fields['Ty']=ChoiceField(choices=choices_y, widget=RadioSelect)
+
+class Drift_Case_Form(Form):
+    def __init__(self, choices):
+        super(Form, self).__init__()
+        self.fields['x_drift_case'] = ChoiceField(choices=choices)
+        self.fields['y_drift_case'] = ChoiceField(choices=choices)
+
+class Accel_Case_Form(Form):
+    def __init__(self, choices):
+        super(Form, self).__init__()
+        self.fields['x_accel_case'] = ChoiceField(choices=choices)
+        self.fields['y_accel_case'] = ChoiceField(choices=choices)
+        
 @login_required
 def project(request, project_id=None):
     # Initialize everything we'll send to the template:
@@ -719,13 +739,38 @@ def project(request, project_id=None):
             elif project_type == "ETABS":
                 form3 = ProjectFormPart3(request.POST, request.FILES)
                 if (form3.is_valid()):
+                    file_path = form3.cleaned_data['path'].name
+                    file_data = request.FILES['path'].file
                     strength = form3.cleaned_data["strength"]
-                    path = request.FILES['path'].file
-                    contents = path.read()
+                    contents = file_data.read()
                     location = form3.cleaned_data["location"]
                     soil_class = form3.cleaned_data["soil_class"]
                     return_period = int(form3.cleaned_data["return_period"])
                     frame_type = form3.cleaned_data["frame_type"]
+
+                    context = ETABS_preprocess(title, description, strength, 
+                                               file_data, file_path,
+                                               location, soil_class, return_period,
+                                               frame_type, request.user.id)
+                    choices_x = map(lambda x: [x['period'], "{:5.3f}".format(x['ux'])],
+                                  context['period_choices'])
+                    choices_y = map(lambda x: [x['period'], "{:5.3f}".format(x['uy'])],
+                                  context['period_choices'])
+                    context['period_form'] = Period_Form(list(choices_x),
+                                                         list(choices_y))
+                    heights = []
+                    for level in context['height_df'].iterrows():
+                        heights.append({'Story': level[1]['Story'],
+                                        'Height': level[1]['Height']})
+                    context['heights'] = heights
+                    
+                    drift_choices = list(map(lambda x: [x, x], context['drift_choices']))
+                    context['drift_case_form'] = Drift_Case_Form(drift_choices)
+
+                    accel_choices = list(map(lambda x: [x, x], context['accel_choices']))
+                    context['accel_case_form'] = Accel_Case_Form(accel_choices)
+                    return render(request, 'slat/etabs_preprocess.html', context)
+
                     
                     tempdir = os.path.join(
                         os.path.split(
@@ -2451,6 +2496,13 @@ def celery_poll_state(request):
 
     return HttpResponse(json_data, content_type='application/json')
 
+def etabs_confirm(request):
+    eprint("> etabs_confirm()")
+    eprint("Request: {}".format(request))
+    eprint("dir(Request): {}".format(dir(request)))
+    eprint("Request.POST: {}".format(request.POST))
+    raise ValueError
+    
 def etabs_progress(request):
     if 'job' in request.GET:
         job_id = request.GET['job']

@@ -9,6 +9,7 @@ from functools import reduce
 from .models import *
 import pandas as pd
 import os
+import time
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -17,10 +18,29 @@ def eprint(*args, **kwargs):
 def ImportETABS(title, description, strength, path,
                        location, soil_class, return_period,
                        frame_type, user_id):
+    
+    start_time = time.time()
     messages = []
     current_task.update_state(meta={'message': "\n".join(messages) + "\nStarting"})
     project = Project()
     xl_workbook = pd.ExcelFile(path)
+    sheet = munge_data_frame(
+        xl_workbook.parse("Modal Participating Mass Ratios", 
+                          skiprows=(1)))
+    mpms = sheet
+    sheet = munge_data_frame(xl_workbook.parse(
+        "Diaphragm Center of Mass Displa",
+        skiprows=1))
+    sheet = munge_data_frame(xl_workbook.parse(
+        "Story Drifts", 
+        skiprows=1))
+    sheet = munge_data_frame(xl_workbook.parse(
+        "Story Accelerations", 
+        skiprows=1))
+    end_time = time.time()
+    
+    eprint("Load Time: {}".format(end_time - start_time))
+    
     setattr(project, 'title_text', title)
     setattr(project, 'description_text', description)
     setattr(project, 'rarity', 1.0/return_period)
