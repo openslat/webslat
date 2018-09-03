@@ -293,6 +293,8 @@ def ImportETABS(user_id, preprocess_data_id):
     messages.append("Done")
     current_task.update_state(
         meta={ 'message': "\n".join(messages)})
+    
+    preprocess_data.delete()
     return(reverse('slat:levels', args=(project.id,)))
     #return project.id
 
