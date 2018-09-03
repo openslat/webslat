@@ -2488,7 +2488,7 @@ def etabs_confirm(request, id):
 
     job = ImportETABS.delay(
         request.user.id,
-        preprocess_data)
+        preprocess_data.id)
     return HttpResponseRedirect(
         reverse('slat:etabs_progress') + '?job=' + job.id)
 

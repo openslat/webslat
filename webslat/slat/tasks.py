@@ -15,7 +15,8 @@ def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
 @shared_task
-def ImportETABS(user_id, preprocess_data):
+def ImportETABS(user_id, preprocess_data_id):
+    preprocess_data = ETABS_Preprocess.objects.get(id=preprocess_data_id)
     title = preprocess_data.title
     description = preprocess_data.description
     strength = preprocess_data.strength
