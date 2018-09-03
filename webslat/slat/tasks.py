@@ -9,21 +9,47 @@ from functools import reduce
 from .models import *
 import pandas as pd
 import os
+import time
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
 @shared_task
-def ImportETABS(title, description, strength, path,
-                       location, soil_class, return_period,
-                       frame_type, user_id):
+def ImportETABS(user_id, preprocess_data):
+    title = preprocess_data.title
+    description = preprocess_data.description
+    strength = preprocess_data.strength
+    location = preprocess_data.location
+    soil_class = preprocess_data.soil_class
+    return_period = preprocess_data.return_period
+    frame_type = preprocess_data.frame_type
+    
+    
+    start_time = time.time()
     messages = []
     current_task.update_state(meta={'message': "\n".join(messages) + "\nStarting"})
     project = Project()
-    xl_workbook = pd.ExcelFile(path)
+    xl_workbook = pd.ExcelFile(io.BytesIO(preprocess_data.file_contents))
+    sheet = munge_data_frame(
+        xl_workbook.parse("Modal Participating Mass Ratios", 
+                          skiprows=(1)))
+    mpms = sheet
+    sheet = munge_data_frame(xl_workbook.parse(
+        "Diaphragm Center of Mass Displa",
+        skiprows=1))
+    sheet = munge_data_frame(xl_workbook.parse(
+        "Story Drifts", 
+        skiprows=1))
+    sheet = munge_data_frame(xl_workbook.parse(
+        "Story Accelerations", 
+        skiprows=1))
+    end_time = time.time()
+    
+    eprint("Load Time: {}".format(end_time - start_time))
+    
     setattr(project, 'title_text', title)
     setattr(project, 'description_text', description)
-    setattr(project, 'rarity', 1.0/return_period)
+    setattr(project, 'rarity', 1.0/float(return_period))
     project.save()
 
     # Get the fundamental frequencies from the ~Modal Participating Mass Ratios~
@@ -266,7 +292,6 @@ def ImportETABS(title, description, strength, path,
     messages.append("Done")
     current_task.update_state(
         meta={ 'message': "\n".join(messages)})
-    os.remove(path)
     return(reverse('slat:levels', args=(project.id,)))
     #return project.id
 
