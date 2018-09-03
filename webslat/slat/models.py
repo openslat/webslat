@@ -860,3 +860,22 @@ class GroupForm(ModelForm):
         model = Group
         fields = '__all__'
         
+class ETABS_Preprocess(models.Model):
+    title = models.CharField(max_length=50, null=True)
+    description = models.CharField(max_length=200, null=True)
+    strength = models.FloatField(null=True)
+    location = models.CharField(max_length=50, null=True)
+    soil_class = models.CharField(max_length=1,null=True)
+    return_period = models.IntegerField()
+    frame_type = models.CharField(max_length=10, null=True)
+    file_name = models.CharField(max_length=255, null=True)
+    file_contents = models.BinaryField(null=True)
+    period_units = models.CharField(max_length=10, null=True)
+    period_x = models.FloatField(null=True)
+    period_y = models.FloatField(null=True)
+    height_units = models.CharField(max_length=10, null=True)
+    stories = models.BinaryField(null=True)
+    drift_case_x = models.CharField(max_length=50, null=True)
+    drift_case_y = models.CharField(max_length=50, null=True)
+    accel_case_x = models.CharField(max_length=50, null=True)
+    accel_case_y = models.CharField(max_length=50, null=True)

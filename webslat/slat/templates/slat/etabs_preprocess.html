@@ -10,16 +10,16 @@
 {% block title %}WebSLAT Project {{ form.instance.title_text }}{% endblock %}
 {% block content_title %}{{ form.instance.title_text }}{% endblock %}
 {% block content %}
-<p><b>Title: </b>{{ title }}</p>
-<p><b>Description: </b>{{ description }}</p>
-<p><b>Path: </b>{{ file_path }}</p>
-<p><b>Location: </b>{{ location }}</p>
-<p><b>Soil Class: </b>{{ soil_class }}</p>
-<p><b>Return Period: </b>{{ return_period }}</p>
-<p><b>Frame Type: </b>{{ frame_type }}</p>
+<p><b>Title: </b>{{ preprocess_data.title }}</p>
+<p><b>Description: </b>{{ preprocess_data.description }}</p>
+<p><b>Path: </b>{{ preprocess_data.file_name }}</p>
+<p><b>Location: </b>{{ preprocess_data.location }}</p>
+<p><b>Soil Class: </b>{{ preprocess_data.soil_class }}</p>
+<p><b>Return Period: </b>{{ preprocess_data.return_period }}</p>
+<p><b>Frame Type: </b>{{ preprocess_data.frame_type }}</p>
 <hr/>
 <p><b>Period Units: </b>{{ period_units }}</p>
-<form action="{% url 'slat:etabs_confirm' %}" method="post">
+<form action="{% url 'slat:etabs_confirm' preprocess_data.id %}" method="post">
     {% csrf_token %}
     <table>
       <tr><th>Case</th>
@@ -51,9 +51,9 @@
     {{ drift_case_form }}
     <hr/>
     <p><b>Acceleration Units:</b></p>
-    <p><b>X</b>: {{ x_accel_units }}</p>
-    <p><b>Y</b>: {{ y_accel_units }}</p>
-    <p> Choose the 'Load Case/Combo' corresponding to the 'Modal Analysis' load 
+    <p><b>X</b>: {{ preprocess_data.x_accel_units }}</p>
+    <p><b>Y</b>: {{ preprocess_data.y_accel_units }}</p>
+    <p> Choose the 'Load Case/Combo' corresponding to the 'Modal Response Spectrum Analysis' load 
       case for acceleration :</p>
     {{ accel_case_form }}
     <hr/>

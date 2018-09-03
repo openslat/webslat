@@ -3,6 +3,8 @@ import pandas as pd
 import numpy as np
 from  .models import *
 from functools import reduce
+import io
+import pickle
 
 def munge_data_frame(df):
     column = df.columns[0]
@@ -170,11 +172,22 @@ def ETABS_preprocess(title, description, strength,
                      file_data, file_path,
                      location, soil_class, return_period,
                      frame_type, user_id):
+    preprocess_data = ETABS_Preprocess()
+    preprocess_data.title = title
+    preprocess_data.description = description
+    preprocess_data.strength = strength
+    preprocess_data.location = location
+    preprocess_data.soil_class = soil_class
+    preprocess_data.return_period = return_period
+    preprocess_data.frame_type = frame_type
+    preprocess_data.file_name = file_path
+    preprocess_data.file_contents = file_data
+
     start_time = time.time()
     project = Project()
-    xl_workbook = pd.ExcelFile(file_data)
+    xl_workbook = pd.ExcelFile(io.BytesIO(file_data))
     sheet  = xl_workbook.parse("Modal Participating Mass Ratios", skiprows=(1))
-    period_units = sheet['Period'][0]
+    preprocess_data.period_units = sheet['Period'][0]
     
     mpms = munge_data_frame(sheet)
 
@@ -193,11 +206,17 @@ def ETABS_preprocess(title, description, strength,
     sheet = xl_workbook.parse("Diaphragm Center of Mass Displa",
                               skiprows=1)
     height_unit = sheet['Z'][0]
+    preprocess_data.height_units = height_unit
     dcomd = munge_data_frame(sheet)
     height_df = dcomd.loc[lambda x: 
                           x['Load Case/Combo'] == 'Dead'].\
                           filter(['Story', 'Z']).sort_values('Z')
     height_df = height_df.rename(index=str, columns={'Z': 'Height'})
+    heights = []
+    for level in height_df.iterrows():
+        heights.append({'Story': level[1]['Story'],
+                        'Height': level[1]['Height']})
+    preprocess_data.stories = pickle.dumps(heights)
 
     sd = munge_data_frame(xl_workbook.parse(
         "Story Drifts", 
@@ -208,30 +227,17 @@ def ETABS_preprocess(title, description, strength,
     sheet = xl_workbook.parse("Story Accelerations", 
                               skiprows=1)
 
-    x_accel_units = sheet['UX'][0]
-    y_accel_units = sheet['UY'][0]
+    preprocess_data.x_accel_units = sheet['UX'][0]
+    preprocess_data.y_accel_units = sheet['UY'][0]
     sa = munge_data_frame(sheet)
     accel_choices = list(set(sa['Load Case/Combo']))
     end_time = time.time()
     
+    preprocess_data.save()
     eprint("Load Time: {}".format(end_time - start_time))
-
-    return {'title': title, 
-            'description': description,
-            'strength': strength, 
-            'file_data': file_data,
-            'file_path': file_path,
-            'location': location,
-            'soil_class': soil_class,
-            'return_period': return_period,
-            'frame_type': frame_type,
-            'user_id': user_id,
-            'period_units': period_units,
+        
+    return {'preprocess_data': preprocess_data,
             'period_choices': period_choices,
-            'height_unit': height_unit,
-            'height_df': height_df,
             'drift_choices': drift_choices,
-            'x_accel_units': x_accel_units,
-            'y_accel_units': y_accel_units,
             'accel_choices': accel_choices}
     

@@ -41,6 +41,7 @@ import tempfile
 import os, sys
 import logging
 from django.template import Context, Template
+import pickle
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -589,8 +590,8 @@ class ProjectCreateTypeForm(Form):
                                         ("ETABS", "ETABS Project")])
 
 class Period_Form(Form):
-    def __init__(self, choices_x, choices_y):
-        super(Form, self).__init__()
+    def __init__(self, request=None, choices_x=[], choices_y=[]):
+        super(Form, self).__init__(request)
         self.fields['Tx']=ChoiceField(choices=choices_x, widget=RadioSelect)
         self.fields['Ty']=ChoiceField(choices=choices_y, widget=RadioSelect)
 
@@ -740,9 +741,9 @@ def project(request, project_id=None):
                 form3 = ProjectFormPart3(request.POST, request.FILES)
                 if (form3.is_valid()):
                     file_path = form3.cleaned_data['path'].name
-                    file_data = request.FILES['path'].file
+                    file_data = request.FILES['path'].file.read()
                     strength = form3.cleaned_data["strength"]
-                    contents = file_data.read()
+                    contents = file_data
                     location = form3.cleaned_data["location"]
                     soil_class = form3.cleaned_data["soil_class"]
                     return_period = int(form3.cleaned_data["return_period"])
@@ -752,17 +753,14 @@ def project(request, project_id=None):
                                                file_data, file_path,
                                                location, soil_class, return_period,
                                                frame_type, request.user.id)
+                    
                     choices_x = map(lambda x: [x['period'], "{:5.3f}".format(x['ux'])],
                                   context['period_choices'])
                     choices_y = map(lambda x: [x['period'], "{:5.3f}".format(x['uy'])],
                                   context['period_choices'])
-                    context['period_form'] = Period_Form(list(choices_x),
-                                                         list(choices_y))
-                    heights = []
-                    for level in context['height_df'].iterrows():
-                        heights.append({'Story': level[1]['Story'],
-                                        'Height': level[1]['Height']})
-                    context['heights'] = heights
+                    context['period_form'] = Period_Form(choices_x=list(choices_x),
+                                                         choices_y=list(choices_y))
+                    context['heights'] = pickle.loads(context['preprocess_data'].stories)
                     
                     drift_choices = list(map(lambda x: [x, x], context['drift_choices']))
                     context['drift_case_form'] = Drift_Case_Form(drift_choices)
@@ -772,23 +770,6 @@ def project(request, project_id=None):
                     return render(request, 'slat/etabs_preprocess.html', context)
 
                     
-                    tempdir = os.path.join(
-                        os.path.split(
-                            os.path.split(
-                                os.path.abspath(__file__))[0])[0],
-                        "tmp")
-                    temp = tempfile.NamedTemporaryFile(dir=tempdir, delete=False)
-                    temp.write(contents)
-                    temp.close()
-
-                    job = ImportETABS.delay(
-                        title, description, strength,
-                        temp.name,
-                        location, soil_class,
-                        return_period, frame_type,
-                        request.user.id)
-                    return HttpResponseRedirect(
-                        reverse('slat:etabs_progress') + '?job=' + job.id)
                 else:
                     print("INVALID")
                     print(form3.errors)
@@ -2496,12 +2477,21 @@ def celery_poll_state(request):
 
     return HttpResponse(json_data, content_type='application/json')
 
-def etabs_confirm(request):
-    eprint("> etabs_confirm()")
-    eprint("Request: {}".format(request))
-    eprint("dir(Request): {}".format(dir(request)))
-    eprint("Request.POST: {}".format(request.POST))
-    raise ValueError
+def etabs_confirm(request, id):
+    preprocess_data = ETABS_Preprocess.objects.get(id=id)
+    preprocess_data.period_x = request.POST.get('Tx', 0)
+    preprocess_data.period_y = request.POST.get('Ty', 0)
+    preprocess_data.drift_case_x = request.POST.get('drift_case_x', 0)
+    preprocess_data.drift_case_y = request.POST.get('drift_case_y', 0)
+    preprocess_data.accel_case_x = request.POST.get('accel_case_x', 0)
+    preprocess_data.accel_case_y = request.POST.get('accel_case_y', 0)
+
+    job = ImportETABS.delay(
+        request.user.id,
+        preprocess_data)
+    return HttpResponseRedirect(
+        reverse('slat:etabs_progress') + '?job=' + job.id)
+
     
 def etabs_progress(request):
     if 'job' in request.GET:
