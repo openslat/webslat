@@ -18,6 +18,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 import numpy as np
 import re
+import pickle
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -877,5 +878,17 @@ class ETABS_Preprocess(models.Model):
     stories = models.BinaryField(null=True)
     drift_case_x = models.CharField(max_length=50, null=True)
     drift_case_y = models.CharField(max_length=50, null=True)
+    accel_units_x = models.CharField(max_length=10, null=True)
+    accel_units_y = models.CharField(max_length=10, null=True)
     accel_case_x = models.CharField(max_length=50, null=True)
     accel_case_y = models.CharField(max_length=50, null=True)
+    period_choices = models.BinaryField(null=True)
+    drift_choices = models.BinaryField(null=True)
+    accel_choices = models.BinaryField(null=True)
+
+    def get_period_choices(self):
+        return pickle.loads(self.period_choices)
+        
+    def get_heights(self):
+        return pickle.loads(self.stories)
+

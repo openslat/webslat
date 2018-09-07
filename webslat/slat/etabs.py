@@ -203,6 +203,13 @@ def ETABS_preprocess(title, description, strength,
                   'period': period,
                   'ux': row[1]['UX'], 
                   'uy': row[1]['UY']})
+        period_choices.append(
+            { 'case' : "",
+              'mode': "",
+              'period': 'Manual',
+              'ux': np.nan,
+              'uy': np.nan})
+    preprocess_data.period_choices = pickle.dumps(period_choices)
     sheet = xl_workbook.parse("Diaphragm Center of Mass Displa",
                               skiprows=1)
     height_unit = sheet['Z'][0]
@@ -223,21 +230,21 @@ def ETABS_preprocess(title, description, strength,
         skiprows=1))
     drift_choices = list(set(sd['Load Case/Combo']))
     drift_choices.sort()
+    preprocess_data.drift_choices = pickle.dumps(drift_choices)
 
     sheet = xl_workbook.parse("Story Accelerations", 
                               skiprows=1)
 
-    preprocess_data.x_accel_units = sheet['UX'][0]
-    preprocess_data.y_accel_units = sheet['UY'][0]
+    preprocess_data.accel_units_x = sheet['UX'][0]
+    preprocess_data.accel_units_y = sheet['UY'][0]
     sa = munge_data_frame(sheet)
     accel_choices = list(set(sa['Load Case/Combo']))
+    accel_choices.sort()
+    preprocess_data.accel_choices = pickle.dumps(accel_choices)
     end_time = time.time()
     
     preprocess_data.save()
     eprint("Load Time: {}".format(end_time - start_time))
         
-    return {'preprocess_data': preprocess_data,
-            'period_choices': period_choices,
-            'drift_choices': drift_choices,
-            'accel_choices': accel_choices}
+    return preprocess_data.id
     

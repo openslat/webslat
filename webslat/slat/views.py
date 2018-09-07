@@ -28,7 +28,7 @@ from django.forms import ModelForm
 import sys
 from random import randint
 from datetime import datetime, timedelta
-
+from django.utils.html import format_html
 from jchart import Chart
 from jchart.config import Axes, DataSet, rgba, ScaleLabel, Legend, Title
 import seaborn as sns
@@ -589,23 +589,31 @@ class ProjectCreateTypeForm(Form):
                                         ("EMPTY", "Empty Project"),
                                         ("ETABS", "ETABS Project")])
 
-class Period_Form(Form):
-    def __init__(self, request=None, choices_x=[], choices_y=[]):
+class ETABS_Confirm_Form(Form):
+    def __init__(self, request=None, preprocess_id=None):
         super(Form, self).__init__(request)
-        self.fields['Tx']=ChoiceField(choices=choices_x, widget=RadioSelect)
-        self.fields['Ty']=ChoiceField(choices=choices_y, widget=RadioSelect)
-
-class Drift_Case_Form(Form):
-    def __init__(self, choices):
-        super(Form, self).__init__()
-        self.fields['x_drift_case'] = ChoiceField(choices=choices)
-        self.fields['y_drift_case'] = ChoiceField(choices=choices)
-
-class Accel_Case_Form(Form):
-    def __init__(self, choices):
-        super(Form, self).__init__()
-        self.fields['x_accel_case'] = ChoiceField(choices=choices)
-        self.fields['y_accel_case'] = ChoiceField(choices=choices)
+        if preprocess_id:
+            preprocess_data = ETABS_Preprocess.objects.get(id=preprocess_id)
+            self.preprocess_data = preprocess_data
+            
+            period_choices = pickle.loads(preprocess_data.period_choices)
+            choices_x = map(lambda x: [x['period'], "{:5.3f}".format(x['ux']) if not np.isnan(x['ux']) else "Manual X Period"],
+                            period_choices)
+            choices_y = map(lambda x: [x['period'], "{:5.3f}".format(x['uy']) if not np.isnan(x['uy']) else "Manual Y Period"],
+                            period_choices)
+            self.fields['Tx']=ChoiceField(choices=choices_x, widget=RadioSelect)
+            self.fields['Ty']=ChoiceField(choices=choices_y, widget=RadioSelect)
+            
+            self.fields['Manual_Tx']= FloatField(required=False)
+            self.fields['Manual_Ty']= FloatField(required=False)
+            
+            drift_choices = list(map(lambda x: [x, x], pickle.loads(preprocess_data.drift_choices)))
+            self.fields['x_drift_case'] = ChoiceField(choices=drift_choices)
+            self.fields['y_drift_case'] = ChoiceField(choices=drift_choices)
+                                 
+            accel_choices = list(map(lambda x: [x, x], pickle.loads(preprocess_data.accel_choices)))
+            self.fields['x_accel_case'] = ChoiceField(choices=accel_choices)
+            self.fields['y_accel_case'] = ChoiceField(choices=accel_choices)
         
 @login_required
 def project(request, project_id=None):
@@ -740,6 +748,7 @@ def project(request, project_id=None):
             elif project_type == "ETABS":
                 form3 = ProjectFormPart3(request.POST, request.FILES)
                 if (form3.is_valid()):
+                
                     file_path = form3.cleaned_data['path'].name
                     file_data = request.FILES['path'].file.read()
                     strength = form3.cleaned_data["strength"]
@@ -749,27 +758,12 @@ def project(request, project_id=None):
                     return_period = int(form3.cleaned_data["return_period"])
                     frame_type = form3.cleaned_data["frame_type"]
 
-                    context = ETABS_preprocess(title, description, strength, 
+                    preprocess_id = ETABS_preprocess(title, description, strength, 
                                                file_data, file_path,
                                                location, soil_class, return_period,
                                                frame_type, request.user.id)
                     
-                    choices_x = map(lambda x: [x['period'], "{:5.3f}".format(x['ux'])],
-                                  context['period_choices'])
-                    choices_y = map(lambda x: [x['period'], "{:5.3f}".format(x['uy'])],
-                                  context['period_choices'])
-                    context['period_form'] = Period_Form(choices_x=list(choices_x),
-                                                         choices_y=list(choices_y))
-                    context['heights'] = pickle.loads(context['preprocess_data'].stories)
-                    
-                    drift_choices = list(map(lambda x: [x, x], context['drift_choices']))
-                    context['drift_case_form'] = Drift_Case_Form(drift_choices)
-
-                    accel_choices = list(map(lambda x: [x, x], context['accel_choices']))
-                    context['accel_case_form'] = Accel_Case_Form(accel_choices)
-                    return render(request, 'slat/etabs_preprocess.html', context)
-
-                    
+                    return HttpResponseRedirect(reverse('slat:etabs_confirm', args=(preprocess_id,)))
                 else:
                     print("INVALID")
                     print(form3.errors)
@@ -2477,20 +2471,35 @@ def celery_poll_state(request):
 
     return HttpResponse(json_data, content_type='application/json')
 
-def etabs_confirm(request, id):
-    preprocess_data = ETABS_Preprocess.objects.get(id=id)
-    preprocess_data.period_x = request.POST.get('Tx', 0)
-    preprocess_data.period_y = request.POST.get('Ty', 0)
-    preprocess_data.drift_case_x = request.POST.get('drift_case_x', 0)
-    preprocess_data.drift_case_y = request.POST.get('drift_case_y', 0)
-    preprocess_data.accel_case_x = request.POST.get('accel_case_x', 0)
-    preprocess_data.accel_case_y = request.POST.get('accel_case_y', 0)
+def etabs_confirm(request, preprocess_id):
+    eprint("> etabs_confirm({})".format(preprocess_id))
+    preprocess_data = ETABS_Preprocess.objects.get(id=preprocess_id)
+    if request.POST:
+        if preprocess_data.period_x == 'Manual':
+            preprocess_data.period_x = request.POST.get('Manual_Tx', 0)
+        preprocess_data.period_y = request.POST.get('Ty', 0)
+        if preprocess_data.period_y == 'Manual':
+            preprocess_data.period_y = request.POST.get('Manual_Ty', 0)
+        eprint("Tx: {}; Ty: {}".format(preprocess_data.period_x,
+                                       preprocess_data.period_y))
+        if preprocess_data.period_x == "" or preprocess_data.period_y == "":
+            return HttpResponseRedirect(reverse('slat:project', request))
 
-    job = ImportETABS.delay(
-        request.user.id,
-        preprocess_data.id)
-    return HttpResponseRedirect(
-        reverse('slat:etabs_progress') + '?job=' + job.id)
+        preprocess_data.drift_case_x = request.POST.get('drift_case_x', 0)
+        preprocess_data.drift_case_y = request.POST.get('drift_case_y', 0)
+        preprocess_data.accel_case_x = request.POST.get('accel_case_x', 0)
+        preprocess_data.accel_case_y = request.POST.get('accel_case_y', 0)
+
+        job = ImportETABS.delay(
+            request.user.id,
+            preprocess_data.id)
+        return HttpResponseRedirect(
+            reverse('slat:etabs_progress') + '?job=' + job.id)
+    else:
+        return render(request, 'slat/etabs_preprocess.html', 
+                      {'preprocess_data': preprocess_data,
+                       'confirm_form': ETABS_Confirm_Form(preprocess_id=preprocess_id)})
+
 
     
 def etabs_progress(request):
