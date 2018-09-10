@@ -603,7 +603,10 @@ class ETABS_Confirm_Form(Form):
                             period_choices)
             self.fields['Tx']=ChoiceField(choices=choices_x, widget=RadioSelect)
             self.fields['Ty']=ChoiceField(choices=choices_y, widget=RadioSelect)
-            
+
+            self.fields['Tx'].widget.attrs['onchange'] = 'Refresh()'
+            self.fields['Ty'].widget.attrs['onchange'] = 'Refresh()'
+
             self.fields['Manual_Tx']= FloatField(required=False)
             self.fields['Manual_Ty']= FloatField(required=False)
             
@@ -614,7 +617,6 @@ class ETABS_Confirm_Form(Form):
             accel_choices = list(map(lambda x: [x, x], pickle.loads(preprocess_data.accel_choices)))
             self.fields['x_accel_case'] = ChoiceField(choices=accel_choices)
             self.fields['y_accel_case'] = ChoiceField(choices=accel_choices)
-        
 @login_required
 def project(request, project_id=None):
     # Initialize everything we'll send to the template:

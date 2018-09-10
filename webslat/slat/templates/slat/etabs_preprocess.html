@@ -9,6 +9,50 @@
 {% block title %}WebSLAT Project {{ form.instance.title_text }}{% endblock %}
 {% block content_title %}{{ form.instance.title_text }}{% endblock %}
 {% block content %}
+<script type="text/JavaScript">
+<!--
+function Refresh( ) {
+    console.error("> Refresh()")
+    i = 0;
+    while (true) {
+        var e = document.getElementById("id_Tx_" + i)
+        if (e == null) {
+            break;
+        } else {
+            if (e.value == 'Manual') {
+                var f = document.getElementById("id_Manual_Tx")
+                if (e.checked) {
+                    f.setAttribute("required", "")
+                } else {
+                    f.removeAttribute("required")
+                }
+            }
+            i = i + 1
+        }
+    }
+
+    i = 0;
+    while (true) {
+        var e = document.getElementById("id_Ty_" + i)
+        if (e == null) {
+            break;
+        } else {
+            if (e.value == 'Manual') {
+                var f = document.getElementById("id_Manual_Ty")
+                if (e.checked) {
+                    f.setAttribute("required", "")
+                } else {
+                    f.removeAttribute("required")
+                }
+            }
+            i = i + 1
+        }
+    }
+    return;
+}
+// --!>
+</script>
+
 <b>ETABS Confirmation Form</b><br/>
 <table><tr><th>Title</th><td>{{ confirm_form.preprocess_data.title }}</td></tr>
 <tr><th>Description: </th><td>{{ confirm_form.preprocess_data.description }}</td></tr>
