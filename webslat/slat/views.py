@@ -401,10 +401,10 @@ def make_demo(user, title, description):
     # Add components:
     all_floors = range(num_floors + 1)
     not_ground = range(1, num_floors+1)
-    components = [{'levels': all_floors, 'id': '206', 'quantity': 10},
-                  {'levels': not_ground, 'id': 'B1041.032a', 'quantity': 32},
-                  {'levels': not_ground, 'id': 'B1044.023', 'quantity': 8},
-                  {'levels': not_ground, 'id': 'C1011.001a', 'quantity': 32}]
+    components = [{'levels': all_floors, 'id': '206', 'quantity': [6, 3]},
+                  {'levels': not_ground, 'id': 'B1041.032a', 'quantity': [24, 8]},
+                  {'levels': not_ground, 'id': 'B1044.023', 'quantity': [8, 0]},
+                  {'levels': not_ground, 'id': 'C1011.001a', 'quantity': [0, 32]}]
     for comp in components:
         component = ComponentsTab.objects.get(ident=comp['id'])
         for l in comp['levels']:
@@ -420,7 +420,9 @@ def make_demo(user, title, description):
             demand = EDP.objects.get(project=project,
                                      level=level,
                                      type=demand_type)
-            group = Component_Group(demand=demand, component=component, quantity=comp['quantity'])
+            group = Component_Group(demand=demand, component=component, 
+                                    quantity_x=comp['quantity'][0],
+                                    quantity_y=comp['quantity'][1])
             group.save()
     
     return project
@@ -548,20 +550,20 @@ def make_example_2(user):
     all_floors = range(num_floors + 1)
     not_ground = range(1, num_floors+1)
     not_roof = range(num_floors)
-    components = [{'levels': not_roof, 'id': '208', 'quantity': 53},
-                  {'levels': [0], 'id': '204', 'quantity': 2},
-                  {'levels': not_roof, 'id': '214', 'quantity': 10},
-                  {'levels': not_ground, 'id': '203', 'quantity': 693},
-                  {'levels': not_ground, 'id': '211', 'quantity': 23},
-                  {'levels': [1], 'id': '2', 'quantity': 20},
-                  {'levels': range(2, num_floors+1), 'id': '2', 'quantity': 4},
-                  {'levels': not_ground, 'id': '2', 'quantity': 18},
-                  {'levels': not_ground, 'id': '3', 'quantity': 16},
-                  {'levels': not_ground, 'id': '105', 'quantity': 721},
-                  {'levels': not_ground, 'id': '107', 'quantity': 99},
-                  {'levels': not_ground, 'id': '106', 'quantity': 721},
-                  {'levels': not_ground, 'id': '108', 'quantity': 10},
-                  {'levels': [num_floors], 'id': '205', 'quantity': 4}]
+    components = [{'levels': not_roof, 'id': '208', 'quantity': [53, 0]},
+                  {'levels': [0], 'id': '204', 'quantity': [2, 0]},
+                  {'levels': not_roof, 'id': '214', 'quantity': [10, 0]},
+                  {'levels': not_ground, 'id': '203', 'quantity': [693, 0]},
+                  {'levels': not_ground, 'id': '211', 'quantity': [23, 0]},
+                  {'levels': [1], 'id': '2', 'quantity': [20, 0]},
+                  {'levels': range(2, num_floors+1), 'id': '2', 'quantity': [4, 0]},
+                  {'levels': not_ground, 'id': '2', 'quantity': [18, 0]},
+                  {'levels': not_ground, 'id': '3', 'quantity': [16, 0]},
+                  {'levels': not_ground, 'id': '105', 'quantity': [721, 0]},
+                  {'levels': not_ground, 'id': '107', 'quantity': [99, 0]},
+                  {'levels': not_ground, 'id': '106', 'quantity': [721, 0]},
+                  {'levels': not_ground, 'id': '108', 'quantity': [10, 0]},
+                  {'levels': [num_floors], 'id': '205', 'quantity': [4, 0]}]
                   
     for comp in components:
         component = ComponentsTab.objects.get(ident=comp['id'])
@@ -578,7 +580,9 @@ def make_example_2(user):
             demand = EDP.objects.get(project=project,
                                      level=level,
                                      type=demand_type)
-            group = Component_Group(demand=demand, component=component, quantity=comp['quantity'])
+            group = Component_Group(demand=demand, component=component, 
+                                    quantity_x=comp['quantity'][0],
+                                    quantity_y=comp['quantity'][1])
             group.save()
     
     return project
@@ -1783,7 +1787,8 @@ def level_cgroup(request, project_id, level_id, cg_id=None):
 
          cg.demand = edp[0]
          cg.component = component
-         cg.quantity = cg_form.cleaned_data['quantity']
+         cg.quantity_x = cg_form.cleaned_data['quantity_x']
+         cg.quantity_y = cg_form.cleaned_data['quantity_y']
          cg.cost_adj = cg_form.cleaned_data['cost_adj']
          cg.comment = cg_form.cleaned_data['comment']
          cg.save()
@@ -1802,7 +1807,8 @@ def level_cgroup(request, project_id, level_id, cg_id=None):
                                          initial= {'component': None, 
                                                    'cost_adj': 1.0, 
                                                    'comment': '', 
-                                                   'quantity': None})
+                                                   'quantity_x': None,
+                                                   'quantity_y': None})
          return render(request, 'slat/level_cgroup.html', {'project': project,
                                                            'level': Level.objects.get(pk=level_id),
                                                            'cg_id': cg_id,

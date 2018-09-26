@@ -454,6 +454,8 @@ class EDP(models.Model):
         (EDP_TYPE_ACCEL, 'Acceleration'))
     type = models.CharField(max_length=1, 
                             choices=EDP_TYPE_CHOICES);
+    direction = models.CharField(max_length=1,
+                                 choices=[['X', 'X'], ['Y', 'Y']])
     flavour = models.ForeignKey(EDP_Flavours, on_delete=PROTECT, blank=False, null=True, db_constraint=False)
     powercurve = models.ForeignKey(EDP_PowerCurve, on_delete=SET_NULL, null=True, blank=False)
     interpolation_method = models.ForeignKey(Interpolation_Method, on_delete=PROTECT, null=True, blank=False, db_constraint=False)
@@ -582,7 +584,8 @@ class EDP_Point(models.Model):
 class Component_Group(models.Model):
     demand = models.ForeignKey('EDP', on_delete=PROTECT, null=False)
     component = models.ForeignKey('ComponentsTab', on_delete=PROTECT, null=False, db_constraint=False)
-    quantity = models.IntegerField(blank=False, null=False)
+    quantity_x = models.IntegerField(blank=False, null=False)
+    quantity_y = models.IntegerField(blank=False, null=False)
     cost_adj = models.FloatField(blank=False, null=False, default=1.0)
     comment = models.CharField(blank=True, null=True, max_length=256)
 
@@ -600,7 +603,8 @@ class Component_Group(models.Model):
                                                 c.max_cost, c.min_cost,
                                                 c.dispersion))
         cost = pyslat.bilevellossfn(self.id, costs)
-        pyslat.compgroup(self.id, self.demand.model(), fragility, cost, None, self.quantity, 
+        pyslat.compgroup(self.id, self.demand.model(), fragility, cost, None, 
+                         self.quantity_x + self.quantity_y, 
                          self.cost_adj,
                          1.0  # delay adjustment factor
                          )
@@ -617,7 +621,7 @@ class Component_Group(models.Model):
             result = result + str(self.component)
         else:
             result = result + "NO COMPONENT"
-        result = result + " " + str(self.quantity)
+        result = result + " " + str(self.quantity_x) + "/" + str(self.quantity_y)
         return result
 
     
@@ -792,7 +796,8 @@ class EDPCompGroupForm(ModelForm):
 
 class FloorCompGroupForm(Form):
     component = ModelChoiceField(queryset=ComponentsTab.objects)
-    quantity = IntegerField(initial=1)
+    quantity_x = IntegerField(initial=1)
+    quantity_y = IntegerField(initial=1)
     cost_adj = FloatField()
     comment = CharField(required=False)
         
@@ -810,18 +815,21 @@ class ComponentForm(Form):
         if initial:
             self.fields['component'].initial = initial['component']
         self.fields['component'].widget.forward.append(forward.Const(level, 'level'))
-        self.fields['quantity'].widget.attrs['class'] = 'normal'
+        self.fields['quantity_x'].widget.attrs['class'] = 'normal'
+        self.fields['quantity_y'].widget.attrs['class'] = 'normal'
         self.fields['cost_adj'].widget.attrs['class'] = 'normal'
         self.fields['comment'].widget.attrs['comment'] = 'normal'
         self.fields['category'].widget.attrs['class'] = 'normal'
         self.fields['component'].widget.attrs['class'] = 'normal'
-        self.fields['quantity'].widget.attrs['title'] = 'How many of this component are in the group?'
+        self.fields['quantity_x'].widget.attrs['title'] = 'How many of this component are in the group?'
+        self.fields['quantity_y'].widget.attrs['title'] = 'How many of this component are in the group?'
         self.fields['cost_adj'].widget.attrs['title'] = 'Adjustment factor from standard cost.'
         self.fields['comment'].widget.attrs['title'] = 'Notes about this component.'
         self.fields['category'].widget.attrs['title'] = 'Narrow the component search by category.'
         self.fields['component'].widget.attrs['title'] = 'Choose the type of component.'
         
-    quantity = IntegerField()
+    quantity_x = IntegerField(label="X Count")
+    quantity_y = IntegerField(label="Y Count")
     cost_adj = FloatField()
     comment = CharField(max_length=256, required=False)
     category = ChoiceField(choices=ListOfComponentCategories, required=False)

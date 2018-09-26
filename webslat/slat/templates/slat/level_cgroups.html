@@ -16,58 +16,8 @@ Component Groups for {{ level.label }}
 </div>
 
 {{ form.errors }}
-{% comment %}
-<b>Structural Components</b>
-<table border="1"><tr><td><b>Component</b></td><td><b>Quantity</b></td><td><b>Adjustment Factor</b></td><td><b>E annual cost</b></td><td></td><td></td></tr>
-{% for cg in cgs %}
-  {% if cg.component.structural %}
-<tr><td>
-    <!-- <a href="{% url 'slat:component' cg.component.ident %}"> -->{{ cg.component }}<!--</a>--></td>
-    <td align="RIGHT">{{ cg.quantity }}</td>
-   <td align="RIGHT">{{ cg.cost_adj|floatformat:2 }}</td>
-   <td align="RIGHT">{{ cg.model.E_annual_cost|floatformat:2 }}</td>
-    <td>
-    <form action="{% url 'slat:level_compgroup' project.id level.id cg.id  %}" method="get">
-        {% csrf_token %}
-    <input type="submit" name='edit' value="Edit" class="table"/>
-    </form>
-    </td><td>
-    <form action="{% url 'slat:level_compgroup' project.id level.id cg.id  %}" method="post">
-        {% csrf_token %}
-      <input type="submit" name='delete' value="Delete" class="table"/>
-    </form>
-    </td></tr>
-  {% endif %}
-{% endfor %}
-</table>
-
-<br/>
-<b>Non-Structural Components</b>
-<table border="1"><tr><td><b>Component</b></td><td><b>Quantity</b></td><td><b>Adjustment Factor</b></td><td><b>E annual cost</b></td><td></td><td></td></tr>
-{% for cg in cgs %}
-  {% if not cg.component.structural %}
-  <tr><td>
-      <!-- <a href="{% url 'slat:component' cg.component.ident %}"> -->{{ cg.component }}<!--</a>--></td>
-    <td align="RIGHT">{{ cg.quantity }}</td>
-   <td align="RIGHT">{{ cg.cost_adj|floatformat:2 }}</td>
-   <td align="RIGHT">{{ cg.model.E_annual_cost|floatformat:2 }}</td>
-    <td>
-    <form action="{% url 'slat:level_compgroup' project.id level.id cg.id  %}" method="get">
-        {% csrf_token %}
-    <input type="submit" name='edit' value="Edit" class="table"/>
-    </form>
-    </td><td>
-    <form action="{% url 'slat:level_compgroup' project.id level.id cg.id  %}" method="post">
-        {% csrf_token %}
-      <input type="submit" name='delete' value="Delete" class="table"/>
-    </form>
-    </td></tr>
-  {% endif %}
-{% endfor %}
-</table>
-{% endcomment %}
-
-<table border="1"><tr><td><b>Component</b></td><td><b>Quantity</b></td><td><b>Adjustment Factor</b></td><td><b>E annual cost</b></td><td></td><td></td></tr>
+<table border="1"><tr><th>Component</th><th>X Count</th>
+    <th>Y Count</th><th>Adjustment Factor</th><th>E annual cost</th><th></th><th></th></tr>
 {% for cg in cgs %}
 <tr><td>
     <!-- <a href="{% url 'slat:component' cg.component.ident %}"> -->{{ cg.component }}
@@ -76,7 +26,8 @@ Component Groups for {{ level.label }}
         <table border="0"><tr><td><b>Comment:</b></td><td><i>{{cg.comment}}</i></td></tr></table>
     {% endif %}
     <!--</a>--></td>
-    <td align="RIGHT">{{ cg.quantity }}</td>
+    <td align="RIGHT">{{ cg.quantity_x }}</td>
+    <td align="RIGHT">{{ cg.quantity_y }}</td>
    <td align="RIGHT">{{ cg.cost_adj|floatformat:2 }}</td>
    <td align="RIGHT">{{ cg.model.E_annual_cost|floatformat:2 }}</td>
     <td>
