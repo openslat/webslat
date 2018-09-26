@@ -171,7 +171,7 @@ dispersion_factors = pd.DataFrame(
 def ETABS_preprocess(title, description, strength, 
                      file_data, file_path,
                      location, soil_class, return_period,
-                     frame_type, user_id):
+                     frame_type_x, frame_type_y, user_id):
     preprocess_data = ETABS_Preprocess()
     preprocess_data.title = title
     preprocess_data.description = description
@@ -179,7 +179,8 @@ def ETABS_preprocess(title, description, strength,
     preprocess_data.location = location
     preprocess_data.soil_class = soil_class
     preprocess_data.return_period = return_period
-    preprocess_data.frame_type = frame_type
+    preprocess_data.frame_type_x = frame_type_x
+    preprocess_data.frame_type_y = frame_type_y
     preprocess_data.file_name = file_path
     preprocess_data.file_contents = file_data
 

@@ -765,12 +765,15 @@ def project(request, project_id=None):
                     location = form3.cleaned_data["location"]
                     soil_class = form3.cleaned_data["soil_class"]
                     return_period = int(form3.cleaned_data["return_period"])
-                    frame_type = form3.cleaned_data["frame_type"]
+                    frame_type_x = form3.cleaned_data["frame_type_x"]
+                    frame_type_y = form3.cleaned_data["frame_type_y"]
 
-                    preprocess_id = ETABS_preprocess(title, description, strength, 
-                                               file_data, file_path,
-                                               location, soil_class, return_period,
-                                               frame_type, request.user.id)
+                    preprocess_id = ETABS_preprocess(
+                        title, description, strength, 
+                        file_data, file_path,
+                        location, soil_class, return_period,
+                        frame_type_x, frame_type_y,
+                        request.user.id)
                     
                     return HttpResponseRedirect(reverse('slat:etabs_confirm', args=(preprocess_id,)))
                 else:

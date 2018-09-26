@@ -24,7 +24,8 @@ def ImportETABS(user_id, preprocess_data_id):
     location = preprocess_data.location
     soil_class = preprocess_data.soil_class
     return_period = preprocess_data.return_period
-    frame_type = preprocess_data.frame_type
+    frame_type_x = preprocess_data.frame_type_x
+    frame_type_y = preprocess_data.frame_type_y
 
     start_time = time.time()
     messages = []
@@ -180,10 +181,10 @@ def ImportETABS(user_id, preprocess_data_id):
 
     # Get the drift and acceleration coefficients from the table:
     drift_coefficients = get_correction_factors(num_floors,
-                                                frame_type,
+                                                frame_type_x,
                                                 "Story Drift Ratio")
     accel_coefficients = get_correction_factors(num_floors,
-                                                frame_type, 
+                                                frame_type_x, 
                                                 "Floor Acceleration")
     current_task.update_state(meta={ 'message': "\n".join(messages) + 
                                     "\nCalculating dispersions."})

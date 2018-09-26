@@ -655,9 +655,11 @@ class ProjectFormPart3(Form):
                           'strength': 1.0,
                           'soil_class': 'C',
                           'location': 'Christchurch',
-                          'frame_type': 'Moment'}):
+                          'frame_type_x': 'Moment',
+                          'frame_type_y': 'Moment'}):
         super(ProjectFormPart3, self).__init__(request, initial=initial)
-        self.fields['frame_type'].widget.attrs['title'] = 'The frame type of the structure.'
+        self.fields['frame_type_x'].widget.attrs['title'] = 'The frame type of the structure.'
+        self.fields['frame_type_y'].widget.attrs['title'] = 'The frame type of the structure.'
         self.fields['return_period'].label = 'Return period (years)'
         self.fields['return_period'].widget.attrs['title'] = 'The return period (years)'
         self.fields['strength'].widget.attrs['title'] = 'The strength ratio at the design level of spectral acceleration.'
@@ -665,7 +667,8 @@ class ProjectFormPart3(Form):
         self.fields['soil_class'].widget.attrs['title'] = 'The soil class at the building site.'
         self.fields['location'].widget.attrs['title'] = 'The location of the building site.'
 
-    frame_type = ChoiceField(choices= FRAME_CHOICES)
+    frame_type_x = ChoiceField(choices= FRAME_CHOICES)
+    frame_type_y = ChoiceField(choices= FRAME_CHOICES)
     return_period = ChoiceField(choices=list(map(lambda x: [x, x], R_defaults)))
     strength = FloatField()
     path = FileField()
@@ -868,7 +871,8 @@ class ETABS_Preprocess(models.Model):
     location = models.CharField(max_length=50, null=True)
     soil_class = models.CharField(max_length=1,null=True)
     return_period = models.IntegerField()
-    frame_type = models.CharField(max_length=10, null=True)
+    frame_type_x = models.CharField(max_length=10, null=True)
+    frame_type_y = models.CharField(max_length=10, null=True)
     file_name = models.CharField(max_length=255, null=True)
     file_contents = models.BinaryField(null=True)
     period_units = models.CharField(max_length=10, null=True)
