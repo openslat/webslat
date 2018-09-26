@@ -604,11 +604,18 @@ class ETABS_Confirm_Form(Form):
             self.fields['Tx']=ChoiceField(choices=choices_x, widget=RadioSelect)
             self.fields['Ty']=ChoiceField(choices=choices_y, widget=RadioSelect)
 
-            self.fields['Tx'].widget.attrs['onchange'] = 'Refresh()'
-            self.fields['Ty'].widget.attrs['onchange'] = 'Refresh()'
+            self.fields['Tx'].widget.attrs['onchange'] = 'Refresh_Tx()'
+            self.fields['Ty'].widget.attrs['onchange'] = 'Refresh_Ty()'
 
             self.fields['Manual_Tx']= FloatField(required=False)
+            self.fields['Manual_Tx'].widget.attrs['disabled'] = 'true'
             self.fields['Manual_Ty']= FloatField(required=False)
+            self.fields['Manual_Ty'].widget.attrs['disabled'] = 'true'
+
+            self.fields['Period'] = ChoiceField(choices=[['TX', 'Tx'], ['TY', 'Ty'], ['AVERAGE', 'Average'], ['MANUAL', 'Manual']])
+            self.fields['Period'].widget.attrs['onchange'] = 'Refresh_Period()'
+            self.fields['Manual_Period'] = FloatField(required=False)
+            self.fields['Manual_Period'].widget.attrs['disabled'] = 'true'
             
             drift_choices = list(map(lambda x: [x, x], pickle.loads(preprocess_data.drift_choices)))
             self.fields['x_drift_case'] = ChoiceField(choices=drift_choices)
@@ -2474,7 +2481,6 @@ def celery_poll_state(request):
     return HttpResponse(json_data, content_type='application/json')
 
 def etabs_confirm(request, preprocess_id):
-    eprint("> etabs_confirm({})".format(preprocess_id))
     preprocess_data = ETABS_Preprocess.objects.get(id=preprocess_id)
     if request.POST:
         if preprocess_data.period_x == 'Manual':
@@ -2482,15 +2488,17 @@ def etabs_confirm(request, preprocess_id):
         preprocess_data.period_y = request.POST.get('Ty', 0)
         if preprocess_data.period_y == 'Manual':
             preprocess_data.period_y = request.POST.get('Manual_Ty', 0)
-        eprint("Tx: {}; Ty: {}".format(preprocess_data.period_x,
-                                       preprocess_data.period_y))
         if preprocess_data.period_x == "" or preprocess_data.period_y == "":
             return HttpResponseRedirect(reverse('slat:project', request))
+        
+        preprocess_data.hazard_period_source = request.POST.get('Period', 0)
+        preprocess_data.hazard_manual_period = request.POST.get('Manual_Period', 0)
 
         preprocess_data.drift_case_x = request.POST.get('drift_case_x', 0)
         preprocess_data.drift_case_y = request.POST.get('drift_case_y', 0)
         preprocess_data.accel_case_x = request.POST.get('accel_case_x', 0)
         preprocess_data.accel_case_y = request.POST.get('accel_case_y', 0)
+        preprocess_data.save()
 
         job = ImportETABS.delay(
             request.user.id,

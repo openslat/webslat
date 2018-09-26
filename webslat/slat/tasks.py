@@ -10,6 +10,7 @@ from .models import *
 import pandas as pd
 import os
 import time
+import logging
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -24,8 +25,7 @@ def ImportETABS(user_id, preprocess_data_id):
     soil_class = preprocess_data.soil_class
     return_period = preprocess_data.return_period
     frame_type = preprocess_data.frame_type
-    
-    
+
     start_time = time.time()
     messages = []
     current_task.update_state(meta={'message': "\n".join(messages) + "\nStarting"})
@@ -60,9 +60,23 @@ def ImportETABS(user_id, preprocess_data_id):
                           skiprows=(1)))
     Tx = list(sheet.sort_values('UX', ascending=False)['Period'])[0]
     Ty = list(sheet.sort_values('UY', ascending=False)['Period'])[0]
-    fundamental_period = (Tx + Ty) / 2.0
 
-    messages.append("Periods: {}, {}".format(Tx, Ty))
+    messages.append("Source: {}".format(preprocess_data.hazard_period_source))
+    current_task.update_state(meta={'message': "\n".join(messages)})
+    logging.debug("Source: {}".format(preprocess_data.hazard_period_source))
+    
+    if preprocess_data.hazard_period_source == 'TX':
+        fundamental_period = Tx
+    elif preprocess_data.hazard_period_source == 'TY':
+        fundamental_period = Ty
+    elif preprocess_data.hazard_period_source == 'AVERAGE':
+        fundamental_period = (Tx + Ty)/2.0
+    elif preprocess_data.hazard_period_source == 'MANUAL':
+        fundamental_period = preprocess_data.hazard_manual_period
+    else:
+        raise ValueError
+
+    messages.append("Periods: {}, {}; {}".format(Tx, Ty, fundamental_period))
     current_task.update_state(meta={'message': "\n".join(messages) + 
                                     "\nCreating hazard curve"})
 

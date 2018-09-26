@@ -874,6 +874,8 @@ class ETABS_Preprocess(models.Model):
     period_units = models.CharField(max_length=10, null=True)
     period_x = models.FloatField(null=True)
     period_y = models.FloatField(null=True)
+    hazard_period_source = models.CharField(max_length=10, null=True)
+    hazard_manual_period = models.FloatField(null=True)
     height_units = models.CharField(max_length=10, null=True)
     stories = models.BinaryField(null=True)
     drift_case_x = models.CharField(max_length=50, null=True)

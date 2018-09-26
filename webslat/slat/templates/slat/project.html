@@ -7,7 +7,13 @@
 {% endblock %}
 
 {% block bodyclass %}{{ block.super }} slat {% endblock %}
-{% block title %}WebSLAT Project {{ form.instance.title_text }}{% endblock %}
+{% block title %}WebSLAT Project 
+{% if form.instance.title_text %}
+    { form.instance.title_text }}
+{% else %}
+ (new)
+{% endif %}
+{% endblock %}
 {% block content_title %}{{ form.instance.title_text }}{% endblock %}
 {% block content %}
 <script type="text/JavaScript">

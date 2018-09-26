@@ -6,13 +6,12 @@
 {% endblock %}
 
 {% block bodyclass %}{{ block.super }} slat {% endblock %}
-{% block title %}WebSLAT Project {{ form.instance.title_text }}{% endblock %}
-{% block content_title %}{{ form.instance.title_text }}{% endblock %}
+{% block title %}WebSLAT Project {{ confirm_form.preprocess_data.title }} ETABS Configuration{% endblock %}
+{% block content_title %}{{ confirm_form.preprocess_data.title }}{% endblock %}
 {% block content %}
 <script type="text/JavaScript">
 <!--
-function Refresh( ) {
-    console.error("> Refresh()")
+function Refresh_Tx( ) {
     i = 0;
     while (true) {
         var e = document.getElementById("id_Tx_" + i)
@@ -22,15 +21,19 @@ function Refresh( ) {
             if (e.value == 'Manual') {
                 var f = document.getElementById("id_Manual_Tx")
                 if (e.checked) {
+                    f.disabled = false
                     f.setAttribute("required", "")
                 } else {
+                    f.disabled = true
                     f.removeAttribute("required")
                 }
             }
             i = i + 1
         }
     }
+}
 
+function Refresh_Ty() {
     i = 0;
     while (true) {
         var e = document.getElementById("id_Ty_" + i)
@@ -40,15 +43,28 @@ function Refresh( ) {
             if (e.value == 'Manual') {
                 var f = document.getElementById("id_Manual_Ty")
                 if (e.checked) {
+                    f.disabled = false
                     f.setAttribute("required", "")
                 } else {
+                    f.disabled = true
                     f.removeAttribute("required")
                 }
             }
             i = i + 1
         }
     }
-    return;
+}
+
+function Refresh_Period() {
+    var e = document.getElementById("id_Period")
+    var f = document.getElementById("id_Manual_Period")
+    if (e.value == "MANUAL") {
+        f.disabled = false
+        f.setAttribute("required", "")
+    } else {
+        f.disabled = true
+        f.removeAttribute("required")
+    }
 }
 // --!>
 </script>
@@ -96,6 +112,8 @@ function Refresh( ) {
           </tr>
       {% endfor %}
     </table>
+    <br/>
+    <table><tr><th>Period for Hazard Curve</th><td>{{ confirm_form.Period }}</td><td>{{ confirm_form.Manual_Period }}</td></tr></table>
 <hr/>
     <p><b>Height Unit: </b>{{ confirm_form.preprocess_data.height_units }}</p>
     <table><tr><th>Story</th><th>Height</th></tr>
