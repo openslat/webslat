@@ -1959,23 +1959,29 @@ def levels(request, project_id):
     levels = project.levels()
     level_info = []
     for level in levels:
-        accel = EDP_Grouping.objects.get(project=project, level=level, type='A').demand_x.flavour != None
+        accel_x = EDP_Grouping.objects.get(project=project, level=level, type='A').demand_x.flavour != None
+        accel_y = EDP_Grouping.objects.get(project=project, level=level, type='A').demand_y.flavour != None
         if level.level > 0:
-            drift = EDP_Grouping.objects.get(project=project, level=level, type='D').demand_x.flavour != None
+            drift_x = EDP_Grouping.objects.get(project=project, level=level, type='D').demand_x.flavour != None
+            drift_y = EDP_Grouping.objects.get(project=project, level=level, type='D').demand_y.flavour != None
         else:
-            drift = False
+            drift_x = False
+            drift_y = False
+            
         level_info.append({'label': level.label,
                            'level': level.level,
                            'id': level.id,
-                           'accel': accel, 
-                           'drift': drift})
+                           'accel_x': accel_x, 
+                           'accel_y': accel_y, 
+                           'drift_x': drift_x,
+                           'drift_y': drift_y})
     return render(request, 'slat/levels.html', 
                   {'project': project, 
                    'level_info': level_info,
                    'levels': levels})
 
 @login_required
-def demand(request, project_id, level_id, type):
+def demand(request, project_id, level_id, type, direction):
     project = get_object_or_404(Project, pk=project_id)
 
     if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
@@ -1988,12 +1994,21 @@ def demand(request, project_id, level_id, type):
     else:
         raise ValueError("UNKNOWN DEMAND TYPE")
         
-    demand = EDP.objects.filter(project=project, level=Level.objects.get(pk=level_id), type=type)
-    if len(demand) != 1:
+    demand_group = EDP_Grouping.objects.get(
+        project=project,
+        level=Level.objects.get(pk=level_id), 
+        type=type)
+    
+    if direction == 'X':
+        demand = demand_group.demand_x
+    elif direction == 'Y':
+        demand = demand_group.demand_y
+    else:
+        demand = None
+        
+    if demand == None:
         raise ValueError("Demand does not exist")
 
-
-    demand = demand[0]
     flavour = demand.flavour
     if not flavour:
         return HttpResponseRedirect(reverse('slat:edp_choose', args=(project_id, demand.id)))

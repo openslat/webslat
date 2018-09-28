@@ -14,7 +14,10 @@
 
 <p><b>Demands by Level</b></p>
 <table cellpadding='3'>
-<tr><th style="background:white"></th><th colspan='2' style="background:lightgray" align='center'>Demands</th><th style="background:white"></th></tr>
+<tr><th style="background:white"></th>
+  <th colspan='2' style="background:lightgray" align='center'>Acceleration</th>
+  <th colspan='2' style="background:lightgray" align='center'>Story Drift</th>
+  <th style="background:white"></th></tr>
 {% for level in level_info %}
 <tr><td>
       <a href="{% url 'slat:rename_level' project.id level.id %}" class="link_button" style="font-size:x-small">rename</a>
@@ -22,13 +25,26 @@
       <a href="{% url 'slat:shift_level' project.id level.id -1 %}" class="link_button" style="font-size:x-small">▼</a>
     <b>{{ level.label }}</b></td>
       <td border='3px' style="background:lightgray">
-        {% if not level.accel %}<i>{% endif %}
-        <a href="{% url 'slat:demand' project.id level.id 'acceleration' %}">Acceleration</a></td>
-        {% if not level.accel %}</i>{% endif %}
+        {% if not level.accel_x %}<i>{% endif %}
+        <a href="{% url 'slat:demand' project.id level.id 'acceleration' 'X' %}">X</a>
+        {% if not level.accel_x %}</i>{% endif %}
+        </td>
+      <td border='3px' style="background:lightgray">
+        {% if not level.accel_y %}<i>{% endif %}
+        <a href="{% url 'slat:demand' project.id level.id 'acceleration' 'Y' %}">Y</a>
+        {% if not level.accel_y %}</i>{% endif %}
+        </td>
       <td style="background:lightgray" >{% if level.level %}
-        {% if not level.drift %}<i>{% endif %}
-	<a href="{% url 'slat:demand' project.id level.id 'drift' %}">Drift</a>
-        {% if not level.drift %}</i>{% endif %}
+        {% if not level.drift_x %}<i>{% endif %}
+	<a href="{% url 'slat:demand' project.id level.id 'drift' 'X' %}">X</a>
+        {% if not level.drift_x %}</i>{% endif %}
+	{% else %}&nbsp;
+	{% endif %}
+      </td>
+      <td style="background:lightgray" >{% if level.level %}
+        {% if not level.drift_y %}<i>{% endif %}
+	<a href="{% url 'slat:demand' project.id level.id 'drift' 'Y' %}">Y</a>
+        {% if not level.drift_y %}</i>{% endif %}
 	{% else %}&nbsp;
 	{% endif %}
       </td>
