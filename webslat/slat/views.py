@@ -1822,14 +1822,20 @@ def level_cgroup(request, project_id, level_id, cg_id=None):
          cg_form.is_valid()
          component = cg_form.cleaned_data['component']
          
-         edp = EDP.objects.filter(project=project, level=Level.objects.get(pk=level_id))
-
          if re.search('^Accel(?i)', component.demand.name):
-             edp = edp.filter(type='A')
+             demand_type = 'A'
          else:
-             edp = edp.filter(type='D')
+             demand_type = 'D'
 
-         cg.demand = edp[0]
+         try:
+             edp = EDP_Grouping.objects.get(
+                 project=project, 
+                 level=Level.objects.get(pk=level_id),
+                 type=demand_type)
+         except:
+             eprint("No demand found")
+             
+         cg.demand = edp
          cg.component = component
          cg.quantity_x = cg_form.cleaned_data['quantity_x']
          cg.quantity_y = cg_form.cleaned_data['quantity_y']
@@ -1934,9 +1940,10 @@ def level_cgroups(request, project_id, level_id):
     if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
-    edps = EDP.objects.filter(project=project, level=Level.objects.get(pk=level_id))
+    edp_groups = EDP_Grouping.objects.filter(project=project, 
+                                           level=Level.objects.get(pk=level_id))
     cgs = []
-    for edp in edps:
+    for edp in edp_groups:
         groups = Component_Group.objects.filter(demand=edp)
         for cg in groups:
             cgs.append(cg)
