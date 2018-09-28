@@ -364,40 +364,58 @@ def make_demo(user, title, description):
     project.save()
 
     # Create EDPs:
-    demand_params = [{'level': 5, 'accel': {'a': 5.39, 'b': 1.5}, 'drift': {'a': 0.0202, 'b': 0.5}},
-                     {'level': 4, 'accel': {'a': 4.18, 'b': 1.5}, 'drift': {'a': 0.0380, 'b': 0.5}},
-                     {'level': 3, 'accel': {'a': 4.10, 'b': 1.5}, 'drift': {'a': 0.0506, 'b': 0.5}},
-                     {'level': 2, 'accel': {'a': 4.25, 'b': 1.5}, 'drift': {'a': 0.0633, 'b': 0.5}},
-                     {'level': 1, 'accel': {'a': 4.15, 'b': 1.5}, 'drift': {'a': 0.0557, 'b': 0.5}},
-                     {'level': 0, 'accel': {'a': 4.05, 'b': 1.5}}]
+    demand_params = [
+        {'level': 5, 'accel': {'a': 5.39, 'b': 1.5}, 'drift': {'a': 0.0202, 'b': 0.5}},
+        {'level': 4, 'accel': {'a': 4.18, 'b': 1.5}, 'drift': {'a': 0.0380, 'b': 0.5}},
+        {'level': 3, 'accel': {'a': 4.10, 'b': 1.5}, 'drift': {'a': 0.0506, 'b': 0.5}},
+        {'level': 2, 'accel': {'a': 4.25, 'b': 1.5}, 'drift': {'a': 0.0633, 'b': 0.5}},
+        {'level': 1, 'accel': {'a': 4.15, 'b': 1.5}, 'drift': {'a': 0.0557, 'b': 0.5}},
+        {'level': 0, 'accel': {'a': 4.05, 'b': 1.5}}]
     for demand in demand_params:
-        level = Level.objects.get(level=demand['level'], project=project)
-        if demand.get('accel'):
-            params = demand.get('accel')
-            curve = EDP_PowerCurve(median_x_a = params['a'],
-                                   median_x_b = params['b'],
-                                   sd_ln_x_a = 1.5,
-                                   sd_ln_x_b = 0.0)
-            curve.save()
-            EDP(project = project,
-                level = level,
-                type = EDP.EDP_TYPE_ACCEL,
-                flavour = EDP_Flavours.objects.get(name_text="Power Curve"),
-                powercurve = curve).save()
+        accels = {}
+        drifts = {}
+        
+        demand_type = ""
+        for direction in ['X', 'Y']:
+            level = Level.objects.get(level=demand['level'], project=project)
+            if demand.get('accel'):
+                demand_type = 'A'
+                params = demand.get('accel')
+                curve = EDP_PowerCurve(median_x_a = params['a'],
+                                       median_x_b = params['b'],
+                                       sd_ln_x_a = 1.5,
+                                       sd_ln_x_b = 0.0)
+                curve.save()
+                accels[direction] = EDP(
+                    flavour = EDP_Flavours.objects.get(name_text="Power Curve"),
+                    powercurve = curve)
+                accels[direction].save()
 
+            if demand.get('drift'):
+                demand_type = 'D'
+                params = demand.get('drift')
+                curve = EDP_PowerCurve(median_x_a = params['a'],
+                                       median_x_b = params['b'],
+                                       sd_ln_x_a = 1.5,
+                                       sd_ln_x_b = 0.0)
+                curve.save()
+                drifts[direction] = EDP(
+                    flavour = EDP_Flavours.objects.get(name_text="Power Curve"),
+                    powercurve = curve)
+                drifts[direction].save()
+        if demand.get('accel'):
+            EDP_Grouping(project=project,
+                         level=level,
+                         type='A',
+                         demand_x = accels['X'],
+                         demand_y = accels['Y']).save()
         if demand.get('drift'):
-            params = demand.get('drift')
-            curve = EDP_PowerCurve(median_x_a = params['a'],
-                                   median_x_b = params['b'],
-                                   sd_ln_x_a = 1.5,
-                                   sd_ln_x_b = 0.0)
-            curve.save()
-            EDP(project = project,
-                level = level,
-                type = EDP.EDP_TYPE_DRIFT,
-                flavour = EDP_Flavours.objects.get(name_text="Power Curve"),
-                powercurve = curve).save()
-            
+            EDP_Grouping(project=project,
+                         level=level,
+                         type='D',
+                         demand_x = drifts['X'],
+                         demand_y = drifts['Y']).save()
+
     # Add components:
     all_floors = range(num_floors + 1)
     not_ground = range(1, num_floors+1)
@@ -417,9 +435,9 @@ def make_demo(user, title, description):
             else:
                 raise ValueError("UNRECOGNIZED DEMAND TYPE FOR COMPONENT: {}".format(component.demand.name))
 
-            demand = EDP.objects.get(project=project,
-                                     level=level,
-                                     type=demand_type)
+            demand = EDP_Grouping.objects.get(project=project,
+                                              level=level,
+                                              type=demand_type)
             group = Component_Group(demand=demand, component=component, 
                                     quantity_x=comp['quantity'][0],
                                     quantity_y=comp['quantity'][1])
@@ -505,10 +523,6 @@ def make_example_2(user):
                 else:
                     raise ValueError("INVALID DEMAND TYPE")
                 
-                edp = EDP(project=project, 
-                          level=level,
-                          type=EDP_demand_type)
-
                 file = demand.get(demand_type)
                 
                 data = np.genfromtxt('example2/{}'.format(file), comments="#", delimiter=",", invalid_raise=True)
@@ -539,13 +553,26 @@ def make_example_2(user):
                     sd_ln_edp = np.std(ln_values, ddof=1)
                     points.append({'im': im, 'mu': median_edp, 'sigma': sd_ln_edp})
 
-                edp.flavour = EDP_Flavours.objects.get(pk=EDP_FLAVOUR_USERDEF);
-                edp.interpolation_method = Interpolation_Method.objects.get(method_text="Linear")
-                edp.save()
+                edps = {}
+                for direction in ['X', 'Y']:
+                    edp = EDP(
+                        flavour = EDP_Flavours.objects.get(pk=EDP_FLAVOUR_USERDEF),
+                        interpolation_method = Interpolation_Method.objects.get(
+                            method_text="Linear"))
+                    edp.save()
+                    edps[direction] = edp
 
-                for p in points:
-                    EDP_Point(demand=edp, im=p['im'], median_x=p['mu'], sd_ln_x=p['sigma']).save()
-            
+                    for p in points:
+                        EDP_Point(demand=edp,
+                                  im=p['im'],
+                                  median_x=p['mu'],
+                                  sd_ln_x=p['sigma']).save()
+
+                EDP_Grouping(project=project, 
+                             level=level, 
+                             type=EDP_demand_type,
+                             demand_x = edps['X'],
+                             demand_y = edps['Y']).save()
     # Add components:
     all_floors = range(num_floors + 1)
     not_ground = range(1, num_floors+1)
@@ -564,7 +591,12 @@ def make_example_2(user):
                   {'levels': not_ground, 'id': '106', 'quantity': [721, 0]},
                   {'levels': not_ground, 'id': '108', 'quantity': [10, 0]},
                   {'levels': [num_floors], 'id': '205', 'quantity': [4, 0]}]
-                  
+
+    eprint("Demands:")
+    for d in EDP_Grouping.objects.filter(project=project):
+        eprint("    {}".format(d))
+    eprint("------------------------")
+    
     for comp in components:
         component = ComponentsTab.objects.get(ident=comp['id'])
         for l in comp['levels']:
@@ -576,10 +608,12 @@ def make_example_2(user):
                 demand_type='D'
             else:
                 raise ValueError("UNRECOGNIZED DEMAND TYPE FOR COMPONENT: {}".format(component.demand.name))
-
-            demand = EDP.objects.get(project=project,
-                                     level=level,
-                                     type=demand_type)
+            
+            eprint("project: {}; level: {}; type: {}".format(project, level, demand_type))
+            
+            demand = EDP_Grouping.objects.get(project=project,
+                                              level=level,
+                                              type=demand_type)
             group = Component_Group(demand=demand, component=component, 
                                     quantity_x=comp['quantity'][0],
                                     quantity_y=comp['quantity'][1])
@@ -687,7 +721,7 @@ def project(request, project_id=None):
         if project.model().AnnualCost().mean() > 0:
             chart = IMCostChart(project)
             #pdf_chart = IMPDFChart(project)
-        
+
         levels = project.num_levels()
         levels_form = None
         users = list(ProjectUserPermissions.objects.filter(project=project, role=ProjectUserPermissions.ROLE_FULL))
@@ -1353,18 +1387,23 @@ class IMDemandPlot(Chart):
     
     def __init__(self, demand):
         super(IMDemandPlot, self).__init__()
+        try:
+            group = demand.demand_x
+        except:
+            group = demand.demand_y
+            
         demand_func = demand.model()
         if demand_func:
-            if demand.type == 'D':
+            if group.type == 'D':
                 demand_type  = 'Drift (radians)'
-            elif demand.type == 'A':
+            elif group.type == 'A':
                 demand_type  = 'Acceleration (g)'
             else:
                 demand_type = 'Unknown'
             
-            self.title['text'] = "{} {}".format(demand.level.label, demand_type)
+            self.title['text'] = "{} {}".format(group.level.label, demand_type)
             self.scales['yAxes'][0]['scaleLabel']['labelString'] = demand_type
-            xlimit = demand.project.IM.model().plot_max()
+            xlimit = group.project.IM.model().plot_max()
 
             self.median =  []
             self.x_10 = []
@@ -1422,16 +1461,21 @@ class DemandRatePlot(Chart):
     
     def __init__(self, demand):
         super(DemandRatePlot, self).__init__()
+        try:
+            group = demand.demand_x
+        except:
+            group = demand.demand_y
+            
         demand_func = demand.model()
         if demand_func:
-            if demand.type == 'D':
+            if group.type == 'D':
                 demand_type  = 'Drift (radians)'
-            elif demand.type == 'A':
+            elif group.type == 'A':
                 demand_type  = 'Acceleration (g)'
             else:
                 demand_type = 'Unknown'
             
-            self.title['text'] = "{} {} Rate of Exceedance".format(demand.level.label, demand_type)
+            self.title['text'] = "{} {} Rate of Exceedance".format(group.level.label, demand_type)
             self.scales['xAxes'][0]['scaleLabel']['labelString'] = demand_type
             
             xlimit = demand_func.plot_max()
@@ -1915,9 +1959,9 @@ def levels(request, project_id):
     levels = project.levels()
     level_info = []
     for level in levels:
-        accel = EDP.objects.get(project=project, level=level, type='A').flavour != None
+        accel = EDP_Grouping.objects.get(project=project, level=level, type='A').demand_x.flavour != None
         if level.level > 0:
-            drift = EDP.objects.get(project=project, level=level, type='D').flavour != None
+            drift = EDP_Grouping.objects.get(project=project, level=level, type='D').demand_x.flavour != None
         else:
             drift = False
         level_info.append({'label': level.label,
@@ -2026,8 +2070,10 @@ def analysis(request, project_id):
         levels = {}
         for l in project.levels():
             levels[l] = []
-        demands = EDP.objects.filter(project=project)
-        for edp in demands:
+        demand_groups = EDP_Grouping.objects.filter(project=project)
+        #demands = list(map(lambda g: [g.demand_x, g.demand_y], demand_groups))
+        #eprint(demands)
+        for edp in demand_groups:
             for c in Component_Group.objects.filter(demand=edp):
                 levels[edp.level].append(c)
 
@@ -2092,7 +2138,7 @@ def analysis(request, project_id):
         columns = ['Component Type', 'Cost']
         data = [columns]
         groups = {}
-        demands = EDP.objects.filter(project=project)
+        demands = EDP_Grouping.objects.filter(project=project)
         for edp in demands:
             for c in Component_Group.objects.filter(demand=edp):
                 type = c.component.name

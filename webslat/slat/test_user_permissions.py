@@ -1,7 +1,7 @@
 import pyslat
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
-from slat.models import Profile, Project, ProjectUserPermissions, EDP, Level
+from slat.models import Profile, Project, ProjectUserPermissions, EDP, Level, EDP_Grouping
 from http import HTTPStatus
 from pyquery import PyQuery
 from slat.views import make_demo
@@ -295,7 +295,7 @@ class PermissionTestCase(TestCase):
             project = Project.objects.get(title_text=project_title)
             
             levels = Level.objects.filter(project=project)
-            demands =  EDP.objects.filter(project=project)
+            demands =  EDP_Grouping.objects.filter(project=project)
 
             if len(levels) > 0:
                 demand = demands.get(level=levels.get(level=0)).pk

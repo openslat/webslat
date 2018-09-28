@@ -164,7 +164,8 @@ class Project(models.Model):
                     self.sd_ln_cost_demolition, pyslat.LOGNORMAL_SIGMA_TYPE.SD_LN_X))
             
         for cg in Component_Group.objects.filter(demand__project = self):
-            structure.AddCompGroup(cg.model())
+            for m in cg.model().Models().values():
+                structure.AddCompGroup(m)
 
     def model(self):
         if not pyslat.structure.lookup(self.id):
@@ -445,24 +446,12 @@ class EDP_PowerCurve(models.Model):
     sd_ln_x_b = models.FloatField(default=0)
 
 class EDP(models.Model):
-    project = models.ForeignKey(Project, on_delete=CASCADE, blank=False, null=False)
-    level = models.ForeignKey(Level, on_delete=CASCADE, blank=False, null=False)
-    EDP_TYPE_DRIFT = 'D'
-    EDP_TYPE_ACCEL = 'A'
-    EDP_TYPE_CHOICES = (
-        (EDP_TYPE_DRIFT, 'Inter-story Drift'),
-        (EDP_TYPE_ACCEL, 'Acceleration'))
-    type = models.CharField(max_length=1, 
-                            choices=EDP_TYPE_CHOICES);
-    direction = models.CharField(max_length=1,
-                                 choices=[['X', 'X'], ['Y', 'Y']])
     flavour = models.ForeignKey(EDP_Flavours, on_delete=PROTECT, blank=False, null=True, db_constraint=False)
     powercurve = models.ForeignKey(EDP_PowerCurve, on_delete=SET_NULL, null=True, blank=False)
     interpolation_method = models.ForeignKey(Interpolation_Method, on_delete=PROTECT, null=True, blank=False, db_constraint=False)
 
     def __str__(self):
-        return "{} {}".format(self.level.label,
-                              dict(EDP.EDP_TYPE_CHOICES)[self.type])
+        return "EDP #{} ({})".format(self.id, self.flavour)
 
     def _make_model(self):
         if not self.flavour:
@@ -486,13 +475,17 @@ class EDP(models.Model):
             prob_func = pyslat.probfn('<probfn>', 'lognormal',
                                       [pyslat.LOGNORMAL_MU_TYPE.MEDIAN_X, mu],
                                       [pyslat.LOGNORMAL_SIGMA_TYPE.SD_LN_X, sigma]) 
-            edp_func = pyslat.edp(self.id, self.project.IM.model(), prob_func)
+            try:
+                group = self.demand_x
+            except:
+                group = self.demand_y
+            edp_func = pyslat.edp(self.id, group.project.IM.model(), prob_func)
 
-            mean = edp_func.Mean(self.project.IM.model().plot_max())
+            mean = edp_func.Mean(group.project.IM.model().plot_max())
             
-            sigma =  edp_func.SD(self.project.IM.model().plot_max())
-            f = lambda x: edp_func.getlambda(x[0]) - self.project.rarity
-            xlimit = fsolve(f, edp_func.Mean(self.project.IM.model().plot_max())/2)[0]
+            sigma =  edp_func.SD(group.project.IM.model().plot_max())
+            f = lambda x: edp_func.getlambda(x[0]) - group.project.rarity
+            xlimit = fsolve(f, edp_func.Mean(group.project.IM.model().plot_max())/2)[0]
             edp_func.set_plot_max(xlimit)
             
         elif self.flavour.id == EDP_FLAVOUR_USERDEF:
@@ -570,7 +563,22 @@ class EDP(models.Model):
             self._make_model()
         return pyslat.edp.lookup(self.id)
 
+class EDP_Grouping(models.Model):
+    project = models.ForeignKey(Project, on_delete=CASCADE, blank=False, null=False)
+    level = models.ForeignKey(Level, on_delete=CASCADE, blank=False, null=False)
+    EDP_TYPE_DRIFT = 'D'
+    EDP_TYPE_ACCEL = 'A'
+    EDP_TYPE_CHOICES = (
+        (EDP_TYPE_DRIFT, 'Inter-story Drift'),
+        (EDP_TYPE_ACCEL, 'Acceleration'))
+    type = models.CharField(max_length=1, 
+                            choices=EDP_TYPE_CHOICES);
+    demand_x = models.OneToOneField(EDP, related_name='demand_x', on_delete=CASCADE, blank=False, null=False)
+    demand_y = models.OneToOneField(EDP, related_name='demand_y', on_delete=CASCADE, blank=False, null=False)
 
+    def __str__(self):
+        return "EDP_Grouping<{}, {}, {}, {}, {}>".format(self.project, self.level, self.type, self.demand_x, self.demand_y)
+    
 class EDP_Point(models.Model):
     demand = models.ForeignKey('EDP', on_delete=CASCADE, null=False)
     im = models.FloatField()
@@ -581,13 +589,26 @@ class EDP_Point(models.Model):
         return("Demand: {}; IM: {}; median_x: {}, sd_ln_x: {}".format(self.demand, self.im, self.median_x, self.sd_ln_x))
         return("an EDP_Point: [{}]".format(self.id))
 
+class Component_Group_SLAT_Model:    # Combines separate pyslat::compgroup objects for X and Y
+    def __init__(self, x_model, y_model):
+        self._x_model = x_model
+        self._y_model = y_model
+    
+    def Models(self):
+        return {'X': self._x_model,
+                'Y': self._y_model}
+
+    def E_annual_cost(self):
+        return self._x_model.E_annual_cost() + self._y_model.E_annual_cost()
+        
 class Component_Group(models.Model):
-    demand = models.ForeignKey('EDP', on_delete=PROTECT, null=False)
+    demand = models.ForeignKey('EDP_Grouping', related_name="demand", on_delete=PROTECT, null=False)
     component = models.ForeignKey('ComponentsTab', on_delete=PROTECT, null=False, db_constraint=False)
     quantity_x = models.IntegerField(blank=False, null=False)
     quantity_y = models.IntegerField(blank=False, null=False)
     cost_adj = models.FloatField(blank=False, null=False, default=1.0)
     comment = models.CharField(blank=True, null=True, max_length=256)
+    _model = None
 
     def _make_model(self):
         frags = []
@@ -603,16 +624,28 @@ class Component_Group(models.Model):
                                                 c.max_cost, c.min_cost,
                                                 c.dispersion))
         cost = pyslat.bilevellossfn(self.id, costs)
-        pyslat.compgroup(self.id, self.demand.model(), fragility, cost, None, 
-                         self.quantity_x + self.quantity_y, 
-                         self.cost_adj,
-                         1.0  # delay adjustment factor
-                         )
+
+        x_model = pyslat.compgroup(self.id,
+                                   self.demand.demand_x.model(), 
+                                   fragility, cost, None, 
+                                   self.quantity_x,
+                                   self.cost_adj,
+                                   1.0  # delay adjustment factor
+        )
+        y_model = pyslat.compgroup(self.id,
+                                   self.demand.demand_y.model(), 
+                                   fragility, cost, None, 
+                                   self.quantity_y,
+                                   self.cost_adj,
+                                   1.0  # delay adjustment factor
+        )
+        return Component_Group_SLAT_Model(x_model, y_model)
 
     def model(self):
-        if not pyslat.compgroup.lookup(self.id):
-            self._make_model()
-        return pyslat.compgroup.lookup(self.id)
+        if not self._model:
+            #eprint("Must make model [{}]".format(self))
+            self._model = self._make_model()
+        return self._model
     
 
     def __str__(self):

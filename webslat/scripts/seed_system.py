@@ -74,13 +74,14 @@ def run():
         
         # Add a component group with a cost adjustment and comment
         roof = Level.objects.get(project=project, level=project.num_levels())
-        demand = EDP.objects.get(project=project, 
+        demand_group = EDP_Grouping.objects.get(project=project, 
                                  level=roof, 
                                  type=EDP.EDP_TYPE_ACCEL)
         component = ComponentsTab.objects.get(ident='206')
         group = Component_Group(demand=demand, 
                                 component=component,
-                                quantity=1,
+                                quantity_x=1,
+                                quantity_y=0,
                                 comment="THE Maltese Falcon",
                                 cost_adj=100)
         group.save()
