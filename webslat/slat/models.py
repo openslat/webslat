@@ -512,10 +512,14 @@ class EDP(models.Model):
             prob_func = pyslat.probfn('<probfn>', 'lognormal',
                                       [pyslat.LOGNORMAL_MU_TYPE.MEDIAN_X, mu],
                                       [pyslat.LOGNORMAL_SIGMA_TYPE.SD_LN_X, sigma]) 
-            edp_func = pyslat.edp(self.id, self.project.IM.model(), prob_func)
+            try:
+                group = self.demand_x
+            except:
+                group = self.demand_y
+            edp_func = pyslat.edp(self.id, group.project.IM.model(), prob_func)
 
-            mean = edp_func.Mean(self.project.IM.model().plot_max())
-            sigma =  edp_func.SD(self.project.IM.model().plot_max())
+            mean = edp_func.Mean(group.project.IM.model().plot_max())
+            sigma =  edp_func.SD(group.project.IM.model().plot_max())
 
             epsilon = 1E-2
             counter = 0
@@ -523,10 +527,10 @@ class EDP(models.Model):
             low_y = edp_func.getlambda(low_x)
 
 
-            high_x = edp_func.Median(self.project.IM.model().plot_max())
+            high_x = edp_func.Median(group.project.IM.model().plot_max())
             high_y = edp_func.getlambda(high_x)
             old_high_y = None
-            while high_y > self.project.rarity:
+            while high_y > group.project.rarity:
                 high_x = high_x * 2
                 old_high_y = high_y
                 high_y = edp_func.getlambda(high_x)
@@ -542,8 +546,8 @@ class EDP(models.Model):
                 counter = counter + 1
                 xlimit = mid_x
 
-                error = self.project.rarity - mid_y
-                if abs(error) < self.project.rarity/10:
+                error = group.project.rarity - mid_y
+                if abs(error) < group.project.rarity/10:
                     xlimit = mid_x
                     break
                 elif error > 0:
