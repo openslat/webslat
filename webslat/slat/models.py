@@ -615,45 +615,54 @@ class Component_Group(models.Model):
     _model = None
 
     def _make_model(self):
-        frags = []
-        for f in FragilityTab.objects.filter(component = self.component).order_by('state'):
-            frags.append([f.median, f.beta])
-        fragility = pyslat.fragfn_user(self.id, {'mu': pyslat.LOGNORMAL_MU_TYPE.MEDIAN_X,
+        x_id = "{}_x".format(self.id)
+        y_id = "{}_y".format(self.id)
+        x_model = pyslat.compgroup.lookup(x_id)
+        y_model =  pyslat.compgroup.lookup(y_id)
+
+        if not x_model or not y_model:
+            frags = []
+            for f in FragilityTab.objects.filter(component = self.component).order_by('state'):
+                frags.append([f.median, f.beta])
+                fragility = pyslat.fragfn_user(self.id, {'mu': pyslat.LOGNORMAL_MU_TYPE.MEDIAN_X,
                                                  'sd': pyslat.LOGNORMAL_SIGMA_TYPE.SD_LN_X},
-                                       frags)
+                                               frags)
 
-        costs = []
-        for c in CostTab.objects.filter(component = self.component).order_by('state'):
-            costs.append(pyslat.MakeBiLevelLoss(c.lower_limit, c.upper_limit,
-                                                c.max_cost, c.min_cost,
-                                                c.dispersion))
-        cost = pyslat.bilevellossfn(self.id, costs)
+            costs = []
+            for c in CostTab.objects.filter(component = self.component).order_by('state'):
+                costs.append(pyslat.MakeBiLevelLoss(c.lower_limit, c.upper_limit,
+                                                    c.max_cost, c.min_cost,
+                                                    c.dispersion))
+                cost = pyslat.bilevellossfn(self.id, costs)
+            
+            if not x_model:
+                x_model = pyslat.compgroup(x_id,
+                                           self.demand.demand_x.model(), 
+                                           fragility, cost, None, 
+                                           self.quantity_x,
+                                           self.cost_adj,
+                                           1.0  # delay adjustment factor
+                )
 
-        x_model = pyslat.compgroup(self.id,
-                                   self.demand.demand_x.model(), 
-                                   fragility, cost, None, 
-                                   self.quantity_x,
-                                   self.cost_adj,
-                                   1.0  # delay adjustment factor
-        )
-        y_model = pyslat.compgroup(self.id,
-                                   self.demand.demand_y.model(), 
-                                   fragility, cost, None, 
-                                   self.quantity_y,
-                                   self.cost_adj,
-                                   1.0  # delay adjustment factor
-        )
+            if not y_model:
+                y_model = pyslat.compgroup(y_id,
+                                           self.demand.demand_y.model(), 
+                                           fragility, cost, None, 
+                                           self.quantity_y,
+                                           self.cost_adj,
+                                           1.0  # delay adjustment factor
+                )
+
         return Component_Group_SLAT_Model(x_model, y_model)
 
     def model(self):
         if not self._model:
-            #eprint("Must make model [{}]".format(self))
             self._model = self._make_model()
         return self._model
     
 
     def __str__(self):
-        result = str(self.demand) + " "
+        result = "Component_Group [{}] {} ".format(hex(id(self)), str(self.demand))
         if self.component:
             result = result + str(self.component)
         else:
