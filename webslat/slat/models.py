@@ -604,6 +604,10 @@ class Component_Group_SLAT_Model:    # Combines separate pyslat::compgroup objec
 
     def E_annual_cost(self):
         return self._x_model.E_annual_cost() + self._y_model.E_annual_cost()
+    
+    def Deaggregated_E_annual_cost(self):
+        return {'X': self._x_model.E_annual_cost(),
+                'Y': self._y_model.E_annual_cost()}
         
 class Component_Group(models.Model):
     demand = models.ForeignKey('EDP_Grouping', related_name="demand", on_delete=PROTECT, null=False)
@@ -614,13 +618,13 @@ class Component_Group(models.Model):
     comment = models.CharField(blank=True, null=True, max_length=256)
     _model = None
 
-    def _make_model(self):
+    def _make_model(self, what_changed):
         x_id = "{}_x".format(self.id)
         y_id = "{}_y".format(self.id)
         x_model = pyslat.compgroup.lookup(x_id)
         y_model =  pyslat.compgroup.lookup(y_id)
 
-        if not x_model or not y_model:
+        if (not x_model) or (not y_model) or (True in what_changed.values()):
             frags = []
             for f in FragilityTab.objects.filter(component = self.component).order_by('state'):
                 frags.append([f.median, f.beta])
@@ -635,7 +639,7 @@ class Component_Group(models.Model):
                                                     c.dispersion))
                 cost = pyslat.bilevellossfn(self.id, costs)
             
-            if not x_model:
+            if (not x_model) or what_changed['X']:
                 x_model = pyslat.compgroup(x_id,
                                            self.demand.demand_x.model(), 
                                            fragility, cost, None, 
@@ -644,7 +648,7 @@ class Component_Group(models.Model):
                                            1.0  # delay adjustment factor
                 )
 
-            if not y_model:
+            if (not y_model) or what_changed['Y']:
                 y_model = pyslat.compgroup(y_id,
                                            self.demand.demand_y.model(), 
                                            fragility, cost, None, 
@@ -657,7 +661,7 @@ class Component_Group(models.Model):
 
     def model(self):
         if not self._model:
-            self._model = self._make_model()
+            self._model = self._make_model({'X': True, 'Y': True})
         return self._model
     
 

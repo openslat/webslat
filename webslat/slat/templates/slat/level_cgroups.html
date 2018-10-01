@@ -16,8 +16,15 @@ Component Groups for {{ level.label }}
 </div>
 
 {{ form.errors }}
-<table border="1"><tr><th>Component</th><th>X Count</th>
-    <th>Y Count</th><th>Adjustment Factor</th><th>E annual cost</th><th></th><th></th></tr>
+<table border="1">
+  <tr>
+    <th></th>
+    <th colspan="2">Count</th>
+    <th></th>
+    <th colspan="3">E annual cost</th>
+    <th colspan="2"></th></tr>
+    <table border="1"><tr><th>Component</th><th>X</th>
+    <th>Y</th><th>Adjustment Factor</th><th>X</th><th>Y</th><th>Total</th><th></th><th></th></tr>
 {% for cg in cgs %}
 <tr><td>
     <!-- <a href="{% url 'slat:component' cg.component.ident %}"> -->{{ cg.component }}
@@ -29,6 +36,8 @@ Component Groups for {{ level.label }}
     <td align="RIGHT">{{ cg.quantity_x }}</td>
     <td align="RIGHT">{{ cg.quantity_y }}</td>
    <td align="RIGHT">{{ cg.cost_adj|floatformat:2 }}</td>
+   <td align="RIGHT">{{ cg.model.Deaggregated_E_annual_cost.X|floatformat:2 }}</td>
+   <td align="RIGHT">{{ cg.model.Deaggregated_E_annual_cost.Y|floatformat:2 }}</td>
    <td align="RIGHT">{{ cg.model.E_annual_cost|floatformat:2 }}</td>
     <td>
     <form action="{% url 'slat:level_compgroup' project.id level.id cg.id  %}" method="get">

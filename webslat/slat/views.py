@@ -1835,6 +1835,18 @@ def level_cgroup(request, project_id, level_id, cg_id=None):
          except:
              eprint("No demand found")
              
+
+         changes = {'X': False, 'Y':False}
+         if cg.demand != edp or \
+            cg.component != component or \
+            cg.cost_adj != cg_form.cleaned_data['cost_adj']:
+             changes['X'] = True
+             changes['Y'] = True
+         if cg.quantity_x != cg_form.cleaned_data['quantity_x']:
+             changes['X'] = True
+         if cg.quantity_y != cg_form.cleaned_data['quantity_y']:
+             changes['Y'] = True
+             
          cg.demand = edp
          cg.component = component
          cg.quantity_x = cg_form.cleaned_data['quantity_x']
@@ -1842,8 +1854,10 @@ def level_cgroup(request, project_id, level_id, cg_id=None):
          cg.cost_adj = cg_form.cleaned_data['cost_adj']
          cg.comment = cg_form.cleaned_data['comment']
          cg.save()
-         if cg_form.has_changed():
-             cg._make_model()
+         eprint("Changes: {}".format(changes))
+         if True in changes.values():
+             eprint("Building Model")
+             cg._make_model(changes)
          cg_id = cg.id
          
          return HttpResponseRedirect(reverse('slat:level_cgroups', args=(project_id, level_id)))
