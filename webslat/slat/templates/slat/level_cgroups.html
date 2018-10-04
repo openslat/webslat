@@ -17,14 +17,21 @@ Component Groups for {{ level.label }}
 
 {{ form.errors }}
 <table border="1">
-  <tr>
+  <tr style="border-width:1px; border-style:solid solid hidden solid">
     <th></th>
-    <th colspan="2">Count</th>
-    <th></th>
-    <th colspan="3">E annual cost</th>
+    <th colspan="3" align="center">Count</th>
+    <th align="center">Adjustment</th>
+    <th colspan="4" align="center">E annual cost</th>
     <th colspan="2"></th></tr>
-    <table border="1"><tr><th>Component</th><th>X</th>
-    <th>Y</th><th>Adjustment Factor</th><th>X</th><th>Y</th><th>Total</th><th></th><th></th></tr>
+    <tr><th>Component</th><th style="border-style:none" align="center">X</th>
+      <th style="border-style:none" align="center">Y</th>
+      <th style="border-style:none" align="center">U</th>
+      <th align="center">Factor</th>
+      <th style="border-style:none" align="center">X</th>
+      <th style="border-style:none" align="center">Y</th>
+      <th style="border-style:none" align="center">U</th>
+      <th style="border-style:none" align="center">Total</th>
+      <th colspan="2"></th></tr>
 {% for cg in cgs %}
 <tr><td>
     <!-- <a href="{% url 'slat:component' cg.component.ident %}"> -->{{ cg.component }}
@@ -35,9 +42,11 @@ Component Groups for {{ level.label }}
     <!--</a>--></td>
     <td align="RIGHT">{{ cg.quantity_x }}</td>
     <td align="RIGHT">{{ cg.quantity_y }}</td>
+    <td align="RIGHT">{{ cg.quantity_u }}</td>
    <td align="RIGHT">{{ cg.cost_adj|floatformat:2 }}</td>
    <td align="RIGHT">{{ cg.model.Deaggregated_E_annual_cost.X|floatformat:2 }}</td>
    <td align="RIGHT">{{ cg.model.Deaggregated_E_annual_cost.Y|floatformat:2 }}</td>
+   <td align="RIGHT">{{ cg.model.Deaggregated_E_annual_cost.U|floatformat:2 }}</td>
    <td align="RIGHT">{{ cg.model.E_annual_cost|floatformat:2 }}</td>
     <td>
     <form action="{% url 'slat:level_compgroup' project.id level.id cg.id  %}" method="get">

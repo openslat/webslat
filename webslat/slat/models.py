@@ -463,9 +463,6 @@ class EDP(models.Model):
                                       [pyslat.LOGNORMAL_MU_TYPE.MEDIAN_X, mu],
                                       [pyslat.LOGNORMAL_SIGMA_TYPE.SD_LN_X, sigma]) 
             edp_func = pyslat.edp(self.id, self.project.IM.model(), prob_func)
-            eprint("edp_func: {}".format(edp_func))
-            eprint("  edp_func.plot_max: {}".format(edp_func.plot_max()))
-            eprint("  edp_func(0): {}".format(edp_func.Mean(0)))
             exit
         elif self.flavour.id == EDP_FLAVOUR_POWERCURVE:
             mu = pyslat.detfn('<powercurve-mu>', 'power law', [self.powercurve.median_x_a,
@@ -580,6 +577,7 @@ class EDP_Grouping(models.Model):
     demand_x = models.OneToOneField(EDP, related_name='demand_x', on_delete=CASCADE, blank=False, null=False)
     demand_y = models.OneToOneField(EDP, related_name='demand_y', on_delete=CASCADE, blank=False, null=False)
 
+
     def __str__(self):
         return "EDP_Grouping<{}, {}, {}, {}, {}>".format(self.project, self.level, self.type, self.demand_x, self.demand_y)
     
@@ -594,26 +592,33 @@ class EDP_Point(models.Model):
         return("an EDP_Point: [{}]".format(self.id))
 
 class Component_Group_SLAT_Model:    # Combines separate pyslat::compgroup objects for X and Y
-    def __init__(self, x_model, y_model):
+    def __init__(self, x_model, y_model, u_model):
         self._x_model = x_model
         self._y_model = y_model
+        self._u_model = u_model
     
     def Models(self):
         return {'X': self._x_model,
-                'Y': self._y_model}
+                'Y': self._y_model,
+                'U': self._u_model}
 
     def E_annual_cost(self):
-        return self._x_model.E_annual_cost() + self._y_model.E_annual_cost()
+        return self._x_model.E_annual_cost() + \
+            self._y_model.E_annual_cost() + \
+            self._u_model.E_annual_cost()
+
     
     def Deaggregated_E_annual_cost(self):
         return {'X': self._x_model.E_annual_cost(),
-                'Y': self._y_model.E_annual_cost()}
+                'Y': self._y_model.E_annual_cost(),
+                'U': self._u_model.E_annual_cost()}
         
 class Component_Group(models.Model):
     demand = models.ForeignKey('EDP_Grouping', related_name="demand", on_delete=PROTECT, null=False)
     component = models.ForeignKey('ComponentsTab', on_delete=PROTECT, null=False, db_constraint=False)
     quantity_x = models.IntegerField(blank=False, null=False)
     quantity_y = models.IntegerField(blank=False, null=False)
+    quantity_u = models.IntegerField(blank=False, null=False)
     cost_adj = models.FloatField(blank=False, null=False, default=1.0)
     comment = models.CharField(blank=True, null=True, max_length=256)
     _model = None
@@ -621,10 +626,12 @@ class Component_Group(models.Model):
     def _make_model(self, what_changed):
         x_id = "{}_x".format(self.id)
         y_id = "{}_y".format(self.id)
+        u_id = "{}_u".format(self.id)
         x_model = pyslat.compgroup.lookup(x_id)
         y_model =  pyslat.compgroup.lookup(y_id)
+        u_model = pyslat.compgroup.lookup(u_id)
 
-        if (not x_model) or (not y_model) or (True in what_changed.values()):
+        if (not x_model) or (not y_model) or (not u_model) or (True in what_changed.values()):
             frags = []
             for f in FragilityTab.objects.filter(component = self.component).order_by('state'):
                 frags.append([f.median, f.beta])
@@ -657,11 +664,28 @@ class Component_Group(models.Model):
                                            1.0  # delay adjustment factor
                 )
 
-        return Component_Group_SLAT_Model(x_model, y_model)
+            if (not u_model) or what_changed['U']:
+                demand = pyslat.edp.lookup(u_id)
+                if not demand:
+                    eprint("Building model: {}".format(u_id))
+                    pyslat.edp(u_id, 
+                               self.demand.project.IM.model(),
+                               self.demand.demand_x.model(),
+                               self.demand.demand_y.model())
+                    demand = pyslat.edp.lookup(u_id)
+                    
+                u_model = pyslat.compgroup(y_id,
+                                           demand,
+                                           fragility, cost, None, 
+                                           self.quantity_u,
+                                           self.cost_adj,
+                                           1.0  # delay adjustment factor
+                )
+        return Component_Group_SLAT_Model(x_model, y_model, u_model)
 
     def model(self):
         if not self._model:
-            self._model = self._make_model({'X': True, 'Y': True})
+            self._model = self._make_model({'X': True, 'Y': True, 'U':True})
         return self._model
     
 
@@ -671,7 +695,7 @@ class Component_Group(models.Model):
             result = result + str(self.component)
         else:
             result = result + "NO COMPONENT"
-        result = result + " " + str(self.quantity_x) + "/" + str(self.quantity_y)
+        result = result + " " + str(self.quantity_x) + "/" + str(self.quantity_y) + "/" + str(self.quantity_u)
         return result
 
     
@@ -848,6 +872,7 @@ class FloorCompGroupForm(Form):
     component = ModelChoiceField(queryset=ComponentsTab.objects)
     quantity_x = IntegerField(initial=1)
     quantity_y = IntegerField(initial=1)
+    quantity_u = IntegerField(initial=1)
     cost_adj = FloatField()
     comment = CharField(required=False)
         
@@ -867,12 +892,14 @@ class ComponentForm(Form):
         self.fields['component'].widget.forward.append(forward.Const(level, 'level'))
         self.fields['quantity_x'].widget.attrs['class'] = 'normal'
         self.fields['quantity_y'].widget.attrs['class'] = 'normal'
+        self.fields['quantity_u'].widget.attrs['class'] = 'normal'
         self.fields['cost_adj'].widget.attrs['class'] = 'normal'
         self.fields['comment'].widget.attrs['comment'] = 'normal'
         self.fields['category'].widget.attrs['class'] = 'normal'
         self.fields['component'].widget.attrs['class'] = 'normal'
         self.fields['quantity_x'].widget.attrs['title'] = 'How many of this component are in the group?'
         self.fields['quantity_y'].widget.attrs['title'] = 'How many of this component are in the group?'
+        self.fields['quantity_u'].widget.attrs['title'] = 'How many of this component are in the group?'
         self.fields['cost_adj'].widget.attrs['title'] = 'Adjustment factor from standard cost.'
         self.fields['comment'].widget.attrs['title'] = 'Notes about this component.'
         self.fields['category'].widget.attrs['title'] = 'Narrow the component search by category.'
@@ -880,6 +907,7 @@ class ComponentForm(Form):
         
     quantity_x = IntegerField(label="X Count")
     quantity_y = IntegerField(label="Y Count")
+    quantity_u = IntegerField(label="U Count")
     cost_adj = FloatField()
     comment = CharField(max_length=256, required=False)
     category = ChoiceField(choices=ListOfComponentCategories, required=False)

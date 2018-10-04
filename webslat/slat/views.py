@@ -419,10 +419,10 @@ def make_demo(user, title, description):
     # Add components:
     all_floors = range(num_floors + 1)
     not_ground = range(1, num_floors+1)
-    components = [{'levels': all_floors, 'id': '206', 'quantity': [6, 3]},
-                  {'levels': not_ground, 'id': 'B1041.032a', 'quantity': [24, 8]},
-                  {'levels': not_ground, 'id': 'B1044.023', 'quantity': [8, 0]},
-                  {'levels': not_ground, 'id': 'C1011.001a', 'quantity': [0, 32]}]
+    components = [{'levels': all_floors, 'id': '206', 'quantity': [6, 3, 0]},
+                  {'levels': not_ground, 'id': 'B1041.032a', 'quantity': [24, 8, 1]},
+                  {'levels': not_ground, 'id': 'B1044.023', 'quantity': [8, 0, 2]},
+                  {'levels': not_ground, 'id': 'C1011.001a', 'quantity': [0, 0, 32]}]
     for comp in components:
         component = ComponentsTab.objects.get(ident=comp['id'])
         for l in comp['levels']:
@@ -440,7 +440,8 @@ def make_demo(user, title, description):
                                               type=demand_type)
             group = Component_Group(demand=demand, component=component, 
                                     quantity_x=comp['quantity'][0],
-                                    quantity_y=comp['quantity'][1])
+                                    quantity_y=comp['quantity'][1],
+                                    quantity_u=comp['quantity'][2])
             group.save()
     
     return project
@@ -592,11 +593,6 @@ def make_example_2(user):
                   {'levels': not_ground, 'id': '108', 'quantity': [10, 0]},
                   {'levels': [num_floors], 'id': '205', 'quantity': [4, 0]}]
 
-    eprint("Demands:")
-    for d in EDP_Grouping.objects.filter(project=project):
-        eprint("    {}".format(d))
-    eprint("------------------------")
-    
     for comp in components:
         component = ComponentsTab.objects.get(ident=comp['id'])
         for l in comp['levels']:
@@ -608,8 +604,6 @@ def make_example_2(user):
                 demand_type='D'
             else:
                 raise ValueError("UNRECOGNIZED DEMAND TYPE FOR COMPONENT: {}".format(component.demand.name))
-            
-            eprint("project: {}; level: {}; type: {}".format(project, level, demand_type))
             
             demand = EDP_Grouping.objects.get(project=project,
                                               level=level,
@@ -1834,27 +1828,29 @@ def level_cgroup(request, project_id, level_id, cg_id=None):
                  type=demand_type)
          except:
              eprint("No demand found")
-             
 
-         changes = {'X': False, 'Y':False}
+         changes = {'X': False, 'Y':False, 'U':False}
          if cg.demand != edp or \
             cg.component != component or \
             cg.cost_adj != cg_form.cleaned_data['cost_adj']:
              changes['X'] = True
              changes['Y'] = True
+             changes['U'] = True
          if cg.quantity_x != cg_form.cleaned_data['quantity_x']:
              changes['X'] = True
          if cg.quantity_y != cg_form.cleaned_data['quantity_y']:
              changes['Y'] = True
+         if cg.quantity_u != cg_form.cleaned_data['quantity_u']:
+             changes['U'] = True
              
          cg.demand = edp
          cg.component = component
          cg.quantity_x = cg_form.cleaned_data['quantity_x']
          cg.quantity_y = cg_form.cleaned_data['quantity_y']
+         cg.quantity_u = cg_form.cleaned_data['quantity_u']
          cg.cost_adj = cg_form.cleaned_data['cost_adj']
          cg.comment = cg_form.cleaned_data['comment']
          cg.save()
-         eprint("Changes: {}".format(changes))
          if True in changes.values():
              eprint("Building Model")
              cg._make_model(changes)
@@ -1871,8 +1867,9 @@ def level_cgroup(request, project_id, level_id, cg_id=None):
                                          initial= {'component': None, 
                                                    'cost_adj': 1.0, 
                                                    'comment': '', 
-                                                   'quantity_x': None,
-                                                   'quantity_y': None})
+                                                   'quantity_x': 0,
+                                                   'quantity_y': 0,
+                                                   'quantity_u': 0})
          return render(request, 'slat/level_cgroup.html', {'project': project,
                                                            'level': Level.objects.get(pk=level_id),
                                                            'cg_id': cg_id,
@@ -2107,8 +2104,6 @@ def analysis(request, project_id):
         for l in project.levels():
             levels[l] = []
         demand_groups = EDP_Grouping.objects.filter(project=project)
-        #demands = list(map(lambda g: [g.demand_x, g.demand_y], demand_groups))
-        #eprint(demands)
         for edp in demand_groups:
             for c in Component_Group.objects.filter(demand=edp):
                 levels[edp.level].append(c)
