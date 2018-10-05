@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
-from slat.models import Profile, Project, Level, EDP, Component_Group, \
-    Group
+from slat.models import Profile, Project, Level, EDP, \
+    EDP_Grouping, Component_Group, Group
 from slat.component_models import ComponentsTab
 from slat.views import make_demo, make_example_2
 

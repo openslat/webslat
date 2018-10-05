@@ -578,20 +578,20 @@ def make_example_2(user):
     all_floors = range(num_floors + 1)
     not_ground = range(1, num_floors+1)
     not_roof = range(num_floors)
-    components = [{'levels': not_roof, 'id': '208', 'quantity': [53, 0]},
-                  {'levels': [0], 'id': '204', 'quantity': [2, 0]},
-                  {'levels': not_roof, 'id': '214', 'quantity': [10, 0]},
-                  {'levels': not_ground, 'id': '203', 'quantity': [693, 0]},
-                  {'levels': not_ground, 'id': '211', 'quantity': [23, 0]},
-                  {'levels': [1], 'id': '2', 'quantity': [20, 0]},
-                  {'levels': range(2, num_floors+1), 'id': '2', 'quantity': [4, 0]},
-                  {'levels': not_ground, 'id': '2', 'quantity': [18, 0]},
-                  {'levels': not_ground, 'id': '3', 'quantity': [16, 0]},
-                  {'levels': not_ground, 'id': '105', 'quantity': [721, 0]},
-                  {'levels': not_ground, 'id': '107', 'quantity': [99, 0]},
-                  {'levels': not_ground, 'id': '106', 'quantity': [721, 0]},
-                  {'levels': not_ground, 'id': '108', 'quantity': [10, 0]},
-                  {'levels': [num_floors], 'id': '205', 'quantity': [4, 0]}]
+    components = [{'levels': not_roof, 'id': '208', 'quantity': [53, 0, 5]},
+                  {'levels': [0], 'id': '204', 'quantity': [2, 5, 0]},
+                  {'levels': not_roof, 'id': '214', 'quantity': [10, 0, 0]},
+                  {'levels': not_ground, 'id': '203', 'quantity': [693, 0, 0]},
+                  {'levels': not_ground, 'id': '211', 'quantity': [23, 0, 0]},
+                  {'levels': [1], 'id': '2', 'quantity': [20, 0, 0]},
+                  {'levels': range(2, num_floors+1), 'id': '2', 'quantity': [4, 0, 5]},
+                  {'levels': not_ground, 'id': '2', 'quantity': [18, 0, 0]},
+                  {'levels': not_ground, 'id': '3', 'quantity': [16, 5, 0]},
+                  {'levels': not_ground, 'id': '105', 'quantity': [721, 0, 5]},
+                  {'levels': not_ground, 'id': '107', 'quantity': [99, 0, 5]},
+                  {'levels': not_ground, 'id': '106', 'quantity': [721, 0, 5]},
+                  {'levels': not_ground, 'id': '108', 'quantity': [10, 0, 5]},
+                  {'levels': [num_floors], 'id': '205', 'quantity': [4, 0, 5]}]
 
     for comp in components:
         component = ComponentsTab.objects.get(ident=comp['id'])
@@ -610,7 +610,8 @@ def make_example_2(user):
                                               type=demand_type)
             group = Component_Group(demand=demand, component=component, 
                                     quantity_x=comp['quantity'][0],
-                                    quantity_y=comp['quantity'][1])
+                                    quantity_y=comp['quantity'][1],
+                                    quantity_u=comp['quantity'][2])
             group.save()
     
     return project
@@ -1828,14 +1829,16 @@ def level_cgroup(request, project_id, level_id, cg_id=None):
                  type=demand_type)
          except:
              eprint("No demand found")
-
-         changes = {'X': False, 'Y':False, 'U':False}
-         if cg.demand != edp or \
-            cg.component != component or \
-            cg.cost_adj != cg_form.cleaned_data['cost_adj']:
+             
+         if not cg_id:
+             changes = {'X': False, 'Y':False, 'U':False}
+         elif cg.demand != edp or \
+              cg.component != component or \
+                              cg.cost_adj != cg_form.cleaned_data['cost_adj']:
              changes['X'] = True
              changes['Y'] = True
              changes['U'] = True
+             
          if cg.quantity_x != cg_form.cleaned_data['quantity_x']:
              changes['X'] = True
          if cg.quantity_y != cg_form.cleaned_data['quantity_y']:
