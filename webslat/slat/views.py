@@ -1818,7 +1818,8 @@ def level_cgroup(request, project_id, level_id, cg_id=None):
 
          if request.POST.get('delete'):
              cg = Component_Group.objects.get(pk=cg_id)
-             project.model().RemoveCompGroup(cg.model())
+             for m in cg.model().Models().values():
+                 project.model().RemoveCompGroup(m)
              cg.delete()
              return HttpResponseRedirect(reverse('slat:level_cgroups', args=(project_id, level_id)))
 
