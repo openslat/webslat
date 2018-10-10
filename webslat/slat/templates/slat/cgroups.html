@@ -52,6 +52,9 @@ Component Groups for {{ project.title_text }}
   </tr>
 {% endfor %}
 </table>
+<br/>
+<a href= "{% url 'slat:compgrouppattern' project.id %}" class="link_button">Add a Pattern</a>
+
 
 </br>
 <a href="{% url 'slat:project' project.id %}">Return to Project</a><br /><br/>
