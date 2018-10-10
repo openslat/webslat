@@ -2721,5 +2721,6 @@ def cgrouppattern(request, project_id, cg_id=None):
          return render(request, 'slat/cgrouppattern.html',
                        {'project': project,
                         'pattern_form': pattern_form,
-                        'level_form': level_form
+                        'level_form': level_form,
+                        'cancel_url': request.META.get('HTTP_REFERER')
                        })

@@ -49,10 +49,17 @@ Component Groups for {{ level.label }}
    <td align="RIGHT">{{ cg.model.Deaggregated_E_annual_cost.U|floatformat:2 }}</td>
    <td align="RIGHT">{{ cg.model.E_annual_cost|floatformat:2 }}</td>
     <td>
-    <form action="{% url 'slat:level_compgroup' project.id level.id cg.id  %}" method="get">
+      {% if cg.pattern %} 
+        <form action="{% url 'slat:compgrouppattern' project.id cg.pattern.id  %}" method="get">
         {% csrf_token %}
-    <input type="submit" name='edit' value="Edit" class="table"/>
-    </form>
+        <input type="submit" name='edit' value="Edit Pattern" class="table"/>
+        </form>
+      {% else %}
+        <form action="{% url 'slat:level_compgroup' project.id level.id cg.id  %}" method="get">
+        {% csrf_token %}
+        <input type="submit" name='edit' value="Edit" class="table"/>
+        </form>
+      {% endif %}
     </td><td>
     <form action="{% url 'slat:level_compgroup' project.id level.id cg.id  %}" method="post">
         {% csrf_token %}
