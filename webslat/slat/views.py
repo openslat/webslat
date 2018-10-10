@@ -456,7 +456,7 @@ def make_demo(user, title, description):
     pattern.save()
     for l in [1,3,5]:
         level = Level.objects.get(project=project, level=l)
-        pattern.CreateFromPattern(level).save()
+        pattern.CreateFromPattern(level)
 
     return project
 
@@ -1813,6 +1813,7 @@ def level_cgroup(request, project_id, level_id, cg_id=None):
 
      if request.method == 'POST':
          if request.POST.get('cancel'):
+             eprint("CANCEL URL: {}".format(request.POST.get('cancel_url')))
              return HttpResponseRedirect(reverse('slat:level_cgroups', args=(project_id, level_id)))
 
          if request.POST.get('delete'):
@@ -1890,7 +1891,8 @@ def level_cgroup(request, project_id, level_id, cg_id=None):
          return render(request, 'slat/level_cgroup.html', {'project': project,
                                                            'level': Level.objects.get(pk=level_id),
                                                            'cg_id': cg_id,
-                                                           'demand_form': demand_form})
+                                                           'demand_form': demand_form,
+                                                           'cancel_url': request.META.get('HTTP_REFERER')})
      
 
 @login_required
@@ -2648,3 +2650,75 @@ def etabs_progress(request):
             'task_id':job_id,
         }
         return render(request,"slat/etabs_progress.html",context)
+
+@login_required
+def cgrouppattern(request, project_id, cg_id=None):
+     project = get_object_or_404(Project, pk=project_id)
+
+     if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
+        raise PermissionDenied
+
+     if request.method == 'POST':
+         # component, quantity_x, quantity_y, quantity_u, cost_adj, comment
+         demand_form = PatternForm(request.POST)
+         demand_form.is_valid()
+         component = demand_form.cleaned_data['component']
+         quantity_x = demand_form.cleaned_data['quantity_x']
+         quantity_y = demand_form.cleaned_data['quantity_y']
+         quantity_u = demand_form.cleaned_data['quantity_u']
+         cost_adj = demand_form.cleaned_data['cost_adj']
+         comment = demand_form.cleaned_data['comment']
+
+         if cg_id:
+             cg = get_object_or_404(Component_Group_Pattern, pk=cg_id)
+             cg.ChangePattern(component, quantity_x, quantity_y, quantity_u,
+                              cost_adj, comment)
+         else:
+             cg = Component_Group_Pattern(project=project, 
+                                          component=component, 
+                                          quantity_x=quantity_x,
+                                          quantity_y=quantity_y,
+                                          quantity_u=quantity_u,
+                                          cost_adj=cost_adj,
+                                          comment=comment)
+             cg.save()
+
+         for l in project.levels():
+             # If level is using the pattern, get its component group:
+             group = Component_Group.objects.filter(
+                 pattern=cg.id,
+                 demand__level= l)
+             if len(group) == 0:
+                 group = None
+             else:
+                 group = group[0]
+                 
+             if request.POST.get(str(l.level)):
+                 if not group:
+                     cg.CreateFromPattern(l)
+             elif group:
+                 group.delete()
+                    
+                 
+         cg.ChangePattern(component, quantity_x, quantity_y, quantity_u, cost_adj, comment)
+         return HttpResponseRedirect(reverse('slat:compgroups', args=(project_id, )))
+             
+     else:
+         if cg_id:
+             cg = get_object_or_404(Component_Group_Pattern, pk=cg_id)
+             pattern_form = PatternForm(initial=model_to_dict(cg))
+             print("Dict: {}".format(model_to_dict(cg)))
+         else:
+             pattern_form = PatternForm(initial= {'component': None, 
+                                                  'cost_adj': 1.0, 
+                                                  'comment': '', 
+                                                  'quantity_x': 0,
+                                                  'quantity_y': 0,
+                                                  'quantity_u': 0})
+         level_form = LevelCheckBoxForm(project, cg_id)
+                 
+         return render(request, 'slat/cgrouppattern.html',
+                       {'project': project,
+                        'pattern_form': pattern_form,
+                        'level_form': level_form
+                       })

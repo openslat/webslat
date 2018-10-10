@@ -1,0 +1,56 @@
+{% extends "base_site.html" %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
+    <script src="{% static "js/jquery-3.2.1.min.js" %}"></script>
+    <script src="{% static "js/slat-utils.js" %}"></script>
+    {{ form.media }}
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} slat {% endblock %}
+{% block title %}WebSLAT: {{ project.title_text}}: Component Group Pattern{% endblock %}
+{% block content_title %}{{ project.title_text}}: Component Group Pattern{% endblock %}
+{% block content %}
+<div class="project_title">
+<b>Project: </b>{{ project.title_text }}<br/>
+<p>On Cancel: {{ cancel_url }}</p>
+
+<b>Component Group </b>
+</div>
+{% if pattern_form %} 
+    <form action="" method="post">
+        {% csrf_token %}
+    <table border="1">
+      <tr><th><label for="id_quantity_x" class="normal">{{ pattern_form.quantity_x.label }}</th><td>{{ pattern_form.quantity_x }}</td></tr>
+      <tr><th><label for="id_quantity_y" class="normal">{{ pattern_form.quantity_y.label }}</th><td>{{ pattern_form.quantity_y }}</td></tr>
+      <tr><th><label for="id_quantity_u" class="normal">{{ pattern_form.quantity_u.label }}</th><td>{{ pattern_form.quantity_u }}</td></tr>
+      <tr><th><label for="id_cost_adj" class="normal">{{ pattern_form.cost_adj.label }}</th><td>{{ pattern_form.cost_adj }}</td></tr>
+      <tr><th><label for="id_comment" class="normal">{{ pattern_form.comment.label }}</th><td>{{ pattern_form.comment }}</td></tr>
+      <tr><th><label for="id_category" class="normal">{{ pattern_form.category.label }}</th><td>{{ pattern_form.category }}</td></tr>
+      <tr><th><label for="id_component" class="normal">{{ pattern_form.component.label }}</th><td>{{ pattern_form.component }}</td></tr>
+      </table>
+    <br />
+    <table><tr><td style="vertical-align:middle">
+    <input type="submit" value="Submit" class="normal"/>
+    </td><td style="vertical-align:bottom">
+       <a href= "{{ cancel_url }}" class="link_button">Cancel</a>
+    </td></tr></table>
+    <hr/>
+    {% if level_form %}
+        {{ level_form }}
+    {% endif %}
+    </form>
+    <br/>
+{% endif %}
+
+	   
+<a href="{% url 'slat:project' project.id %}">Return to Project</a>
+<br/>
+<a href="{% url 'slat:index' %}">Return to Project List</a>
+<hr/>
+
+<div id="like_count"></div> 
+{% endblock %}
+{% block footer %}
+{{ pattern_form.media }}
+{% endblock %}

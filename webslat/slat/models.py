@@ -3,7 +3,7 @@ import sys
 import time
 from scipy.optimize import fsolve, newton
 from django.db import models
-from django.forms import  ModelForm, BaseModelFormSet, Select, NumberInput, Textarea, TextInput, FloatField, FileInput, FileField, Form, ModelChoiceField, IntegerField, HiddenInput, CharField
+from django.forms import  ModelForm, BaseModelFormSet, Select, NumberInput, Textarea, TextInput, FloatField, FileInput, FileField, Form, ModelChoiceField, IntegerField, HiddenInput, CharField, BooleanField
 from django.forms import Form, ChoiceField, Select
 from slat.constants import *
 from .nzs import *
@@ -628,18 +628,25 @@ class Component_Group_Pattern(models.Model):
         else:
             demand_type = 'D'
 
-        demand = EDP_Grouping.objects.get(project=self.project,
-                                          level=level,
-                                          type=demand_type)
+        try:
+            demand = EDP_Grouping.objects.get(project=self.project,
+                                              level=level,
+                                              type=demand_type)
+            result = Component_Group(pattern=self, 
+                                      demand=demand, 
+                                      component=self.component, 
+                                      quantity_x=self.quantity_x,
+                                      quantity_y=self.quantity_y,
+                                      quantity_u=self.quantity_u,
+                                      cost_adj=self.cost_adj,
+                                      comment=self.comment)
+            result.save()
+            return result
         
-        return Component_Group(pattern=self, 
-                               demand=demand, 
-                               component=self.component, 
-                               quantity_x=self.quantity_x,
-                               quantity_y=self.quantity_y,
-                               quantity_u=self.quantity_u,
-                               cost_adj=self.cost_adj,
-                               comment=self.comment)
+        except:
+            eprint("<demand not found: {}, {}>".format(level, demand_type))
+            return None
+            
     
     def ChangePattern(self, component, qx, qy, qu, adj, comment):
         self.component = component
@@ -985,6 +992,37 @@ class ComponentForm(Form):
         widget=autocomplete.Select2(url='/slat/component-autocomplete/',
                                     forward=['category']))
 
+class PatternForm(Form):
+    def __init__(self, initial=None, level=None):
+        super(PatternForm, self).__init__(initial)
+        if initial:
+            self.fields['component'].initial = initial['component']
+        self.fields['quantity_x'].widget.attrs['class'] = 'normal'
+        self.fields['quantity_y'].widget.attrs['class'] = 'normal'
+        self.fields['quantity_u'].widget.attrs['class'] = 'normal'
+        self.fields['cost_adj'].widget.attrs['class'] = 'normal'
+        self.fields['comment'].widget.attrs['comment'] = 'normal'
+        self.fields['category'].widget.attrs['class'] = 'normal'
+        self.fields['component'].widget.attrs['class'] = 'normal'
+        self.fields['quantity_x'].widget.attrs['title'] = 'How many of this component are in the group?'
+        self.fields['quantity_y'].widget.attrs['title'] = 'How many of this component are in the group?'
+        self.fields['quantity_u'].widget.attrs['title'] = 'How many of this component are in the group?'
+        self.fields['cost_adj'].widget.attrs['title'] = 'Adjustment factor from standard cost.'
+        self.fields['comment'].widget.attrs['title'] = 'Notes about this component.'
+        self.fields['category'].widget.attrs['title'] = 'Narrow the component search by category.'
+        self.fields['component'].widget.attrs['title'] = 'Choose the type of component.'
+        
+    quantity_x = IntegerField(label="X Count")
+    quantity_y = IntegerField(label="Y Count")
+    quantity_u = IntegerField(label="U Count")
+    cost_adj = FloatField()
+    comment = CharField(max_length=256, required=False)
+    category = ChoiceField(choices=ListOfComponentCategories, required=False)
+    component = ModelChoiceField(
+        queryset=ComponentsTab.objects.all(),
+        widget=autocomplete.Select2(url='/slat/component-autocomplete/',
+                                    forward=['category']))
+    
 class LevelLabelForm(Form):
     def __init__(self, request=None, initial=None):
         super(Form, self).__init__(request, initial=initial)
@@ -1053,3 +1091,16 @@ class ETABS_Preprocess(models.Model):
     def get_heights(self):
         return pickle.loads(self.stories)
 
+class LevelCheckBoxForm(Form):
+    def __init__(self, project, cg_id=None, request=None, initial=None):
+        super(Form, self).__init__(request, initial=initial)
+        for l in project.levels():
+            default=False
+            if cg_id:
+                if len(Component_Group.objects.filter(pattern=cg_id,
+                                                      demand__level=l)):
+                    default=True
+            self.fields[l.level] = BooleanField(required=False, initial=default)
+            self.fields[l.level].widget.attrs['class'] = 'normal'
+            self.fields[l.level].title = l.label
+            self.fields[l.level].label = l.label

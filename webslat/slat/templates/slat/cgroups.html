@@ -43,10 +43,12 @@ Component Groups for {{ project.title_text }}
   <td>
     {% if cg.level %}
     <form action="{% url 'slat:level_compgroup' project.id cg.level.id cg.id  %}" method="get">
-        {% csrf_token %}
+    {% else %}
+    <form action="{% url 'slat:compgrouppattern' project.id cg.id  %}" method="get">
+    {% endif %}
+    {% csrf_token %}
     <input type="submit" name='edit' value="Edit" class="table"/>
     </form>
-    {% endif %}
   </tr>
 {% endfor %}
 </table>

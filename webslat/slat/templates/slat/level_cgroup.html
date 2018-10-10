@@ -14,6 +14,8 @@
 <div class="project_title">
 <b>Project: </b>{{ project.title_text }}<br/>
 <b>{{ level.label }}</b>
+<p>On Cancel: {{ cancel_url }}</p>
+
 <b>Component Group </b>
 </div>
 {% if demand_form %} 
@@ -32,7 +34,7 @@
     <table><tr><td style="vertical-align:middle">
     <input type="submit" value="Submit" class="normal"/>
     </td><td style="vertical-align:bottom">
-       <a href= "{% url 'slat:level_cgroups' project.id  level.id %}" class="link_button">Cancel</a>
+       <a href= "{{ cancel_url }}" class="link_button">Cancel</a>
     </td></tr></table>
     </form>
     <br/>
