@@ -146,6 +146,12 @@ function Refresh( ) {
           <input type="submit" value="Engineering Demands" class="normal"/>
         </form></td>
      {% endif %}
+    {% if form.instance.IM %}
+	<td><form action="{% url 'slat:compgroups' form.instance.id %}" method="get">
+          {% csrf_token %}
+          <input type="submit" value="Component Groups" class="normal"/>
+        </form></td>
+     {% endif %}
     <td><form action="{% url 'slat:analysis' form.instance.id %}" method="get">
       {% csrf_token %}
       <input type="submit" value="Analysis" class="normal"/>

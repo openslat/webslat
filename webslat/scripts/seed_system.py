@@ -76,12 +76,13 @@ def run():
         roof = Level.objects.get(project=project, level=project.num_levels())
         demand_group = EDP_Grouping.objects.get(project=project, 
                                  level=roof, 
-                                 type=EDP.EDP_TYPE_ACCEL)
+                                 type=EDP_Grouping.EDP_TYPE_ACCEL)
         component = ComponentsTab.objects.get(ident='206')
-        group = Component_Group(demand=demand, 
+        group = Component_Group(demand=demand_group, 
                                 component=component,
                                 quantity_x=1,
                                 quantity_y=0,
+                                quantity_u=0,
                                 comment="THE Maltese Falcon",
                                 cost_adj=100)
         group.save()

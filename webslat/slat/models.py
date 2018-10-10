@@ -612,8 +612,50 @@ class Component_Group_SLAT_Model:    # Combines separate pyslat::compgroup objec
         return {'X': self._x_model.E_annual_cost(),
                 'Y': self._y_model.E_annual_cost(),
                 'U': self._u_model.E_annual_cost()}
+
+class Component_Group_Pattern(models.Model):
+    project = models.ForeignKey(Project, on_delete=CASCADE, blank=False, null=False)
+    component = models.ForeignKey('ComponentsTab', on_delete=PROTECT, null=False, db_constraint=False)
+    quantity_x = models.IntegerField(blank=False, null=False)
+    quantity_y = models.IntegerField(blank=False, null=False)
+    quantity_u = models.IntegerField(blank=False, null=False)
+    cost_adj = models.FloatField(blank=False, null=False, default=1.0)
+    comment = models.CharField(blank=True, null=True, max_length=256)
+
+    def CreateFromPattern(self, level):
+        if re.search('^Accel(?i)', self.component.demand.name):
+            demand_type = 'A'
+        else:
+            demand_type = 'D'
+
+        demand = EDP_Grouping.objects.get(project=self.project,
+                                          level=level,
+                                          type=demand_type)
         
+        return Component_Group(pattern=self, 
+                               demand=demand, 
+                               component=self.component, 
+                               quantity_x=self.quantity_x,
+                               quantity_y=self.quantity_y,
+                               quantity_u=self.quantity_u,
+                               cost_adj=self.cost_adj,
+                               comment=self.comment)
+    
+    def ChangePattern(self, component, qx, qy, qu, adj, comment):
+        self.component = component
+        self.quantity_x = qx
+        self.quantity_y = qy
+        self.quantity_u = qu
+        self.cost_adj = adj
+        self.comment = comment
+        self.save()
+
+        clients = Component_Group.objects.filter(pattern=self)
+        for c in clients:
+            c.Change(component, qx, qy, qu, adj, comment)
+    
 class Component_Group(models.Model):
+    pattern = models.ForeignKey('Component_Group_Pattern', on_delete=CASCADE, null=True)
     demand = models.ForeignKey('EDP_Grouping', related_name="demand", on_delete=PROTECT, null=False)
     component = models.ForeignKey('ComponentsTab', on_delete=PROTECT, null=False, db_constraint=False)
     quantity_x = models.IntegerField(blank=False, null=False)
@@ -667,14 +709,13 @@ class Component_Group(models.Model):
             if (not u_model) or what_changed['U']:
                 demand = pyslat.edp.lookup(u_id)
                 if not demand:
-                    eprint("Building model: {}".format(u_id))
                     pyslat.edp(u_id, 
                                self.demand.project.IM.model(),
                                self.demand.demand_x.model(),
                                self.demand.demand_y.model())
                     demand = pyslat.edp.lookup(u_id)
                     
-                u_model = pyslat.compgroup(y_id,
+                u_model = pyslat.compgroup(u_id,
                                            demand,
                                            fragility, cost, None, 
                                            self.quantity_u,
@@ -689,6 +730,34 @@ class Component_Group(models.Model):
         return self._model
     
 
+    def Change(self, component, qx, qy, qu, adj, comment):
+        what_changed = {'X': False, 'Y': False, 'U': False}
+        if self.component != component:
+            self.component = component
+            what_changed = {'X': True, 'Y': True, 'U': True}
+            
+        if self.cost_adj != adj:
+            self.cost_adj = adj
+            what_changed = {'X': True, 'Y': True, 'U': True}
+
+        self.comment = comment
+        
+        if self.quantity_x != qx:
+            self.quantity_x = qx
+            what_changed['X'] = True
+            
+        if self.quantity_y != qy:
+            self.quantity_y = qy
+            what_changed['Y'] = True
+            
+        if not self.quantity_u == qu:
+            self.quantity_u = qu
+            what_changed['U'] = True
+
+        self.save()
+        self._make_model(what_changed)
+            
+        
     def __str__(self):
         result = "Component_Group [{}] {} ".format(hex(id(self)), str(self.demand))
         if self.component:

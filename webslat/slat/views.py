@@ -443,7 +443,21 @@ def make_demo(user, title, description):
                                     quantity_y=comp['quantity'][1],
                                     quantity_u=comp['quantity'][2])
             group.save()
-    
+
+    # Muck with component group patterns:
+    pattern = Component_Group_Pattern(
+        project=project,
+        component=ComponentsTab.objects.get(ident='206'),
+        quantity_x=1,
+        quantity_y=2,
+        quantity_u=5,
+        cost_adj=1.0,
+        comment='Created as a pattern group.')
+    pattern.save()
+    for l in [1,3,5]:
+        level = Level.objects.get(project=project, level=l)
+        pattern.CreateFromPattern(level).save()
+
     return project
 
 def make_example_2(user):
@@ -775,7 +789,7 @@ def project(request, project_id=None):
                         # Create empty demands:
                         edp = EDP(project=project,
                                   level=level,
-                                  type = EDP.EDP_TYPE_ACCEL)
+                                  type = EDP_Grouping.EDP_TYPE_ACCEL)
                         edp.save()
 
                         if l != 0:
@@ -1526,7 +1540,7 @@ def edp_init(request, project_id):
         for f in range(int(project.floors) + 1):
             EDP(project=project,
                 level=f,
-                type=EDP.EDP_TYPE_ACCEL).save()
+                type=EDP_Grouping.EDP_TYPE_ACCEL).save()
             if f > 0:
                 EDP(project=project,
                     level=f,
@@ -1942,10 +1956,33 @@ def edp_cgroup(request, project_id, edp_id, cg_id=None):
                        'cg_form': cg_form})
     
 @login_required
-def cgroups(request, project_id):
+def cgroups(request, project_id, groups=None):
      project = get_object_or_404(Project, pk=project_id)
+     cgs = []
+     levels = []
+     for cg in Component_Group.objects.filter(demand__project=project).order_by("component"):
+         key = {'component': cg.component, 
+                'adj': cg.cost_adj,
+                'count_x': cg.quantity_x,
+                'count_y': cg.quantity_y,
+                'count_u': cg.quantity_u,
+                'comment': cg.comment,
+                'id': cg.id if not cg.pattern else cg.pattern.id,
+                'level': (None if cg.pattern != None else cg.demand.level)}
+         if not key in cgs:
+             cgs.append(key)
+             levels.append([])
+
+         index = cgs.index(key)
+         levels[index].append(cg.demand.level)
+
+     data = []
+     for x in zip(cgs, levels):
+         dict = x[0]
+         dict['levels'] = x[1]
+         data.append(dict)
      return render(request, 'slat/cgroups.html', {'project': project,
-                                                  'cgs': Component_Group.objects.filter(demand__project=project)})
+                                                  'data': data})
  
 @login_required
 def level_cgroups(request, project_id, level_id):

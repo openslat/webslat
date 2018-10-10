@@ -50,6 +50,7 @@ urlpatterns = [
     url(r'^project/(?P<project_id>[0-9]+)/edp/(?P<edp_id>[0-9]+)/cgroup$', views.edp_cgroup, name='edp_cgroup'),
     url(r'^project/(?P<project_id>[0-9]+)/edp/(?P<edp_id>[0-9]+)/cgroup/(?P<cg_id>[0-9]+)$', views.edp_cgroup, name='edp_cgroup'),
     url(r'^project/(?P<project_id>[0-9]+)/cgroups$', views.cgroups, name='compgroups'),
+    url(r'^project/(?P<project_id>[0-9]+)/cgroups/(?P<groups>([0-9]+,)*[0-9]+)$', views.cgroups, name='compgroups'),
     url(r'^project/(?P<project_id>[0-9]+)/level/(?P<level_id>[0-9]+)/cgroup$', views.level_cgroup, name='level_compgroup'),
     url(r'^project/(?P<project_id>[0-9]+)/level/(?P<level_id>[0-9]+)/cgroup/(?P<cg_id>[0-9]+)$', views.level_cgroup, name='level_compgroup'),
     url(r'^project/(?P<project_id>[0-9]+)/cgroup$', views.cgroup, name='compgroup'),
