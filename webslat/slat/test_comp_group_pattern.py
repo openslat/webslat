@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from slat.models import Project, Component_Group_Pattern, Component_Group
 from django.test import TestCase, Client
 from slat.views import make_demo
+from slat.component_models import *
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -62,4 +63,28 @@ class GroupTestCase(TestCase):
                               pattern.cost_adj,
                               pattern.comment)
         self.assertTrue(round(project.model().AnnualCost().mean()) == 384487)
+
+        pattern.ChangePattern(pattern.component,
+                              pattern.quantity_x,
+                              pattern.quantity_y,
+                              pattern.quantity_u, 
+                              pattern.cost_adj,
+                              "Comment changed for testing.")
+        self.assertTrue(round(project.model().AnnualCost().mean()) == 384487)
+
+        pattern.ChangePattern(pattern.component,
+                              pattern.quantity_x,
+                              pattern.quantity_y,
+                              pattern.quantity_u, 
+                              pattern.cost_adj * 3.5,
+                              pattern.comment)
+        self.assertTrue(round(project.model().AnnualCost().mean()) == 405299)
+
+        pattern.ChangePattern(ComponentsTab.objects.get(ident='208'),
+                              pattern.quantity_x,
+                              pattern.quantity_y,
+                              pattern.quantity_u, 
+                              pattern.cost_adj,
+                              pattern.comment)
+        self.assertTrue(round(project.model().AnnualCost().mean()) == 376808)
         
