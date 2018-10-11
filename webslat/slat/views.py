@@ -1816,6 +1816,26 @@ def level_cgroup(request, project_id, level_id, cg_id=None):
              eprint("CANCEL URL: {}".format(request.POST.get('cancel_url')))
              return HttpResponseRedirect(reverse('slat:level_cgroups', args=(project_id, level_id)))
 
+         if request.POST.get('separate'):
+             cg = Component_Group.objects.get(pk=cg_id)
+             cg.pattern = None
+             cg.save()
+             return HttpResponseRedirect(reverse('slat:level_cgroups', args=(project_id, level_id)))
+         
+         if request.POST.get('make_pattern'):
+             cg = Component_Group.objects.get(pk=cg_id)
+             pattern = Component_Group_Pattern(project=project, 
+                                          component=cg.component, 
+                                          quantity_x=cg.quantity_x,
+                                          quantity_y=cg.quantity_y,
+                                          quantity_u=cg.quantity_u,
+                                          cost_adj=cg.cost_adj,
+                                          comment=cg.comment)
+             pattern.save()
+             cg.pattern = pattern
+             cg.save()
+             return HttpResponseRedirect(reverse('slat:level_cgroups', args=(project_id, level_id)))
+         
          if request.POST.get('delete'):
              cg = Component_Group.objects.get(pk=cg_id)
              for m in cg.model().Models().values():

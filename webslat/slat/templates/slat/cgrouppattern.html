@@ -29,15 +29,17 @@
       <tr><th><label for="id_component" class="normal">{{ pattern_form.component.label }}</th><td>{{ pattern_form.component }}</td></tr>
       </table>
     <br />
+    <hr/>
+    {% if level_form %}
+        <table><tr><td>
+        {{ level_form }}
+        </td></tr></table>
+    {% endif %}
     <table><tr><td style="vertical-align:middle">
     <input type="submit" value="Submit" class="normal"/>
     </td><td style="vertical-align:bottom">
        <a href= "{{ cancel_url }}" class="link_button">Cancel</a>
     </td></tr></table>
-    <hr/>
-    {% if level_form %}
-        {{ level_form }}
-    {% endif %}
     </form>
     <br/>
 {% endif %}

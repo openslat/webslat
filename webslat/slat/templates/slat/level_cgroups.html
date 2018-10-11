@@ -61,10 +61,24 @@ Component Groups for {{ level.label }}
         </form>
       {% endif %}
     </td><td>
-    <form action="{% url 'slat:level_compgroup' project.id level.id cg.id  %}" method="post">
-        {% csrf_token %}
-      <input type="submit" name='delete' value="Delete" class="table"/>
-    </form>
+    {% if cg.pattern %}
+        <form action="{% url 'slat:level_compgroup' project.id level.id cg.id  %}" method="post">
+            {% csrf_token %}
+          <input type="submit" name='separate' value="Separate" class="table"/>
+        </form>
+    {% else %}
+        <form action="{% url 'slat:level_compgroup' project.id level.id cg.id  %}" method="post">
+            {% csrf_token %}
+          <input type="submit" name='delete' value="Delete" class="table"/>
+        </form>
+    {% endif %}
+    </td><td>
+        {% if not cg.pattern %}
+        <form action="{% url 'slat:level_compgroup' project.id level.id cg.id  %}" method="post">
+            {% csrf_token %}
+          <input type="submit" name='make_pattern' value="Make Pattern" class="table"/>
+        </form>
+    {% endif %}
     </td></tr>
 {% endfor %}
 </table>

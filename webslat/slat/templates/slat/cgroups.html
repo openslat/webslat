@@ -24,7 +24,7 @@ Component Groups for {{ project.title_text }}
   <td align="right">{{ cg.count_u }}</td>
   <td alighn="right">{{ cg.adj }}</td>
   <td>
-    {% if cg.levels|length == 1 %}
+    {% if cg.level %}
     {{ cg.levels.0.label }}
     {% else %}
     <details>
