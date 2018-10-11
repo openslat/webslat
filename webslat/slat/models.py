@@ -991,6 +991,7 @@ class ComponentForm(Form):
         queryset=ComponentsTab.objects.all(),
         widget=autocomplete.Select2(url='/slat/component-autocomplete/',
                                     forward=['category']))
+    next_url = CharField(widget=HiddenInput(), max_length=50, required=False)
 
 class PatternForm(Form):
     def __init__(self, initial=None, level=None):

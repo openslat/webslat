@@ -19,6 +19,7 @@
 {% if demand_form %} 
     <form action="" method="post">
         {% csrf_token %}
+        {{ demand_form.next_url }}
     <table border="1">
       <tr><th><label for="id_quantity_x" class="normal">{{ demand_form.quantity_x.label }}</th><td>{{ demand_form.quantity_x }}</td></tr>
       <tr><th><label for="id_quantity_y" class="normal">{{ demand_form.quantity_y.label }}</th><td>{{ demand_form.quantity_y }}</td></tr>

@@ -1866,14 +1866,14 @@ def level_cgroup(request, project_id, level_id, cg_id=None):
          except:
              eprint("No demand found")
              
-         if not cg_id:
-             changes = {'X': False, 'Y':False, 'U':False}
-         elif cg.demand != edp or \
-              cg.component != component or \
+         changes = {'X': False, 'Y':False, 'U':False}
+         if cg_id:
+             if cg.demand != edp or \
+                cg.component != component or \
                               cg.cost_adj != cg_form.cleaned_data['cost_adj']:
-             changes['X'] = True
-             changes['Y'] = True
-             changes['U'] = True
+                 changes['X'] = True
+                 changes['Y'] = True
+                 changes['U'] = True
              
          if cg.quantity_x != cg_form.cleaned_data['quantity_x']:
              changes['X'] = True
@@ -1895,20 +1895,27 @@ def level_cgroup(request, project_id, level_id, cg_id=None):
              cg._make_model(changes)
          cg_id = cg.id
          
-         return HttpResponseRedirect(reverse('slat:level_cgroups', args=(project_id, level_id)))
+         if request.POST.get('next_url'):
+             return HttpResponseRedirect(request.POST.get('next_url'))
+         else:
+             return HttpResponseRedirect(reverse('slat:level_cgroups', args=(project_id, level_id)))
      else:
          if cg_id:
              cg = get_object_or_404(Component_Group, pk=cg_id)
-             demand_form = ComponentForm(initial=model_to_dict(cg), level=level_id)
-             print("Dict: {}".format(model_to_dict(cg)))
+             data = model_to_dict(cg)
+             data['next_url'] = request.META.get('HTTP_REFERER')
+             eprint("data['next_url']: {}".format(data['next_url']))
+             demand_form = ComponentForm(initial=data, level=level_id)
          else:
+             eprint("else: {}".format(request.META.get('HTTP_REFERER')))
              demand_form = ComponentForm(level=level_id, 
                                          initial= {'component': None, 
                                                    'cost_adj': 1.0, 
                                                    'comment': '', 
                                                    'quantity_x': 0,
                                                    'quantity_y': 0,
-                                                   'quantity_u': 0})
+                                                   'quantity_u': 0, 
+                                                   'next_url': request.META.get('HTTP_REFERER')})
          return render(request, 'slat/level_cgroup.html', {'project': project,
                                                            'level': Level.objects.get(pk=level_id),
                                                            'cg_id': cg_id,
@@ -2723,7 +2730,6 @@ def cgrouppattern(request, project_id, cg_id=None):
                     
                  
          cg.ChangePattern(component, quantity_x, quantity_y, quantity_u, cost_adj, comment)
-         eprint("URL: {}".format(request.POST.get('next_url')))
          if request.POST.get('next_url'):
              return HttpResponseRedirect(request.POST.get('next_url'))
          else:
