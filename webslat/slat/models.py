@@ -1022,6 +1022,8 @@ class PatternForm(Form):
         queryset=ComponentsTab.objects.all(),
         widget=autocomplete.Select2(url='/slat/component-autocomplete/',
                                     forward=['category']))
+    next_url = CharField(widget=HiddenInput(), max_length=50, required=False)
+
     
 class LevelLabelForm(Form):
     def __init__(self, request=None, initial=None):

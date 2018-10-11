@@ -2680,6 +2680,7 @@ def cgrouppattern(request, project_id, cg_id=None):
         raise PermissionDenied
 
      if request.method == 'POST':
+         eprint("POST: {}".format(request.POST))
          # component, quantity_x, quantity_y, quantity_u, cost_adj, comment
          demand_form = PatternForm(request.POST)
          demand_form.is_valid()
@@ -2722,25 +2723,33 @@ def cgrouppattern(request, project_id, cg_id=None):
                     
                  
          cg.ChangePattern(component, quantity_x, quantity_y, quantity_u, cost_adj, comment)
-         return HttpResponseRedirect(reverse('slat:compgroups', args=(project_id, )))
+         eprint("URL: {}".format(request.POST.get('next_url')))
+         if request.POST.get('next_url'):
+             return HttpResponseRedirect(request.POST.get('next_url'))
+         else:
+             return HttpResponseRedirect(reverse('slat:compgroups', args=(project_id, )))
              
      else:
          if cg_id:
              cg = get_object_or_404(Component_Group_Pattern, pk=cg_id)
-             pattern_form = PatternForm(initial=model_to_dict(cg))
-             print("Dict: {}".format(model_to_dict(cg)))
+             data = model_to_dict(cg)
+             data['next_url']=request.META.get('HTTP_REFERER')
+             pattern_form = PatternForm(initial=data)
          else:
              pattern_form = PatternForm(initial= {'component': None, 
                                                   'cost_adj': 1.0, 
                                                   'comment': '', 
                                                   'quantity_x': 0,
                                                   'quantity_y': 0,
-                                                  'quantity_u': 0})
+                                                  'quantity_u': 0,
+                                                  'next_url': request.META.get('HTTP_REFERER')})
          level_form = LevelCheckBoxForm(project, cg_id)
                  
          return render(request, 'slat/cgrouppattern.html',
                        {'project': project,
                         'pattern_form': pattern_form,
                         'level_form': level_form,
-                        'cancel_url': request.META.get('HTTP_REFERER')
+                        'cancel_url': request.META.get('HTTP_REFERER'),
                        })
+
+     

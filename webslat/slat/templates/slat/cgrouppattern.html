@@ -19,6 +19,7 @@
 {% if pattern_form %} 
     <form action="" method="post">
         {% csrf_token %}
+        {{ pattern_form.next_url }}
     <table border="1">
       <tr><th><label for="id_quantity_x" class="normal">{{ pattern_form.quantity_x.label }}</th><td>{{ pattern_form.quantity_x }}</td></tr>
       <tr><th><label for="id_quantity_y" class="normal">{{ pattern_form.quantity_y.label }}</th><td>{{ pattern_form.quantity_y }}</td></tr>
