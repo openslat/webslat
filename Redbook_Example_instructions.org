@@ -223,3 +223,23 @@ This document provides instructions for entering the Redbook example using ~webs
    |       107 | Exterior glazing (horizontal wall system) (Porter, 2000)            |       99 |
    |       106 | Drywall Paint (Mitrani-Reiser, 2007)                                |      721 |
    |       108 | Generic drift sensitive non-structural component (Aslani 2005)      |       10 |
+* Component Patterns
+  #+ATTR_LATEX: :environment longtable :align |r|p{8cm}|r|r|r|r|
+  #+ATTR_LaTeX: :width \textwidth :placement [h!bt]
+  | Component | Description                                                           |   X |   Y |   U | Levels |
+  |-----------+-----------------------------------------------------------------------+-----+-----+-----+--------|
+  |         2 | Ductile CIP RC beams                                                  |  18 |     |     |   1-10 |
+  |         2 | Ductile CIP RC beams                                                  |     |   4 |     |   2-10 |
+  |         2 | Ductile CIP RC beams                                                  |     |  20 |     |      1 |
+  |         3 | Column slab-connections Aslani and Miranda, (2005a)                   |   8 |   8 |     |   1-10 |
+  |       105 | Drywall partition and finish (excl painting) (Mitrani-Reiser, 2007)   | 360 | 361 |     |   1-10 |
+  |       106 | Drywall Paint (Mitrani-Reiser, 2007)                                  | 360 | 361 |     |   1-10 |
+  |       107 | Exterior glazing (horizontal wall system) (Porter, 2000)              |  49 |  50 |     |   1-10 |
+  |       108 | Generic drift sensitive non-structural component (Aslani 2005)        |     |     |  10 |   1-10 |
+  |       203 | Ceiling Systems Suspended acoustical tile type1                       |     |     | 693 |   1-10 |
+  |       204 | Conveying - Hydraulic elevator                                        |     |     |   2 |      0 |
+  |       205 | Roof Mounted Equipment                                                |     |     |   4 |     10 |
+  |       208 | Desktop Computers - unfastened                                        |     |     |  53 |    0-9 |
+  |       209 | Servers and network Equipment                                         |     |     |  16 |  2,5,9 |
+  |       211 | Automatic sprinklers (Mitrani-Reiser, 2007)                           |     |     |  23 |   1-10 |
+  |       214 | Generic acceleration sensitive non-structural component (Aslani 2005) |     |     |  10 |    0-9 |

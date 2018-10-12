@@ -1806,6 +1806,7 @@ def cgroup(request, project_id, floor_num, cg_id=None):
 
 @login_required
 def level_cgroup(request, project_id, level_id, cg_id=None):
+     eprint("> level_cgroup()")
      project = get_object_or_404(Project, pk=project_id)
 
      if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
@@ -1841,7 +1842,10 @@ def level_cgroup(request, project_id, level_id, cg_id=None):
              for m in cg.model().Models().values():
                  project.model().RemoveCompGroup(m)
              cg.delete()
-             return HttpResponseRedirect(reverse('slat:level_cgroups', args=(project_id, level_id)))
+             if request.POST.get('next_url'):
+                 return HttpResponseRedirect(request.POST.get('next_url'))
+             else:
+                 return HttpResponseRedirect(reverse('slat:level_cgroups', args=(project_id, level_id)))
 
          if cg_id:
              cg = Component_Group.objects.get(pk=cg_id)
@@ -2687,7 +2691,19 @@ def cgrouppattern(request, project_id, cg_id=None):
         raise PermissionDenied
 
      if request.method == 'POST':
-         eprint("POST: {}".format(request.POST))
+         if request.POST.get('delete'):
+            cgp = Component_Group_Pattern.objects.get(pk=cg_id)
+            for cg in Component_Group.objects.filter(pattern=cgp):
+               for m in cg.model().Models().values():
+                 project.model().RemoveCompGroup(m)
+               cg.delete()
+            cgp.delete()
+
+            if request.POST.get('next_url'):
+                return HttpResponseRedirect(request.POST.get('next_url'))
+            else:
+                return HttpResponseRedirect(reverse('slat:compgroups', args=(project_id, )))
+
          # component, quantity_x, quantity_y, quantity_u, cost_adj, comment
          demand_form = PatternForm(request.POST)
          demand_form.is_valid()

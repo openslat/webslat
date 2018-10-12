@@ -15,7 +15,7 @@ Component Groups for {{ project.title_text }}
 <p>Component Groups for <i>{{ project.title_text }}</i></P>
 {{ form.errors }}
 
-<table border="1"><tr><th>Component</th><th>X</th><th>Y</th><th>U</th><th>Mult</th><th>Levels</th><th></th></tr>
+<table border="1"><tr><th>Component</th><th>X</th><th>Y</th><th>U</th><th>Mult</th><th>Levels</th><th></th><th></th></tr>
 {% for cg in data %}
 <tr>
   <td align="right">{{ cg.component.ident }}</td>
@@ -47,8 +47,21 @@ Component Groups for {{ project.title_text }}
     <form action="{% url 'slat:compgrouppattern' project.id cg.id  %}" method="get">
     {% endif %}
     {% csrf_token %}
+    <input type="hidden" name="next_url" value={{request.path}}>
     <input type="submit" name='edit' value="Edit" class="table"/>
     </form>
+  </td>
+  <td>
+    {% if cg.level %}
+    <form action="{% url 'slat:level_compgroup' project.id cg.level.id cg.id  %}" method="post">
+    {% else %}
+    <form action="{% url 'slat:compgrouppattern' project.id cg.id  %}" method="post">
+    {% endif %}
+    {% csrf_token %}
+    <input type="hidden" name="next_url" value={{request.path}}>
+    <input type="submit" name='delete' value="Delete" class="table"/>
+    </form>
+  </td>
   </tr>
 {% endfor %}
 </table>
