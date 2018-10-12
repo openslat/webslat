@@ -283,7 +283,7 @@ class ByCompPieChart(Chart):
         # Skip the first entry, which are the column labels:
         for label, costs in data[1:]:
             self.labels.append(label)
-            self.costs.append(costs)
+            self.costs.append("{:>.2f}".format(costs))
         #self.title['text'] = 'By Floor'
 
         # Assign colors
