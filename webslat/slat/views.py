@@ -2025,7 +2025,14 @@ def cgroups(request, project_id, groups=None):
 
      data = []
      raw_data = list(zip(cgs, levels))
-     raw_data.sort(key=lambda x: x[0]['component'].ident)
+     
+     def sort_components(l):
+          convert = lambda text: float(text) if text.isdigit() else text
+          alphanum = lambda key: [ convert(c) for c in re.split('([-+]?[0-9]*\.?[0-9]*)', key[0]['component'].ident) ]
+          l.sort( key=alphanum )
+          return l
+      
+     raw_data = sort_components(raw_data)
      for x in raw_data:
          dict = x[0]
          dict['levels'] = x[1]
