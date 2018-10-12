@@ -1994,6 +1994,19 @@ def cgroups(request, project_id, groups=None):
      project = get_object_or_404(Project, pk=project_id)
      cgs = []
      levels = []
+     for cg in Component_Group_Pattern.objects.filter(project=project):
+         key = {'component': cg.component, 
+                'adj': cg.cost_adj,
+                'count_x': cg.quantity_x,
+                'count_y': cg.quantity_y,
+                'count_u': cg.quantity_u,
+                'comment': cg.comment,
+                'id': cg.id,
+                'level': None}
+         if not key in cgs:
+             cgs.append(key)
+             levels.append([])
+         
      for cg in Component_Group.objects.filter(demand__project=project).order_by("component"):
          key = {'component': cg.component, 
                 'adj': cg.cost_adj,
@@ -2011,7 +2024,9 @@ def cgroups(request, project_id, groups=None):
          levels[index].append(cg.demand.level)
 
      data = []
-     for x in zip(cgs, levels):
+     raw_data = list(zip(cgs, levels))
+     raw_data.sort(key=lambda x: x[0]['component'].ident)
+     for x in raw_data:
          dict = x[0]
          dict['levels'] = x[1]
          data.append(dict)
