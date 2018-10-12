@@ -256,7 +256,7 @@ class ByFloorChart(Chart):
         # Skip the first entry, which are the column labels:
         for label, costs in data[1:]:
             self.labels.append(label)
-            self.costs.append(costs)
+            self.costs.append("{:>.2f}".format(costs))
         #self.title['text'] = 'By Floor'
         
     def get_labels(self, **kwargs):
@@ -2050,18 +2050,25 @@ def level_cgroups(request, project_id, level_id):
     edp_groups = EDP_Grouping.objects.filter(project=project, 
                                            level=Level.objects.get(pk=level_id))
     cgs = []
+    totals = {'X':0, 'Y':0, 'U':0}
     for edp in edp_groups:
         groups = Component_Group.objects.filter(demand=edp)
         for cg in groups:
             cgs.append(cg)
+            cost = cg.model().Deaggregated_E_annual_cost()
+            totals['X'] = totals['X'] + cost['X']
+            totals['Y'] = totals['Y'] + cost['Y']
+            totals['U'] = totals['U'] + cost['U']
             
+    totals['composite'] = totals['X'] + totals['Y'] + totals['U']
     if request.method == 'POST':
          raise ValueError("SHOULD NOT GET HERE")
     else:
         return render(request, 'slat/level_cgroups.html',
                       {'project': project,
                        'level': Level.objects.get(pk=level_id),
-                       'cgs': cgs})
+                       'cgs': cgs,
+                       'totals': totals})
 
 @login_required
 def levels(request, project_id):

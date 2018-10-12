@@ -81,9 +81,13 @@ Component Groups for {{ level.label }}
     {% endif %}
     </td></tr>
 {% endfor %}
+<tr><td colspan="5"></td>
+  <td bgcolor="lightgray"><b>{{ totals.X|floatformat:2 }}</b></td>
+  <td bgcolor="lightgray"><b>{{ totals.Y|floatformat:2 }}</b></td>
+  <td bgcolor="lightgray"><b>{{ totals.U|floatformat:2 }}</b></td>
+  <td bgcolor="lightgray"><b>{{ totals.composite|floatformat:2 }}</b></td>
+  <td colspan="3"></td></tr>
 </table>
-
-
 <p><a href="{% url 'slat:level_compgroup' project.id level.id %}" class="link_button">New Component Group</a></p>
 
 </br>
