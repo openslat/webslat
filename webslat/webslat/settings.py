@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django_extensions',
     'jchart',
     'slat.apps.SlatConfig',
+    'mathfilters'
 ]
 
 MIDDLEWARE = [

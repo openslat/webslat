@@ -1,4 +1,5 @@
 {% extends "base_site.html" %}
+{% load mathfilters %}
 {% load i18n static %}
 {% block extrastyle %}{{ block.super }}
     <link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
@@ -87,6 +88,11 @@ Component Groups for {{ level.label }}
   <td bgcolor="lightgray"><b>{{ totals.U|floatformat:2 }}</b></td>
   <td bgcolor="lightgray"><b>{{ totals.composite|floatformat:2 }}</b></td>
   <td colspan="3"></td></tr>
+<tr><td colspan="5"></td>
+  <td bgcolor="lightgray"><b>{{ totals.X|div:totals.composite|mul:100|floatformat:0 }}%</b></td>
+  <td bgcolor="lightgray"><b>{{ totals.Y|div:totals.composite|mul:100|floatformat:0 }}%</b></td>
+  <td bgcolor="lightgray"><b>{{ totals.U|div:totals.composite|mul:100|floatformat:0 }}%</b></td>
+  <td colspan="4"></td></tr>
 </table>
 <p><a href="{% url 'slat:level_compgroup' project.id level.id %}" class="link_button">New Component Group</a></p>
 

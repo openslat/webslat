@@ -261,7 +261,8 @@ served via Apache.
           pandas \
           celery \
           django-celery \
-          redis
+          redis \
+          django-mathfilters
      pip3 install django-registration
      pip3 install --upgrade django
      deactivate
