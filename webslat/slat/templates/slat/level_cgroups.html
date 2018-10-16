@@ -89,9 +89,9 @@ Component Groups for {{ level.label }}
   <td bgcolor="lightgray"><b>{{ totals.composite|floatformat:2 }}</b></td>
   <td colspan="3"></td></tr>
 <tr><td colspan="5"></td>
-  <td bgcolor="lightgray"><b>{{ totals.X|div:totals.composite|mul:100|floatformat:0 }}%</b></td>
-  <td bgcolor="lightgray"><b>{{ totals.Y|div:totals.composite|mul:100|floatformat:0 }}%</b></td>
-  <td bgcolor="lightgray"><b>{{ totals.U|div:totals.composite|mul:100|floatformat:0 }}%</b></td>
+  <td bgcolor="lightgray" align="right"><b>{{ totals.X|div:totals.composite|mul:100|floatformat:0 }}%</b></td>
+  <td bgcolor="lightgray" align="right"><b>{{ totals.Y|div:totals.composite|mul:100|floatformat:0 }}%</b></td>
+  <td bgcolor="lightgray" align="right"><b>{{ totals.U|div:totals.composite|mul:100|floatformat:0 }}%</b></td>
   <td colspan="4"></td></tr>
 </table>
 <p><a href="{% url 'slat:level_compgroup' project.id level.id %}" class="link_button">New Component Group</a></p>
