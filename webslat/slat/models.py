@@ -733,7 +733,7 @@ class Component_Group(models.Model):
 
     def model(self):
         if not self._model:
-            self._model = self._make_model({'X': True, 'Y': True, 'U':True})
+            self._model = self._make_model({'X': False, 'Y': False, 'U':False})
         return self._model
     
 
