@@ -2804,3 +2804,28 @@ def cgrouppattern(request, project_id, cg_id=None):
                        })
 
      
+@login_required
+def floor_by_floor(request, project_id):
+    eprint("> floor_by_floor({}, {})".format(request, project_id))
+    project = get_object_or_404(Project, pk=project_id)
+
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
+        raise PermissionDenied
+
+    data = []
+    for level in project.levels():
+        this_level = {'level': level, 'components': []}
+        total_costs = {'X': 0, 'Y': 0, 'U': 0}
+        for cg in Component_Group.objects.filter(demand__project=project,
+                                                 demand__level=level).\
+                                                 order_by("component"):
+            total_costs['X'] += cg.model().Deaggregated_E_annual_cost()['X']
+            total_costs['Y'] += cg.model().Deaggregated_E_annual_cost()['Y']
+            total_costs['U'] += cg.model().Deaggregated_E_annual_cost()['U']
+            this_level['total_costs'] = total_costs
+            this_level['components'].append(cg)
+        data.append(this_level)
+
+    return render(request, 'slat/floor_by_floor.html',
+                  {'project': project,
+                   'data': data})

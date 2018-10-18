@@ -1,0 +1,77 @@
+{% extends "base_site.html" %}
+{% load mathfilters %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
+    <script src="{% static "js/jquery-3.2.1.min.js" %}"></script>
+    <script src="{% static "js/slat-utils.js" %}"></script>
+
+    {{ form.media }}
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} slat {% endblock %}
+{% block title %}WebSLAT: {{ project.title_text }} Detailed Analysis{% endblock %}
+{% block content_title %}{{ project.title_text }} Detailed Analysis{% endblock %}
+{% block content %}
+<div class="project_title">
+<b>Project Analysis:</b> {{ project.title_text }}
+</div>
+
+<p><b>Annual Cost Mean:</b> {{ project.model.AnnualCost.mean|floatformat:2 }}</p>
+<p><b>Annual Cost SD log:</b> {{ project.model.AnnualCost.sd_ln|floatformat:2 }}</p>
+
+{% for level in data %}
+    <p>Level <b><a href={% url 'slat:level_cgroups' project.id level.level.id %}>{{ level.level }}</a></b>
+      contributites ${{level.total_costs.X|add:level.total_costs.Y|add:level.total_costs.U|floatformat:2}} ({{level.total_costs.X|add:level.total_costs.Y|add:level.total_costs.U|div:project.model.AnnualCost.mean|mul:100|floatformat:1}}%) to the total annual expected cost.
+      </p>
+    <table border="1">
+      <tr>
+        <th colspan="2" align="center">Component</th>
+        <th></th>
+        <th colspan="3" align="center">Quantity</th>
+        <th colspan="4" align="center">Cost</th>
+      </tr>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Adj</th>
+        <th>X</th>
+        <th>Y</th>
+        <th>U</th>
+        <th>X</th>
+        <th>X</th>
+        <th>U</th>
+        <th>Total</th>
+      </tr>
+      {% for c in level.components %}
+      <tr><td align='right' >{{ c.component.ident }}</td>
+        <td>{{ c.component.name }}
+          {% if c.comment %}
+          <br/>
+          <table border="0"><tr><td><b>Comment:</b></td><td><i>{{c.comment}}</i></td></tr></table>
+          {% endif %}
+        </td>
+           <td>{{ c.cost_adj }}</td>
+           <td align="right">{{ c.quantity_x }} </td>
+           <td align="right">{{ c.quantity_y }}</td>
+           <td align="right">{{ c.quantity_u }}</td>
+           <td align="right">{{ c.model.Models.X.E_annual_cost|floatformat:2 }} </td>
+           <td align="right">{{ c.model.Models.Y.E_annual_cost|floatformat:2 }} </td>
+           <td align="right">{{ c.model.Models.U.E_annual_cost|floatformat:2 }} </td>
+           <td align="right">{{ c.model.E_annual_cost|floatformat:2 }} </td>
+           </tr>
+      {% endfor %}
+      <tr><td colspan="6" align="right">Total</td>
+        <td align="right">{{ level.total_costs.X|floatformat:2 }}</td>
+        <td align="right">{{ level.total_costs.Y|floatformat:2 }}</td>
+        <td align="right">{{ level.total_costs.U|floatformat:2 }}</td>
+        <td align="right">{{ level.total_costs.X|add:level.total_costs.Y|add:level.total_costs.U|floatformat:2 }}</td>
+        </tr>
+    </table>
+    </enum>
+{% endfor %}
+<hr/>
+<a href="{% url 'slat:project' project.id %}">Return to Project</a><br /><br/>
+<a href="{% url 'slat:index' %}">Return to Project List</a>
+
+{% endblock %}

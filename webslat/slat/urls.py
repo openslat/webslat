@@ -58,6 +58,7 @@ urlpatterns = [
     url(r'^project/(?P<project_id>[0-9]+)/cgroup_pattern/(?P<cg_id>[0-9]+)$', views.cgrouppattern, name='compgrouppattern'),
     url(r'^project/(?P<project_id>[0-9]+)/cgroup_pattern$', views.cgrouppattern, name='compgrouppattern'),
     url(r'^project/(?P<project_id>[0-9]+)/analysis$', views.analysis, name='analysis'),
+    url(r'^project/(?P<project_id>[0-9]+)/floor_by_floor$', views.floor_by_floor, name='floor_by_floor'),
     url(r'^project/(?P<project_id>[0-9]+)/level/(?P<level_id>[0-9]+)/cgroups$', views.level_cgroups, name='level_cgroups'),
     url(r'^project/(?P<project_id>[0-9]+)/level$', views.levels, name='levels'),
     url(r'^project/(?P<project_id>[0-9]+)/level/(?P<level_id>[0-9]+)/(?P<type>(acceleration)|(drift))/(?P<direction>(X)|(Y))$', views.demand, name='demand'),
