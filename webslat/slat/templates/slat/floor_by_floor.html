@@ -21,56 +21,55 @@
 <p><b>Annual Cost SD log:</b> {{ project.model.AnnualCost.sd_ln|floatformat:2 }}</p>
 
 {% for level in data %}
-    <p>Level <b><a href={% url 'slat:level_cgroups' project.id level.level.id %}>{{ level.level }}</a></b>
+    <p><b><a href={% url 'slat:level_cgroups' project.id level.level.id %}>{{ level.level }}</a></b>
       contributites ${{level.total_costs.X|add:level.total_costs.Y|add:level.total_costs.U|floatformat:2}} ({{level.total_costs.X|add:level.total_costs.Y|add:level.total_costs.U|div:project.model.AnnualCost.mean|mul:100|floatformat:1}}%) to the total annual expected cost.
       </p>
     <table border="1">
       <tr>
-        <th colspan="2" align="center">Component</th>
-        <th></th>
-        <th colspan="3" align="center">Quantity</th>
-        <th colspan="4" align="center">Cost</th>
+        <th colspan="2" align="center"style="background:lightgray">Component</th>
+        <th style="background:darkgray"></th>
+        <th colspan="3" align="center" style="background:lightgray">Quantity</th>
+        <th colspan="4" align="center" style="background:darkgray">Cost</th>
       </tr>
       <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Adj</th>
-        <th>X</th>
-        <th>Y</th>
-        <th>U</th>
-        <th>X</th>
-        <th>X</th>
-        <th>U</th>
-        <th>Total</th>
+        <th style="background:lightgray">ID</th>
+        <th style="background:lightgray">Name</th>
+        <th style="background:darkgray">Adj</th>
+        <th style="background:lightgray">X</th>
+        <th style="background:lightgray">Y</th>
+        <th style="background:lightgray">U</th>
+        <th style="background:darkgray">X</th>
+        <th style="background:darkgray">X</th>
+        <th style="background:darkgray">U</th>
+        <th style="background:darkgray">Total</th>
       </tr>
       {% for c in level.components %}
-      <tr><td align='right' >{{ c.component.ident }}</td>
-        <td>{{ c.component.name }}
+      <tr><td align='right' style="background:lightgray">{{ c.component.ident }}</td>
+        <td style="background:lightgray">{{ c.component.name }}
           {% if c.comment %}
           <br/>
-          <table border="0"><tr><td><b>Comment:</b></td><td><i>{{c.comment}}</i></td></tr></table>
+          <table border="0" style="background:lightgray"><tr><td><b>Comment:</b></td><td><i>{{c.comment}}</i></td></tr></table>
           {% endif %}
         </td>
-           <td>{{ c.cost_adj }}</td>
-           <td align="right">{{ c.quantity_x }} </td>
-           <td align="right">{{ c.quantity_y }}</td>
-           <td align="right">{{ c.quantity_u }}</td>
-           <td align="right">{{ c.model.Models.X.E_annual_cost|floatformat:2 }} </td>
-           <td align="right">{{ c.model.Models.Y.E_annual_cost|floatformat:2 }} </td>
-           <td align="right">{{ c.model.Models.U.E_annual_cost|floatformat:2 }} </td>
-           <td align="right">{{ c.model.E_annual_cost|floatformat:2 }} </td>
+           <td style="background:darkgray">{{ c.cost_adj }}</td>
+           <td align="right" style="background:lightgray">{{ c.quantity_x }} </td>
+           <td align="right" style="background:lightgray">{{ c.quantity_y }}</td>
+           <td align="right" style="background:lightgray">{{ c.quantity_u }}</td>
+           <td align="right" style="background:darkgray">{{ c.model.Models.X.E_annual_cost|floatformat:2 }} </td>
+           <td align="right" style="background:darkgray">{{ c.model.Models.Y.E_annual_cost|floatformat:2 }} </td>
+           <td align="right" style="background:darkgray">{{ c.model.Models.U.E_annual_cost|floatformat:2 }} </td>
+           <td align="right" style="background:darkgray">{{ c.model.E_annual_cost|floatformat:2 }} </td>
            </tr>
       {% endfor %}
       <tr><td colspan="6" align="right">Total</td>
-        <td align="right">{{ level.total_costs.X|floatformat:2 }}</td>
-        <td align="right">{{ level.total_costs.Y|floatformat:2 }}</td>
-        <td align="right">{{ level.total_costs.U|floatformat:2 }}</td>
-        <td align="right">{{ level.total_costs.X|add:level.total_costs.Y|add:level.total_costs.U|floatformat:2 }}</td>
+        <td align="right" style="background:darkgray">{{ level.total_costs.X|floatformat:2 }}</td>
+        <td align="right" style="background:darkgray">{{ level.total_costs.Y|floatformat:2 }}</td>
+        <td align="right" style="background:darkgray">{{ level.total_costs.U|floatformat:2 }}</td>
+        <td align="right" style="background:darkgray">{{ level.total_costs.X|add:level.total_costs.Y|add:level.total_costs.U|floatformat:2 }}</td>
         </tr>
     </table>
-    </enum>
-{% endfor %}
 <hr/>
+{% endfor %}
 <a href="{% url 'slat:project' project.id %}">Return to Project</a><br /><br/>
 <a href="{% url 'slat:index' %}">Return to Project List</a>
 

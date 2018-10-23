@@ -16,6 +16,12 @@
 Component Groups for {{ level.label }}
 </div>
 
+<table width="80%"><tr><td width="50%">
+  {{ charts2.A.as_html }}
+</td><td width="50%">
+  {{ charts2.D.as_html }}
+</td></tr></table>
+<hr/>
 {{ form.errors }}
 <table border="1">
   <tr style="border-width:1px; border-style:solid solid hidden solid">
@@ -89,9 +95,15 @@ Component Groups for {{ level.label }}
   <td bgcolor="lightgray"><b>{{ totals.composite|floatformat:2 }}</b></td>
   <td colspan="3"></td></tr>
 <tr><td colspan="5"></td>
+  {% if totals.composite %}
   <td bgcolor="lightgray" align="right"><b>{{ totals.X|div:totals.composite|mul:100|floatformat:0 }}%</b></td>
   <td bgcolor="lightgray" align="right"><b>{{ totals.Y|div:totals.composite|mul:100|floatformat:0 }}%</b></td>
   <td bgcolor="lightgray" align="right"><b>{{ totals.U|div:totals.composite|mul:100|floatformat:0 }}%</b></td>
+  {% else %}
+  <td bgcolor="lightgray" align="right"><b>--%</b></td>
+  <td bgcolor="lightgray" align="right"><b>--%</b></td>
+  <td bgcolor="lightgray" align="right"><b>--%</b></td>
+  {% endif %}
   <td colspan="4"></td></tr>
 </table>
 <p><a href="{% url 'slat:level_compgroup' project.id level.id %}" class="link_button">New Component Group</a></p>

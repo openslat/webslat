@@ -1,4 +1,4 @@
-from celery import shared_task,current_task
+from celery import shared_task,current_task,task
 from numpy import random
 from scipy.fftpack import fft
 from django.urls import reverse
@@ -15,8 +15,11 @@ import logging
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
-@shared_task
+@task
 def ImportETABS(user_id, preprocess_data_id):
+    logger = ImportETABS.get_logger()
+#    logger.debug("> ImportETABS()")
+
     preprocess_data = ETABS_Preprocess.objects.get(id=preprocess_data_id)
     title = preprocess_data.title
     description = preprocess_data.description
@@ -26,6 +29,12 @@ def ImportETABS(user_id, preprocess_data_id):
     return_period = preprocess_data.return_period
     frame_type_x = preprocess_data.frame_type_x
     frame_type_y = preprocess_data.frame_type_y
+    drift_case_x = preprocess_data.drift_case_x
+    drift_case_y = preprocess_data.drift_case_y
+    accel_case_x = preprocess_data.accel_case_x
+    accel_case_y = preprocess_data.accel_case_y
+    Tx = preprocess_data.period_x
+    Ty = preprocess_data.period_y
 
     start_time = time.time()
     messages = []
@@ -54,17 +63,8 @@ def ImportETABS(user_id, preprocess_data_id):
     setattr(project, 'rarity', 1.0/float(return_period))
     project.save()
 
-    # Get the fundamental frequencies from the ~Modal Participating Mass Ratios~
-    # tab:
-    sheet = munge_data_frame(
-        xl_workbook.parse("Modal Participating Mass Ratios", 
-                          skiprows=(1)))
-    Tx = list(sheet.sort_values('UX', ascending=False)['Period'])[0]
-    Ty = list(sheet.sort_values('UY', ascending=False)['Period'])[0]
-
     messages.append("Source: {}".format(preprocess_data.hazard_period_source))
     current_task.update_state(meta={'message': "\n".join(messages)})
-    logging.debug("Source: {}".format(preprocess_data.hazard_period_source))
     
     if preprocess_data.hazard_period_source == 'TX':
         fundamental_period = Tx
@@ -129,36 +129,44 @@ def ImportETABS(user_id, preprocess_data_id):
     sheet = munge_data_frame(xl_workbook.parse(
         "Story Drifts", 
         skiprows=1))
-    drifts = sheet.loc[
-        lambda x: map(lambda a: a == 'MRS EQX mu=4 Max' or 
-                      a == 'MRS EQY mu=4 Max', 
-                      x['Load Case/Combo'])].filter(
-                          ['Story', 'Direction', 'Drift'])
     drifts_df = pd.DataFrame(columns=['Story', 'X', 'Y'])
-    for story in height_df['Story'].values:
-        x = drifts.loc[lambda x: map(lambda a, b: a == story and\
-                                     b == 'X', x['Story'], x['Direction'])
+
+    for i in height_df['Story'].index:
+        story = height_df.at[i, 'Story']
+
+        x = sheet.loc[lambda x: map(lambda a, b, c: a == story and\
+                                    b == drift_case_x and\
+                                    c == 'X', \
+                                    sheet['Story'],\
+                                    sheet['Load Case/Combo'],
+                                    sheet['Direction'])
         ]['Drift'].values[0]
-        y = drifts.loc[lambda x: map(lambda a, b: a == story and\
-                                     b == 'Y', x['Story'], x['Direction'])
+        y = sheet.loc[lambda x: map(lambda a, b, c: a == story and\
+                                     b == drift_case_y and\
+                                     c == 'Y', \
+                                     sheet['Story'],\
+                                     sheet['Load Case/Combo'],
+                                     sheet['Direction'])
         ]['Drift'].values[0]
         drifts_df = drifts_df.append(
             pd.DataFrame(data=[[story, x, y]],
                          columns=['Story', 'X', 'Y']))
     
-    # Get the acceleration at each story from the ~Story Drifts~ tab:
+    # Get the acceleration at each story from the ~Story Accelerations~ tab:
     sheet = munge_data_frame(xl_workbook.parse(
         "Story Accelerations", 
         skiprows=1))
-    accels = sheet.loc[
-        lambda x: map(lambda a: a == 'MRS EQX mu=4 Max' or 
-                      a == 'MRS EQY mu=4 Max', 
-                      x['Load Case/Combo'])].filter(['Story', 'UX', 'UY'])
     accels_df = pd.DataFrame(columns=['Story', 'X', 'Y'])
     
-    for story in height_df['Story'].values:
-        x = accels.loc[lambda x: x['Story'] == story]['UX'].values[0]
-        y = accels.loc[lambda x: x['Story'] == story]['UY'].values[0]
+    for i in  height_df['Story'].index:
+        story = height_df.at[i, 'Story']
+
+        x = sheet.loc[lambda x: map(lambda a, b: a == story and \
+                                    b == accel_case_x, \
+                                    sheet['Story'], sheet['Load Case/Combo'])]['UX'].values[0]
+        y = sheet.loc[lambda x: map(lambda a, b: a == story and \
+                                    b == accel_case_y, \
+                                    sheet['Story'], sheet['Load Case/Combo'])]['UY'].values[0]
         
         # Convert form mm/sec^2 to g:
         x = x / 9810

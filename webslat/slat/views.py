@@ -1503,6 +1503,137 @@ class DemandRatePlot(Chart):
                 borderColor=rgba(255,99,132,1.0),
                 backgroundColor=rgba(0,0,0,0))]
 
+class DemandRatesPlot1(Chart):
+    chart_type = 'line'
+    legend = Legend(display=True)
+    title = Title(display=True)
+    scales = {
+        'xAxes': [Axes(type='linear', 
+                       position='bottom', 
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Demand'))],
+        'yAxes': [Axes(type='linear', 
+                       position='left',
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Annual Rate of Exceedance'))]
+    }
+    
+    
+    def __init__(self, demand_group):
+        eprint("> DemandRatesPlot.__init__(): {}".format(self))
+        super(DemandRatesPlot1, self).__init__()
+        if demand_group.demand_x.model():
+            if demand_group.type == 'D':
+                demand_type  = 'Drift (radians)'
+            elif demand_group.type == 'A':
+                demand_type  = 'Acceleration (g)'
+            else:
+                demand_type = 'Unknown'
+
+            eprint("demand_type: {}".format(demand_type))
+            
+            self.title['text'] = "".join("{} {} Rate of Exceedance".format(demand_group.level.label,
+                                                                   demand_type))
+            self.scales['xAxes'][0]['scaleLabel']['labelString'] = demand_type
+            
+            xlimit = max(demand_group.demand_x.model().plot_max(),
+                         demand_group.demand_y.model().plot_max())
+            self.rate_x =  []
+            self.rate_y = []
+            N = 25
+            for i in range(1,N +1):
+                x = i/N * xlimit
+                rate = demand_group.demand_x.model().getlambda(x)
+                self.rate_x.append({'x': x, 'y': rate})
+                rate = demand_group.demand_y.model().getlambda(x)
+                self.rate_y.append({'x': x, 'y': rate})
+        else:
+             eprint("SKIPPING")   
+                
+    def get_datasets(self, *args, **kwargs):
+        return [
+            DataSet(
+                type='line',
+                label='X',
+                data=self.rate_x,
+                borderWidth=3,
+                borderDash=[5, 5],
+                borderColor=rgba(255, 0, 0, 1.0),
+                backgroundColor=rgba(0,0,0,0)),
+            DataSet(
+                type='line',
+                label='Y',
+                data=self.rate_y,
+                borderWidth=3,
+                borderColor=rgba(0, 255, 0, 1.0),
+                borderDash=[5, 5],
+                borderDashOffset=5,
+                backgroundColor=rgba(0,0,0,0))]
+
+class DemandRatesPlot2(Chart):
+    chart_type = 'line'
+    legend = Legend(display=True)
+    title = Title(display=True)
+    scales = {
+        'xAxes': [Axes(type='linear', 
+                       position='bottom', 
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Demand'))],
+        'yAxes': [Axes(type='linear', 
+                       position='left',
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Annual Rate of Exceedance'))]
+    }
+    
+    
+    def __init__(self, demand_group):
+        eprint("> DemandRatesPlot2.__init__(): {}".format(self))
+        super(DemandRatesPlot2, self).__init__()
+        if demand_group.demand_x.model():
+            if demand_group.type == 'D':
+                demand_type  = 'Drift (radians)'
+            elif demand_group.type == 'A':
+                demand_type  = 'Acceleration (g)'
+            else:
+                demand_type = 'Unknown'
+
+            eprint("demand_type: {}".format(demand_type))
+            
+            self.title['text'] = "".join("{} {} Rate of Exceedance".format(demand_group.level.label,
+                                                                   demand_type))
+            self.scales['xAxes'][0]['scaleLabel']['labelString'] = demand_type
+            
+            xlimit = max(demand_group.demand_x.model().plot_max(),
+                         demand_group.demand_y.model().plot_max())
+            self.rate_x =  []
+            self.rate_y = []
+            N = 25
+            for i in range(1,N +1):
+                x = i/N * xlimit
+                rate = demand_group.demand_x.model().getlambda(x)
+                self.rate_x.append({'x': x, 'y': rate})
+                rate = demand_group.demand_y.model().getlambda(x)
+                self.rate_y.append({'x': x, 'y': rate})
+                
+    def get_datasets(self, *args, **kwargs):
+        return [
+            DataSet(
+                type='line',
+                label='X',
+                data=self.rate_x,
+                borderWidth=3,
+                borderColor=rgba(255, 0, 0, 1.0),
+                borderDash=[5, 5],
+                backgroundColor=rgba(0,0,0,0)),
+            DataSet(
+                type='line',
+                label='Y',
+                data=self.rate_y,
+                borderWidth=3,
+                borderColor=rgba(0, 255, 0,1.0),
+                borderDash=[5, 5],
+                borderDashOffset=5,
+                backgroundColor=rgba(0,0,0,0))]
 
 @login_required
 def edp_view(request, project_id, edp_id):
@@ -2048,11 +2179,20 @@ def level_cgroups(request, project_id, level_id):
         raise PermissionDenied
 
     edp_groups = EDP_Grouping.objects.filter(project=project, 
-                                           level=Level.objects.get(pk=level_id))
+                                           level=Level.objects.get(pk=level_id)).order_by('type')
     cgs = []
     totals = {'X':0, 'Y':0, 'U':0}
-    for edp in edp_groups:
-        groups = Component_Group.objects.filter(demand=edp)
+    charts = {'A':{'X': None, 'Y':None}, 'D':{'X':None, 'Y':None}}
+    charts2 = {'A': None, 'D': None}
+    for group in edp_groups:
+        charts[group.type]['X'] = DemandRatePlot(group.demand_x)
+        charts[group.type]['Y'] = DemandRatePlot(group.demand_y)
+        if group.type == 'A':
+            charts2[group.type] = DemandRatesPlot1(group)
+        else:
+            charts2[group.type] = DemandRatesPlot2(group)
+            
+        groups = Component_Group.objects.filter(demand=group)
         for cg in groups:
             cgs.append(cg)
             cost = cg.model().Deaggregated_E_annual_cost()
@@ -2061,6 +2201,7 @@ def level_cgroups(request, project_id, level_id):
             totals['U'] = totals['U'] + cost['U']
             
     totals['composite'] = totals['X'] + totals['Y'] + totals['U']
+
     if request.method == 'POST':
          raise ValueError("SHOULD NOT GET HERE")
     else:
@@ -2068,7 +2209,8 @@ def level_cgroups(request, project_id, level_id):
                       {'project': project,
                        'level': Level.objects.get(pk=level_id),
                        'cgs': cgs,
-                       'totals': totals})
+                       'totals': totals,
+                       'charts': charts, 'charts2': charts2})
 
 @login_required
 def levels(request, project_id):
@@ -2325,7 +2467,6 @@ def ComponentDescription(request, component_key):
 
 @login_required
 def shift_level(request, project_id, level_id, shift):
-    print("> shift_level({}, {}, {})".format(project_id, level_id, shift))
     shift = int(shift)
     project = Project.objects.get(pk=project_id)
 
@@ -2672,9 +2813,11 @@ def celery_poll_state(request):
 def etabs_confirm(request, preprocess_id):
     preprocess_data = ETABS_Preprocess.objects.get(id=preprocess_id)
     if request.POST:
+        preprocess_data.period_x = request.POST.get('Tx')
+        preprocess_data.period_y = request.POST.get('Ty')
+
         if preprocess_data.period_x == 'Manual':
             preprocess_data.period_x = request.POST.get('Manual_Tx', 0)
-        preprocess_data.period_y = request.POST.get('Ty', 0)
         if preprocess_data.period_y == 'Manual':
             preprocess_data.period_y = request.POST.get('Manual_Ty', 0)
         if preprocess_data.period_x == "" or preprocess_data.period_y == "":
@@ -2682,11 +2825,11 @@ def etabs_confirm(request, preprocess_id):
         
         preprocess_data.hazard_period_source = request.POST.get('Period', 0)
         preprocess_data.hazard_manual_period = request.POST.get('Manual_Period', 0)
-
-        preprocess_data.drift_case_x = request.POST.get('drift_case_x', 0)
-        preprocess_data.drift_case_y = request.POST.get('drift_case_y', 0)
-        preprocess_data.accel_case_x = request.POST.get('accel_case_x', 0)
-        preprocess_data.accel_case_y = request.POST.get('accel_case_y', 0)
+        
+        preprocess_data.drift_case_x = request.POST.get('x_drift_case', 0)
+        preprocess_data.drift_case_y = request.POST.get('y_drift_case', 0)
+        preprocess_data.accel_case_x = request.POST.get('x_accel_case', 0)
+        preprocess_data.accel_case_y = request.POST.get('y_accel_case', 0)
         preprocess_data.save()
 
         job = ImportETABS.delay(
