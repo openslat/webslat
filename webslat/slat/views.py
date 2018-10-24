@@ -419,14 +419,17 @@ def make_demo(user, title, description):
     # Add components:
     all_floors = range(num_floors + 1)
     not_ground = range(1, num_floors+1)
+    roof = range(num_floors, num_floors+1)
     components = [{'levels': all_floors, 'id': '206', 'quantity': [6, 3, 0]},
                   {'levels': not_ground, 'id': 'B1041.032a', 'quantity': [24, 8, 1]},
                   {'levels': not_ground, 'id': 'B1044.023', 'quantity': [8, 0, 2]},
-                  {'levels': not_ground, 'id': 'C1011.001a', 'quantity': [0, 0, 32]}]
+                  {'levels': not_ground, 'id': 'C1011.001a', 'quantity': [0, 0, 32]},
+                  {'levels': roof, 'id': '205', 'quantity': [0, 0, 10]},
+                  {'levels': [1, 3, 5], 'id': '206', 'quantity': [1, 2, 5]}]
     for comp in components:
         component = ComponentsTab.objects.get(ident=comp['id'])
-        for l in comp['levels']:
-            level = Level.objects.get(project=project, level=l)
+        if len(comp['levels']) == 1:
+            level = Level.objects.get(project=project, level=comp['levels'][0])
             
             if re.compile(".*Accel").match(component.demand.name):
                 demand_type='A'
@@ -443,20 +446,20 @@ def make_demo(user, title, description):
                                     quantity_y=comp['quantity'][1],
                                     quantity_u=comp['quantity'][2])
             group.save()
+        else:
+            pattern = Component_Group_Pattern(
+                project=project,
+                component=component,
+                quantity_x=comp['quantity'][0],
+                quantity_y=comp['quantity'][1],
+                quantity_u=comp['quantity'][2],
+                cost_adj=1.0,
+                comment='Created as a pattern group.')
+            pattern.save()
 
-    # Muck with component group patterns:
-    pattern = Component_Group_Pattern(
-        project=project,
-        component=ComponentsTab.objects.get(ident='206'),
-        quantity_x=1,
-        quantity_y=2,
-        quantity_u=5,
-        cost_adj=1.0,
-        comment='Created as a pattern group.')
-    pattern.save()
-    for l in [1,3,5]:
-        level = Level.objects.get(project=project, level=l)
-        pattern.CreateFromPattern(level)
+            for l in comp['levels']:
+                level = Level.objects.get(project=project, level=l)
+                pattern.CreateFromPattern(level)
 
     return project
 
@@ -782,23 +785,34 @@ def project(request, project_id=None):
                             label = "Roof"
                         else:
                             label = "Floor #{}".format(l + 1)
-                        print("L: {}; Label: {}".format(l, label))
                         level = Level(project=project, level=l, label=label)
                         level.save()
 
                         # Create empty demands:
-                        edp = EDP(project=project,
-                                  level=level,
-                                  type = EDP_Grouping.EDP_TYPE_ACCEL)
+                        edp_x = EDP()
+                        edp_x.save()
+                        edp_y = EDP()
+                        edp_y.save()
+                        edp = EDP_Grouping(project=project,
+                                           level=level,
+                                           demand_x=edp_x,
+                                           demand_y=edp_y,
+                                           type = EDP_Grouping.EDP_TYPE_ACCEL)
                         edp.save()
 
                         if l != 0:
-                            edp = EDP(project=project,
-                                      level=level,
-                                      type = EDP.EDP_TYPE_DRIFT)
+                            edp_x = EDP()
+                            edp_x.save()
+                            edp_y = EDP()
+                            edp_y.save()
+                            edp = EDP_Grouping(project=project,
+                                               level=level,
+                                               demand_x=edp_x,
+                                               demand_y=edp_y,
+                                               type = EDP_Grouping.EDP_TYPE_DRIFT)
                             edp.save()
-                            
-                                  
+                else:
+                    eprint("Error in Form2")
                 project.AssignRole(request.user, ProjectUserPermissions.ROLE_FULL)
                 return HttpResponseRedirect(reverse('slat:hazard_choose', args=(project.id,))) 
             elif project_type == "ETABS":
@@ -1520,7 +1534,6 @@ class DemandRatesPlot1(Chart):
     
     
     def __init__(self, demand_group):
-        eprint("> DemandRatesPlot.__init__(): {}".format(self))
         super(DemandRatesPlot1, self).__init__()
         if demand_group.demand_x.model():
             if demand_group.type == 'D':
@@ -1530,8 +1543,6 @@ class DemandRatesPlot1(Chart):
             else:
                 demand_type = 'Unknown'
 
-            eprint("demand_type: {}".format(demand_type))
-            
             self.title['text'] = "".join("{} {} Rate of Exceedance".format(demand_group.level.label,
                                                                    demand_type))
             self.scales['xAxes'][0]['scaleLabel']['labelString'] = demand_type
@@ -1587,7 +1598,6 @@ class DemandRatesPlot2(Chart):
     
     
     def __init__(self, demand_group):
-        eprint("> DemandRatesPlot2.__init__(): {}".format(self))
         super(DemandRatesPlot2, self).__init__()
         if demand_group.demand_x.model():
             if demand_group.type == 'D':
@@ -1597,8 +1607,6 @@ class DemandRatesPlot2(Chart):
             else:
                 demand_type = 'Unknown'
 
-            eprint("demand_type: {}".format(demand_type))
-            
             self.title['text'] = "".join("{} {} Rate of Exceedance".format(demand_group.level.label,
                                                                    demand_type))
             self.scales['xAxes'][0]['scaleLabel']['labelString'] = demand_type
@@ -1937,7 +1945,6 @@ def cgroup(request, project_id, floor_num, cg_id=None):
 
 @login_required
 def level_cgroup(request, project_id, level_id, cg_id=None):
-     eprint("> level_cgroup()")
      project = get_object_or_404(Project, pk=project_id)
 
      if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
@@ -1945,7 +1952,6 @@ def level_cgroup(request, project_id, level_id, cg_id=None):
 
      if request.method == 'POST':
          if request.POST.get('cancel'):
-             eprint("CANCEL URL: {}".format(request.POST.get('cancel_url')))
              return HttpResponseRedirect(reverse('slat:level_cgroups', args=(project_id, level_id)))
 
          if request.POST.get('separate'):
@@ -2026,7 +2032,6 @@ def level_cgroup(request, project_id, level_id, cg_id=None):
          cg.comment = cg_form.cleaned_data['comment']
          cg.save()
          if True in changes.values():
-             eprint("Building Model")
              cg._make_model(changes)
          cg_id = cg.id
          
@@ -2039,10 +2044,8 @@ def level_cgroup(request, project_id, level_id, cg_id=None):
              cg = get_object_or_404(Component_Group, pk=cg_id)
              data = model_to_dict(cg)
              data['next_url'] = request.META.get('HTTP_REFERER')
-             eprint("data['next_url']: {}".format(data['next_url']))
              demand_form = ComponentForm(initial=data, level=level_id)
          else:
-             eprint("else: {}".format(request.META.get('HTTP_REFERER')))
              demand_form = ComponentForm(level=level_id, 
                                          initial= {'component': None, 
                                                    'cost_adj': 1.0, 
@@ -2480,10 +2483,8 @@ def shift_level(request, project_id, level_id, shift):
         print("Project number is correct")
         
     if shift > 0:
-        print("> 0: Shifting Up")
         try:
             other_level = Level.objects.get(project=project, level=level_to_move.level + 1)
-            print(other_level.id)
             level_to_move.level = level_to_move.level + 1
             other_level.level = other_level.level - 1
             level_to_move.save()
@@ -2491,10 +2492,8 @@ def shift_level(request, project_id, level_id, shift):
         except Level.DoesNotExist:
             print("Nowhere to go")
     elif shift < 0:
-        print("< 0: Shifting Down")
         try:
             other_level = Level.objects.get(project=project, level=level_to_move.level - 1)
-            print(other_level.id)
             level_to_move.level = level_to_move.level - 1
             other_level.level = other_level.level + 1
             level_to_move.save()
@@ -2513,7 +2512,6 @@ def rename_level(request, project_id, level_id):
         raise PermissionDenied
 
     level = Level.objects.get(pk=level_id)
-    print("> rename_level: {} {} [{}]".format(project_id, level_id, level.label))
     if request.method == 'POST':
         form = LevelLabelForm(request.POST)
         if form.is_valid():
@@ -2949,7 +2947,6 @@ def cgrouppattern(request, project_id, cg_id=None):
      
 @login_required
 def floor_by_floor(request, project_id):
-    eprint("> floor_by_floor({}, {})".format(request, project_id))
     project = get_object_or_404(Project, pk=project_id)
 
     if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:

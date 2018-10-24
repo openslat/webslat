@@ -661,6 +661,17 @@ class Component_Group_Pattern(models.Model):
         for c in clients:
             c.Change(component, qx, qy, qu, adj, comment)
     
+    def __str__(self):
+        result = "Component_Group_Pattern " + \
+                 "{}/{}/{}@{} of {}; {}".format(self.quantity_x,
+                                                self.quantity_y,
+                                                self.quantity_u,
+                                                self.cost_adj,
+                                                self.component,
+                                                self.comment)
+        return result
+                                                
+
 class Component_Group(models.Model):
     pattern = models.ForeignKey('Component_Group_Pattern', on_delete=CASCADE, null=True)
     demand = models.ForeignKey('EDP_Grouping', related_name="demand", on_delete=PROTECT, null=False)

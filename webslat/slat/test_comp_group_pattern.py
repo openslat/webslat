@@ -33,20 +33,20 @@ class GroupTestCase(TestCase):
 
     def test_change_count(self):
         """Change the count for a pattern, and make sure the costs are re-calculated."""
+
         project = Project.objects.get(pk=1)
-        self.assertTrue(round(project.model().AnnualCost().mean()) == 381286)
+        self.assertEqual(round(project.model().AnnualCost().mean()), 383578)
 
 
         pattern = Component_Group_Pattern.objects.get(pk=1)
         groups = Component_Group.objects.filter(pattern=pattern)
-
         pattern.ChangePattern(pattern.component,
                               pattern.quantity_x,
                               pattern.quantity_y,
-                              0, 
+                              1, 
                               pattern.cost_adj,
                               pattern.comment)
-        self.assertTrue(round(project.model().AnnualCost().mean()) == 378084)
+        self.assertEqual(round(project.model().AnnualCost().mean()), 384818)
 
         pattern.ChangePattern(pattern.component,
                               pattern.quantity_x,
@@ -54,7 +54,8 @@ class GroupTestCase(TestCase):
                               pattern.quantity_u,
                               pattern.cost_adj,
                               pattern.comment)
-        self.assertTrue(round(project.model().AnnualCost().mean()) == 382566)
+        self.assertEqual(round(project.model().AnnualCost().mean()), 392254)
+        return
 
         pattern.ChangePattern(pattern.component,
                               4,
@@ -62,7 +63,7 @@ class GroupTestCase(TestCase):
                               pattern.quantity_u, 
                               pattern.cost_adj,
                               pattern.comment)
-        self.assertTrue(round(project.model().AnnualCost().mean()) == 384487)
+        self.assertEqual(round(project.model().AnnualCost().mean()), 389775)
 
         pattern.ChangePattern(pattern.component,
                               pattern.quantity_x,
@@ -70,7 +71,7 @@ class GroupTestCase(TestCase):
                               pattern.quantity_u, 
                               pattern.cost_adj,
                               "Comment changed for testing.")
-        self.assertTrue(round(project.model().AnnualCost().mean()) == 384487)
+        self.assertEqual(round(project.model().AnnualCost().mean()), 389775)
 
         pattern.ChangePattern(pattern.component,
                               pattern.quantity_x,
@@ -78,7 +79,7 @@ class GroupTestCase(TestCase):
                               pattern.quantity_u, 
                               pattern.cost_adj * 3.5,
                               pattern.comment)
-        self.assertTrue(round(project.model().AnnualCost().mean()) == 405299)
+        self.assertEqual(round(project.model().AnnualCost().mean()), 433154)
 
         pattern.ChangePattern(ComponentsTab.objects.get(ident='208'),
                               pattern.quantity_x,
@@ -86,5 +87,4 @@ class GroupTestCase(TestCase):
                               pattern.quantity_u, 
                               pattern.cost_adj,
                               pattern.comment)
-        self.assertTrue(round(project.model().AnnualCost().mean()) == 376808)
-        
+        self.assertEqual(round(project.model().AnnualCost().mean()), 373744)
