@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_extensions',
+    'djcelery',
     'jchart',
     'slat.apps.SlatConfig',
     'mathfilters'
@@ -158,4 +159,6 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'openslat@gmail.com'
 EMAIL_HOST_PASSWORD = 'OnIl?OgHibEnmyabcub9'
+
+TEST_RUNNER = 'djcelery.contrib.test_runner.CeleryTestSuiteRunner'
 

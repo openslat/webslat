@@ -1,4 +1,5 @@
 from django.test import TestCase, Client
+from django.test.utils import override_settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from slat.models import *
@@ -9,6 +10,8 @@ import django.http
 import re
 import pyslat
 import os
+import time
+from slat.tasks import ImportETABS
 
 class NewProjectTestCase(TestCase):
     def setUp(self):
@@ -215,7 +218,8 @@ class NewProjectTestCase(TestCase):
 
         # Confirm we're sent to the correct page:
         self.assertTrue(re.match("/slat/etabs_confirm/[0-9]+", response.url))
-        response = c.get(response.url)
+        confirm_url = response.url
+        response = c.get(confirm_url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         # Parse the contents:
@@ -309,13 +313,13 @@ class NewProjectTestCase(TestCase):
         s = pq("#id_x_drift_case")[0]
         self.assertEqual(len(drift_choices), len(s.getchildren()))
         for i in range(len(s.getchildren())):
-            c = s.getchildren()[i]
-            self.assertEqual(c.attrib['value'], drift_choices[i])
+            child = s.getchildren()[i]
+            self.assertEqual(child.attrib['value'], drift_choices[i])
         s = pq("#id_y_drift_case")[0]
         self.assertEqual(len(drift_choices), len(s.getchildren()))
         for i in range(len(s.getchildren())):
-            c = s.getchildren()[i]
-            self.assertEqual(c.attrib['value'], drift_choices[i])
+            child = s.getchildren()[i]
+            self.assertEqual(child.attrib['value'], drift_choices[i])
 
         # Check the accelleration choices:
         self.assertEqual(pq('p')[4].text_content().strip(), "X: mm/sec²")
@@ -326,10 +330,23 @@ class NewProjectTestCase(TestCase):
         s = pq("#id_x_accel_case")[0]
         self.assertEqual(len(accel_choices), len(s.getchildren()))
         for i in range(len(s.getchildren())):
-            c = s.getchildren()[i]
-            self.assertEqual(c.attrib['value'], accel_choices[i])
+            child = s.getchildren()[i]
+            self.assertEqual(child.attrib['value'], accel_choices[i])
         s = pq("#id_y_accel_case")[0]
         self.assertEqual(len(accel_choices), len(s.getchildren()))
         for i in range(len(s.getchildren())):
-            c = s.getchildren()[i]
-            self.assertEqual(c.attrib['value'], accel_choices[i])
+            child = s.getchildren()[i]
+            self.assertEqual(child.attrib['value'], accel_choices[i])
+
+        response = c.post(confirm_url,
+                          {'y_drift_case': 'ES EQY',
+                           'x_accel_case': 'MRS EQX mu=4 Max',
+                           'Ty': '2.051',
+                           'x_drift_case': 'ES EQX',
+                           'Tx': '2.365',
+                           'y_accel_case': 'MRS EQY mu=4 Max',
+                           'Period': 'TX'})
+        self.assertTrue(re.match("/slat/etabs_progress\?job=", response.url))
+
+        project = Project.objects.get(pk=1)
+        self.assertEqual(len(EDP_Grouping.objects.filter(project=project)), 21)
