@@ -6,6 +6,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'webslat.settings')
 from django.conf import settings
 from celery import Celery
 
+#CELERYD_CONCURRENCY = 1
 app = Celery('slat',
              backend='redis://localhost',
              broker='redis://localhost')

@@ -161,4 +161,4 @@ EMAIL_HOST_USER = 'openslat@gmail.com'
 EMAIL_HOST_PASSWORD = 'OnIl?OgHibEnmyabcub9'
 
 TEST_RUNNER = 'djcelery.contrib.test_runner.CeleryTestSuiteRunner'
-
+CELERYD_CONCURRENCY = 1
