@@ -6,11 +6,17 @@ from django.contrib.auth.models import User
 from .etabs import *
 import numpy as np
 from functools import reduce
+#from .models import *
 from .models import *
 import pandas as pd
 import os
 import time
 import logging
+from jchart import Chart
+from jchart.config import Axes, DataSet, rgba, ScaleLabel, Legend, Title
+import seaborn as sns
+from math import *
+from django.utils.safestring import mark_safe
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -18,7 +24,7 @@ def eprint(*args, **kwargs):
 @task
 def ImportETABS(user_id, preprocess_data_id):
     logger = ImportETABS.get_logger()
-#    logger.debug("> ImportETABS()")
+    eprint("> ImportETABS()")
 
     preprocess_data = ETABS_Preprocess.objects.get(id=preprocess_data_id)
     title = preprocess_data.title
@@ -362,8 +368,112 @@ def ImportETABS(user_id, preprocess_data_id):
         meta={ 'message': "\n".join(messages)})
     
     preprocess_data.delete()
+    eprint("< ImportETABS()")
     return(reverse('slat:levels', args=(project.id,)))
     #return project.id
 
     
 
+@task
+def Project_Annual_Cost(project_id):
+    logger = Project_Annual_Cost.get_logger()
+    logger.info("> Project_Annual_Cost({})".format(project_id))
+    eprint("> Project_Annual_Cost({})".format(project_id))
+    for c in Cached_Result.objects.all():
+        eprint("C: {}".format(c))
+    project = Project.objects.get(pk=project_id)
+    cr = Cached_Result.objects.get(identifier="Project::Annual_Cost",
+                                   project=project)
+    eprint("CR: {}".format(cr))
+    annual_cost = project.model().AnnualCost()
+    cr.result = pickle.dumps({'mean': annual_cost.mean(), 'sd_ln': annual_cost.sd_ln()})
+    cr.save()
+    eprint("< Project_Annual_Cost({})".format(project_id))
+    logger.info("< Project_Annual_Cost({})".format(project_id))
+    return None
+
+@task
+def Incremental_Test(project_id):
+    s = time.time()
+    eprint("> Incremental_Test(): Projects: {}".format(pyslat.structure.defs))
+    value = {'slat_id_status': 'Calculating...'}
+    
+    project = Project.objects.get(pk=project_id)
+
+    groups = Component_Group.objects.filter(demand__project=project)
+    for c in groups:
+        models = c.model().Models()
+        value['slat_comp_id_{}_x'.format(c.id)] = models['X'].E_annual_cost()
+        current_task.update_state(meta=value)
+
+        value['slat_comp_id_{}_y'.format(c.id)] = models['Y'].E_annual_cost()
+        current_task.update_state(meta=value)
+
+        value['slat_comp_id_{}_u'.format(c.id)] = models['U'].E_annual_cost()
+        current_task.update_state(meta=value)
+
+    c = ExpectedLoss_Over_Time_Chart(project).as_html()
+
+    d = re.search("Chart\(ctx, *(\{[^;]*)", c, re.MULTILINE).groups()[0][0:-1]
+    e = d.replace("true", "True").replace("false", "False")
+    value['slat_id_chart'] = eval(e)
+    value['slat_id_status'] = 'Done'
+    
+    eprint(project.model().AnnualCost())
+    eprint(time.time() - s)
+    eprint("< Incremental_Test(): Projects: {}".format(pyslat.structure.defs))
+    return value
+        
+class ExpectedLoss_Over_Time_Chart(Chart):
+    chart_type = 'line'
+    legend = Legend(display=False)
+    title = Title(display=True, text="Expected Loss over Time")
+    scales = {
+        'xAxes': [Axes(type='linear', 
+                       position='bottom', 
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Years From Present'))],
+        'yAxes': [Axes(type='linear', 
+                       position='left',
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Expected Loss ($k)'))],
+    }
+
+    def __init__(self, project):
+        super(ExpectedLoss_Over_Time_Chart, self).__init__()
+        building = project.model()
+        im_func = project.IM.model()
+        
+        xlimit = im_func.plot_max()
+        
+        self.data = []
+
+        rate = 0.06
+
+        for i in range(20):
+            year = (i + 1) * 5
+            loss = building.E_cost(year, rate) / 1000
+            self.data.append({'x': year, 'y': loss})
+        
+        if isnan(building.getRebuildCost().mean()):
+            if isnan(building.AnnualCost().mean()):
+                title = "Missing data, somewhere; cost is NAN"
+            else:
+                title = "EAL=${}\nDiscount rate = {}%".format(round(building.AnnualCost().mean()), 100 * rate)
+        else:
+            title = "EAL=${}\n({} % of rebuild cost)\nDiscount rate = {}%".format(
+                round(building.AnnualCost().mean()),
+                round(10000 * 
+                      building.AnnualCost().mean()/building.getRebuildCost().mean()) /
+                100,
+                100 * rate)
+        self.title['text'] = title
+        
+    def get_datasets(self, *args, **kwargs):
+        return [
+            DataSet(
+                type='line',
+                data=self.data,
+                borderColor=rgba(0x34,0x64,0xC7,1.0),
+                backgroundColor=rgba(0,0,0,0.0)
+            )]

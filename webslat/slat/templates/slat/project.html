@@ -161,7 +161,7 @@ function Refresh( ) {
 
     
     {% if chart %} 
-        <p>Mean annual cost: {{ project.model.AnnualCost.mean | floatformat:2 }} (ln std dev: {{ project.model.AnnualCost.sd_ln | floatformat:2}}).</p>
+        <p>Mean annual cost: {{ webproject.Annual_Cost.mean | floatformat:2 }} (ln std dev: {{ webproject.Annual_Cost.sd_ln | floatformat:2}}).</p>
         <div style="position: relative;  width:50%">
         {{ chart.as_html }}
         </div>

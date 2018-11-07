@@ -34,7 +34,7 @@ from jchart.config import Axes, DataSet, rgba, ScaleLabel, Legend, Title
 import seaborn as sns
 import json
 import celery_tasks
-from .tasks import ImportETABS
+from .tasks import ImportETABS, Incremental_Test
 from .etabs import ETABS_preprocess
 import celery
 import tempfile
@@ -42,6 +42,7 @@ import os, sys
 import logging
 from django.template import Context, Template
 import pickle
+from .webmodels import *
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -742,9 +743,7 @@ def project(request, project_id=None):
             groups.append(g.group)
 
         return render(request, 'slat/project.html', { 
-            'form': form,
-            'form1': form1, 
-            'form2': form2, 
+            'webproject': WebProject(project_id),
             'form3': form3, 
             'levels': levels, 
             'chart': chart,
@@ -2969,3 +2968,43 @@ def floor_by_floor(request, project_id):
     return render(request, 'slat/floor_by_floor.html',
                   {'project': project,
                    'data': data})
+
+
+def test(request, project_id=None):
+    if request.method == 'GET':
+        if request.GET.get('job'):
+            raise ValueError("HOW DID THIS HAPPEN?")
+            return render(request, 'slat/test.html', {})
+        else:
+            job = Incremental_Test.delay(project_id)
+
+            project = Project.objects.get(pk=project_id)
+            level_map = []
+            for l in project.levels():
+                this_level = {'label': l.label, 'components': []}
+                groups = Component_Group.objects.filter(demand__level=l, demand__project=project)
+                for g in groups:
+                    this_level['components'].append(g)
+                level_map.append(this_level)
+                    
+            return render(request, 'slat/test.html', {'task_id': job.id, 'level_map': level_map})
+    else:
+        # This should never happen!
+        raise(ValueError("POST not supported"))
+
+def incremental_test_poll_state(request):
+    """ A view to report the progress to the user """
+    data = 'Fail'
+    if request.is_ajax():
+        if 'task_id' in request.POST.keys() and request.POST['task_id']:
+            task_id = request.POST['task_id']
+            task = Incremental_Test.AsyncResult(task_id)
+            data = task.result or task.data
+        else:
+            data = 'No task_id in the request'
+    else:
+        data = 'This is not an ajax request'
+        
+    json_data = json.dumps(data)
+
+    return HttpResponse(json_data, content_type='application/json')

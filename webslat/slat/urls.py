@@ -69,4 +69,6 @@ urlpatterns = [
     url(r'^etabs_confirm/(?P<preprocess_id>[0-9]+)$', views.etabs_confirm, name='etabs_confirm'),
     url(r'^etabs_progress$', views.etabs_progress,name='etabs_progress'),
     url(r'^celery_poll_state$', views.celery_poll_state,name='celery_poll_state'),
+    url(r'^test/(?P<project_id>[0-9]+)$', views.test, name='test'),
+    url(r'^test/incremental_test_poll_state$', views.incremental_test_poll_state,name='incremental_test_poll_state'),
 ]
