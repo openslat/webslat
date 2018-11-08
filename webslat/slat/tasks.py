@@ -383,16 +383,12 @@ def Project_Basic_Stats(project_id):
     values['slat_id_mean_annual_cost'] = "{:>.2f}".format(project.model().AnnualCost().mean())
     current_task.update_state(meta=values)
     values['slat_id_sd_ln_annual_cost'] = "{:>.2f}".format(project.model().AnnualCost().sd_ln())
-    c = IMCostChart(project).as_html()
-    d = re.search("Chart\(ctx, *(\{[^;]*)", c, re.MULTILINE).groups()[0][0:-1]
-    e = d.replace("true", "True").replace("false", "False")
-    values['slat_id_cost_chart'] = eval(e)
+    current_task.update_state(meta=values)
+    
+    values['slat_id_cost_chart'] = Command_String_from_Chart(IMCostChart(project))
     current_task.update_state(meta=values)
 
-    c  = IMPDFChart(project).as_html()
-    d = re.search("Chart\(ctx, *(\{[^;]*)", c, re.MULTILINE).groups()[0][0:-1]
-    e = d.replace("true", "True").replace("false", "False")
-    values['slat_id_pdf_chart'] = eval(e)
+    values['slat_id_pdf_chart'] = Command_String_from_Chart(IMPDFChart(project))
     
     values['slat_id_status'] = 'Done'
     current_task.update_state(meta=values)
@@ -418,11 +414,7 @@ def Incremental_Test(project_id):
         value['slat_comp_id_{}_u'.format(c.id)] = models['U'].E_annual_cost()
         current_task.update_state(meta=value)
 
-    c = ExpectedLoss_Over_Time_Chart(project).as_html()
-
-    d = re.search("Chart\(ctx, *(\{[^;]*)", c, re.MULTILINE).groups()[0][0:-1]
-    e = d.replace("true", "True").replace("false", "False")
-    value['slat_id_chart'] = eval(e)
+    value['slat_id_chart'] = Command_String_from_Chart(ExpectedLoss_Over_Time_Chart(project))
     value['slat_id_status'] = 'Done'
     
     eprint(project.model().AnnualCost())

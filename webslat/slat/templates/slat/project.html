@@ -50,6 +50,8 @@ function Refresh( ) {
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
 <script type="text/javascript">
   var poll_xhr;
+  var status_count = 0;
+  var status_flag = false;
   var cost_chart = false;
   var pdf_chart = false;
 
@@ -67,7 +69,18 @@ function Refresh( ) {
             csrfmiddlewaretoken: "{{csrf_token}}",
         },
        success: function(result) {
-             console.log(result);
+             status_count++;
+             if (status_count == 5) {
+                status_count = 0;
+                status_flag = !status_flag;
+                element = document.getElementById('slat_id_status')
+                if (status_flag) {
+                   element.style.color = 'red';
+                } else {
+                   element.style.color = 'black';
+                }
+             }
+
              for (f in result) {
                   console.log(f + ": " + result[f]);
                   element = document.getElementById(f)
@@ -79,16 +92,17 @@ function Refresh( ) {
                       cost_chart = true
                       ctx =  document.getElementById(f).getContext("2d")
                       new Chart(ctx, result[f])
-                  } else {
-                      if (element) {
-                          element.textContent = result[f];
-                      }
+                  } else if (element) {
+                      element.textContent = result[f];
                   }
             }
             if (result.slat_id_status == 'Done') {
-                console.log("STOPPING")
                 clearInterval(refreshIntervalId);
-  };
+                element = document.getElementById('slat_id_status')
+                if (element) {
+                    element.hidden = true;
+                };
+            }
       }});
     }
 
@@ -214,6 +228,7 @@ function Refresh( ) {
 
     
     {% if task_id %} 
+        <p><b><span id="slat_id_status"></span></b></p>
         <p>Mean annual cost: <span id="slat_id_mean_annual_cost">(waiting)</span>
           ln std dev: <span id="slat_id_sd_ln_annual_cost">(waiting)</span></p>
           <hr/>
@@ -221,7 +236,7 @@ function Refresh( ) {
             <canvas class="chart" id="slat_id_cost_chart"></canvas> 
           </div>
           <div style="position: relative;  width:50%" class="chart-container" style="position: relative; ">
-            <canvas class="chart" id="slat_id_pdf_chart"></canvas> 
+            <canvas class="chart" id="slat_id_pdf_chart">WAITING</canvas> 
           </div>
     {% endif %}
     {% if pdfchart %} 

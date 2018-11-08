@@ -75,11 +75,13 @@ class NewProjectTestCase(TestCase):
         self.assertEqual(pq('input').filter(lambda i: \
                                             pq('input')[i].name == 'sd_ln_cost_collapse')\
                          [0].value, None)
-        text = pq('p')[1].text
-        match = re.match('Mean annual cost: *([0-9]*\.[0-9][0-9]) \(ln std dev: *([0-9]+\.[0-9][0-9])\).', text)
-        self.assertTrue(match)
-        self.assertTrue(abs(float(match.groups()[0]) - 383578) < 1.0)
-        self.assertTrue(abs(float(match.groups()[1]) - 1.75) < 0.5)
+
+        text = pq("#slat_id_mean_annual_cost").text()
+        self.assertEqual(text, '(waiting)')
+        #match = re.match('Mean annual cost: *([0-9]*\.[0-9][0-9]) \(ln std dev: *([0-9]+\.[0-9][0-9])\).', text)
+        #self.assertTrue(match)
+        #self.assertTrue(abs(float(match.groups()[0]) - 383578) < 1.0)
+        #self.assertTrue(abs(float(match.groups()[1]) - 1.75) < 0.5)
 
         # Get the project, and check aspects of it independently of the web
         # presentation. 

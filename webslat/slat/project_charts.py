@@ -4,6 +4,18 @@ import seaborn as sns
 from math import *
 from  .models import *
 
+def Command_String_from_Chart(chart):
+    try:
+        html = chart.as_html()
+        command = re.search("Chart\(ctx, *(\{[^;]*)", html, re.MULTILINE).groups()[0][0:-1]
+        js_command = command.replace("true", "True").replace("false", "False")
+        result = eval(js_command)
+        return result
+    except Exception as e:
+        eprint("Error converting command string for chart")
+        return None
+
+
 class ExpectedLoss_Over_Time_Chart(Chart):
     chart_type = 'line'
     legend = Legend(display=False)
