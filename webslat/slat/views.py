@@ -34,7 +34,7 @@ from jchart.config import Axes, DataSet, rgba, ScaleLabel, Legend, Title
 import seaborn as sns
 import json
 import celery_tasks
-from .tasks import ImportETABS, Incremental_Test
+from .tasks import ImportETABS, Incremental_Test, Project_Basic_Stats
 from .etabs import ETABS_preprocess
 import celery
 import tempfile
@@ -46,140 +46,6 @@ from .webmodels import *
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
-
-class IMPDFChart(Chart):
-    chart_type = 'line'
-    legend = False
-    scales = {
-        'xAxes': [Axes(type='linear', position='bottom')],
-    }
-
-    def __init__(self, project):
-        super(IMPDFChart, self).__init__()
-        self.pdf = []
-
-        # This was copied from earlier code, which calculated the data,
-        # then passed it to the chart. This can be cleaned up to 
-        # eliminate intermediate variables and streamline the process.
-        if project.IM and len(project.model().ComponentsByEDP()) > 0:
-            building = project.model()
-            im_func = project.IM.model()
-                
-            xlimit = im_func.plot_max()*5
-
-            headings = ['IM', 'PDF']
-
-            N = 50
-            for i in range(N + 1):
-                im = i/N * xlimit
-                self.pdf.append({'x': im, 'y': building.pdf(im)})
-
-    def get_datasets(self, *args, **kwargs):
-        datasets = [DataSet(
-            type='line',
-            label='PDF',
-            data=self.pdf,
-            borderColor=rgba(255,99,132,1.0),
-            backgroundColor=rgba(0,0,0,0)
-        )]
-        return datasets
-    
-class IMCostChart(Chart):
-    chart_type = 'line'
-    scales = {
-        'xAxes': [Axes(type='linear',
-                       position='bottom')],
-        'yAxes': [Axes(scaleLabel=ScaleLabel(display=True, labelString="Cost"))]
-    }
-
-    def __init__(self, project):
-        super(IMCostChart, self).__init__()
-        self.repair = []
-        self.demolition = []
-        self.collapse = []
-        if project.IM:
-            self.scales['xAxes'][0]['scaleLabel']=ScaleLabel(
-                display=True, 
-                labelString=project.IM.label())
-
-        # This was copied from earlier code, which calculated the data,
-        # then passed it to the chart. This can be cleaned up to 
-        # eliminate intermediate variables and streamline the process.
-        if project.IM and len(project.model().ComponentsByEDP()) > 0:
-            building = project.model()
-            im_func = project.IM.model()
-                
-            xlimit = im_func.plot_max()
-
-            columns = ['IM', 'Repair']
-            if im_func.DemolitionRate():
-                columns.append('Demolition')
-            if im_func.CollapseRate():
-                columns.append('Collapse')
-
-            # Suppress legend if only one line
-            if (len(columns) == 2):
-                self.legend = Legend(display=False)
-                        
-            data = [columns]
-
-            N = 10
-            for i in range(N + 1):
-                im = i/N * xlimit
-                new_data = [im]
-                costs = building.CostsByFate(im)
-                new_data.append(costs[0].mean())
-                
-                if im_func.DemolitionRate():
-                    new_data.append(costs[1].mean())
-                if im_func.CollapseRate():
-                    new_data.append(costs[2].mean())
-                data.append(new_data)
-
-            headings = data[0]
-            for line in data[1:]:
-                line.reverse()
-                im = line.pop()
-
-                for i in range(1, len(headings)):
-                    cost = line.pop()
-                    heading = headings[i]
-                    if heading == 'Repair':
-                        self.repair.append({'x': im, 'y': cost})
-                    elif heading == 'Demolition':
-                        self.demolition.append({'x': im, 'y': cost})
-                    elif heading == 'Collapse':
-                        self.collapse.append({'x': im, 'y': cost})
-                    else:
-                        raise ValueError("Unknown cost type: {}".format(heading))
-        
-    def get_datasets(self, *args, **kwargs):
-        datasets = []
-        if len(self.repair) > 0:
-            datasets.append(DataSet(
-                type='line',
-                label='Repair',
-                data=self.repair,
-                borderColor=rgba(255,99,132,1.0),
-                backgroundColor=rgba(0,0,0,0)
-            ))
-        if len(self.demolition) > 0:
-            datasets.append(DataSet(
-                type='line',
-                label='Demolition',
-                data=self.demolition,
-                borderColor=rgba(54, 262, 235, 1.0),
-                backgroundColor=rgba(0,0,0,0)
-            ))
-        if len(self.collapse) > 0:
-            datasets.append(DataSet(
-                type='line',
-                label='Collapse',
-                data=self.collapse,
-                borderColor=rgba(74, 192, 191, 1.0),
-                backgroundColor=rgba(0,0,0,0)
-            ))
-        return datasets
 
 class ExpectedLoss_Over_Time_Chart(Chart):
     chart_type = 'line'
@@ -731,8 +597,8 @@ def project(request, project_id=None):
         can_add = project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL
         form = ProjectForm(instance=project, initial=model_to_dict(project))
 
-        if project.model().AnnualCost().mean() > 0:
-            chart = IMCostChart(project)
+        #if project.model().AnnualCost().mean() > 0:
+            #chart = IMCostChart(project)
             #pdf_chart = IMPDFChart(project)
 
         levels = project.num_levels()
@@ -742,8 +608,12 @@ def project(request, project_id=None):
         for g in ProjectGroupPermissions.objects.filter(project=project):
             groups.append(g.group)
 
+        job = Project_Basic_Stats.delay(project_id)
+
         return render(request, 'slat/project.html', { 
+            'task_id': job.id,
             'webproject': WebProject(project_id),
+            'form': form,
             'form3': form3, 
             'levels': levels, 
             'chart': chart,
@@ -2999,6 +2869,23 @@ def incremental_test_poll_state(request):
         if 'task_id' in request.POST.keys() and request.POST['task_id']:
             task_id = request.POST['task_id']
             task = Incremental_Test.AsyncResult(task_id)
+            data = task.result or task.data
+        else:
+            data = 'No task_id in the request'
+    else:
+        data = 'This is not an ajax request'
+        
+    json_data = json.dumps(data)
+
+    return HttpResponse(json_data, content_type='application/json')
+
+def project_basic_status_poll_state(request):
+    """ A view to report the progress to the user """
+    data = 'Fail'
+    if request.is_ajax():
+        if 'task_id' in request.POST.keys() and request.POST['task_id']:
+            task_id = request.POST['task_id']
+            task = Project_Basic_Stats.AsyncResult(task_id)
             data = task.result or task.data
         else:
             data = 'No task_id in the request'

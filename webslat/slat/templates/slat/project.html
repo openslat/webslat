@@ -46,6 +46,59 @@ function Refresh( ) {
 }
 // --!>
 </script>
+{% if project %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+<script type="text/javascript">
+  var poll_xhr;
+  var cost_chart = false;
+  var pdf_chart = false;
+
+  (function(){
+    var poll = function(){
+      var json_dump = "{{ data }}";
+      var task_id = "{{task_id}}";
+
+      console.log(task_id);
+      poll_xhr = $.ajax({
+        url:'project_basic_status_poll_state',
+        type: 'POST',
+        data: {
+            task_id: task_id,
+            csrfmiddlewaretoken: "{{csrf_token}}",
+        },
+       success: function(result) {
+             console.log(result);
+             for (f in result) {
+                  console.log(f + ": " + result[f]);
+                  element = document.getElementById(f)
+                  if (f == 'slat_id_cost_chart' && !cost_chart) {
+                      cost_chart = true
+                      ctx =  document.getElementById(f).getContext("2d")
+                      new Chart(ctx, result[f])
+                  } else if (f == 'slat_id_pdf_chart' && !pdf_chart) {
+                      cost_chart = true
+                      ctx =  document.getElementById(f).getContext("2d")
+                      new Chart(ctx, result[f])
+                  } else {
+                      if (element) {
+                          element.textContent = result[f];
+                      }
+                  }
+            }
+            if (result.slat_id_status == 'Done') {
+                console.log("STOPPING")
+                clearInterval(refreshIntervalId);
+  };
+      }});
+    }
+
+    var refreshIntervalId = setInterval(function() {
+      poll();
+    },100);
+  })();
+</script>
+{% endif %}
+
 {% if form.instance.id %}
   <form action="{% url 'slat:project' form.instance.id %}" method="post">
     {% csrf_token %}
@@ -160,11 +213,16 @@ function Refresh( ) {
 {% endif %}
 
     
-    {% if chart %} 
-        <p>Mean annual cost: {{ webproject.Annual_Cost.mean | floatformat:2 }} (ln std dev: {{ webproject.Annual_Cost.sd_ln | floatformat:2}}).</p>
-        <div style="position: relative;  width:50%">
-        {{ chart.as_html }}
-        </div>
+    {% if task_id %} 
+        <p>Mean annual cost: <span id="slat_id_mean_annual_cost">(waiting)</span>
+          ln std dev: <span id="slat_id_sd_ln_annual_cost">(waiting)</span></p>
+          <hr/>
+          <div style="position: relative;  width:50%" class="chart-container" style="position: relative; ">
+            <canvas class="chart" id="slat_id_cost_chart"></canvas> 
+          </div>
+          <div style="position: relative;  width:50%" class="chart-container" style="position: relative; ">
+            <canvas class="chart" id="slat_id_pdf_chart"></canvas> 
+          </div>
     {% endif %}
     {% if pdfchart %} 
         {{ pdfchart.as_html }}
