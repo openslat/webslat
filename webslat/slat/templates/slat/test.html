@@ -1,0 +1,90 @@
+{% extends "base_site.html" %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
+{{ form.media }}
+{{ form1.media }}
+
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} slat {% endblock %}
+{% block title %}WebSLAT Project 
+{% if form.instance.title_text %}
+    { form.instance.title_text }}
+{% else %}
+ (new)
+{% endif %}
+{% endblock %}
+{% block content_title %}{{ form.instance.title_text }}{% endblock %}
+{% block content %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+<script type="text/javascript">
+  var poll_xhr;
+  var status_count = 0;
+  var status_flag = false;
+  
+  (function(){
+    var poll = function(){
+    var json_dump = "{{ data }}";
+    var task_id = "{{task_id}}";
+
+      poll_xhr = $.ajax({
+        url:'incremental_test_poll_state',
+        type: 'POST',
+        data: {
+            task_id: task_id,
+            csrfmiddlewaretoken: "{{csrf_token}}",
+        },
+       success: function(result) {
+             status_count++;
+             if (status_count == 5) {
+                status_count = 0;
+                status_flag = !status_flag;
+                element = document.getElementById('slat_id_status')
+                if (status_flag) {
+                   element.style.color = 'red';
+                } else {
+                   element.style.color = 'black';
+                }
+             }
+             for (f in result) {
+                  //console.log(f + ": " + result[f]);
+                  element = document.getElementById(f)
+                  if (f == 'slat_id_chart') {
+                      ctx =  document.getElementById(f).getContext("2d")
+                      new Chart(ctx, result[f])
+                  } else {
+                      element.textContent = result[f];
+                  }
+            }
+            if (result.slat_id_status == 'Done') {
+                clearInterval(refreshIntervalId);
+                element = document.getElementById('slat_id_status')
+                if (element) {
+                    element.hidden = true;
+                };
+            }
+      }});
+    }
+
+    var refreshIntervalId = setInterval(function() {
+      poll();
+    },100);
+  })();
+</script>
+
+<p><span id="slat_id_status"></span>
+{% for level in level_map %}
+   <p><b>{{ level.label }}</b></p>
+   <table><tr><th>Component</th><th>X</th><th>Y</th><th>U</th></tr>
+     {% for c in level.components %}
+        <tr><td>{{ c.component.ident }}</td>
+          <td id="slat_comp_id_{{ c.id }}_x"}>---</td>
+          <td id="slat_comp_id_{{ c.id }}_y">---</td>
+          <td id="slat_comp_id_{{ c.id }}_u">---</td>
+        </tr>
+     {% endfor %}
+   </table>
+{% endfor %}
+<hr/>
+<div class="chart-container" style="position: relative; "> <canvas class="chart" id="slat_id_chart"></canvas> </div>
+{% endblock %}
