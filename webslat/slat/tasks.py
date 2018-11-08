@@ -405,15 +405,24 @@ def Incremental_Test(project_id):
     groups = Component_Group.objects.filter(demand__project=project)
     for c in groups:
         models = c.model().Models()
-        value['slat_comp_id_{}_x'.format(c.id)] = models['X'].E_annual_cost()
+        value['slat_id_status'] = "Calculating X cost for group #{} ({}).".format(c.id, c.demand.level.label)
+        current_task.update_state(meta=value)
+        
+        value['slat_comp_id_{}_x'.format(c.id)] = models['Y'].E_annual_cost()
+        value['slat_id_status'] = "Calculating X cost for group #{} ({}).".format(c.id, c.demand.level.label)
         current_task.update_state(meta=value)
 
+        value['slat_id_status'] = "Calculating U cost for group #{} ({}).".format(c.id, c.demand.level.label)
         value['slat_comp_id_{}_y'.format(c.id)] = models['Y'].E_annual_cost()
         current_task.update_state(meta=value)
 
         value['slat_comp_id_{}_u'.format(c.id)] = models['U'].E_annual_cost()
         current_task.update_state(meta=value)
 
+    value['slat_id_status'] = "Plotting Expected Loss Over Time."
+    value['slat_comp_id_{}_y'.format(c.id)] = models['Y'].E_annual_cost()
+    current_task.update_state(meta=value)
+  
     value['slat_id_chart'] = Command_String_from_Chart(ExpectedLoss_Over_Time_Chart(project))
     value['slat_id_status'] = 'Done'
     
