@@ -190,7 +190,7 @@ class IMPDFChart(Chart):
 
             headings = ['IM', 'PDF']
 
-            N = 50
+            N = 20
             for i in range(N + 1):
                 im = i/N * xlimit
                 self.pdf.append({'x': im, 'y': building.pdf(im)})
@@ -205,4 +205,110 @@ class IMPDFChart(Chart):
         )]
         return datasets
     
+
+class ByFloorChart(Chart):
+    chart_type = 'horizontalBar'
+    legend = Legend(display=False)
+    title = Title(display=True, text="Mean Annual Repair Cost by Floor")
+    scales = {
+        'xAxes': [Axes(type='linear', 
+                       position='bottom', 
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Cost ($)'))],
+        'yAxes': [Axes(position='left',
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Floor'))],
+    }
+    
+    def __init__(self, project):
+        super(ByFloorChart, self).__init__()
+        self.labels = []
+        self.costs = []
+        building = project.model()
+        im_func = project.IM.model()
+        
+        data = []
+        rate = 0.06
+        xlimit = im_func.plot_max()
+        levels = {}
+        for l in project.levels():
+            levels[l] = []
+        demand_groups = EDP_Grouping.objects.filter(project=project)
+        for edp in demand_groups:
+            for c in Component_Group.objects.filter(demand=edp):
+                levels[edp.level].append(c)
+        ordered_levels = project.levels()
+        ordered_levels.sort(key=lambda x: x.level, reverse=True)
+        for l in ordered_levels:
+            self.labels.append(l.label)
+            costs = 0
+            for c in levels[l]:
+                costs = costs + c.model().E_annual_cost()
+            self.costs.append("{:>.2f}".format(costs))
+        
+    def get_labels(self, **kwargs):
+        return self.labels
+
+    def get_datasets(self, **kwargs):
+        return [DataSet(label='Bar Chart',
+                        data=self.costs,
+                        borderWidth=1,
+                        borderColor=rgba(0,0,0,1.0),
+                        backgroundColor=rgba(0x34,0x64,0xC7,1.0))]
+
+
+class ByCompPieChart(Chart):
+    chart_type = 'pie'
+    legend = Legend(display=False)
+    title = Title(display=True)
+    
+    def __init__(self, project):
+        super(ByCompPieChart, self).__init__()
+        data = [['Component Type', 'Cost']]
+        groups = {}
+        demands = EDP_Grouping.objects.filter(project=project)
+        for edp in demands:
+            for c in Component_Group.objects.filter(demand=edp):
+                type = c.component.name
+                if not groups.get(type):
+                    groups[type] = 0
+                groups[type] = groups[type] + c.model().E_annual_cost()
+
+        for key in groups.keys():
+            data.append([key, groups[key]])
+        
+        self.title['text'] = 'Mean Annual Repair Cost By Component Type'
+        self.labels = []
+        self.costs = []
+        # Skip the first entry, which are the column labels:
+        for label, costs in data[1:]:
+            self.labels.append(label)
+            self.costs.append("{:>.2f}".format(costs))
+        #self.title['text'] = 'By Floor'
+
+        # Assign colors
+        palette = sns.color_palette(None, len(self.costs))
+        colors = []
+        for r, g, b in palette:
+            r = int(r * 255)
+            g = int(g * 255)
+            b = int(b * 255)
+            colors.append(rgba(r, g, b, 0.5))
+
+        self._colors = colors
+        self._color_map = list(zip(self.labels, self._colors, self.costs))
+
+    def get_color_map(self):
+        return self._color_map
+    
+    def get_labels(self, **kwargs):
+        return self.labels
+
+    def get_datasets(self, **kwargs):
+        return [DataSet(label='Pie Chart',
+                        data=self.costs,
+                        borderWidth=1,
+                        borderColor=rgba(0,0,0,1.0),
+                        backgroundColor=self._colors)]
+
 

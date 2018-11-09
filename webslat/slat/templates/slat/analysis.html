@@ -12,55 +12,124 @@
 {% block title %}WebSLAT: {{ project.title_text }} Analysis{% endblock %}
 {% block content_title %}{{ project.title_text }} Analysis{% endblock %}
 {% block content %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+<script type="text/javascript">
+  var poll_xhr;
+  var status_count = 0;
+  var status_flag = false;
+  var cost_chart = false;
+  var by_floor_chart = false;
+  var by_comp_chart = false;
+  var by_comp_key = false;
+
+  (function(){
+    var poll = function(){
+      var json_dump = "{{ data }}";
+      var task_id = "{{task_id}}";
+
+      console.log(task_id);
+      poll_xhr = $.ajax({
+        url:'project_basic_analysis_poll_state',
+        type: 'POST',
+        data: {
+            task_id: task_id,
+            csrfmiddlewaretoken: "{{csrf_token}}",
+        },
+       success: function(result) {
+             status_count++;
+             if (status_count == 2) {
+                status_count = 0;
+                status_flag = !status_flag;
+                element = document.getElementById('slat_id_status')
+                if (status_flag) {
+                   element.style.color = 'red';
+                } else {
+                   element.style.color = 'black';
+                }
+             }
+
+             for (f in result) {
+                  console.log(f + ": " + result[f]);
+                  element = document.getElementById(f)
+                  if (f == 'slat_id_cost_chart' && !cost_chart) {
+                      cost_chart = true
+                      ctx =  document.getElementById(f).getContext("2d")
+                      new Chart(ctx, result[f])
+                  } else if (f == 'slat_id_by_floor_chart' && !by_floor_chart) {
+                      cost_chart = true
+                      ctx =  document.getElementById(f).getContext("2d")
+                      new Chart(ctx, result[f])
+                  } else if (f == 'slat_id_by_comp_chart' && !by_comp_chart) {
+                      by_comp_chart = true
+                      ctx =  document.getElementById(f).getContext("2d")
+                      new Chart(ctx, result[f])
+                  } else if (f == 'slat_id_by_comp_chart_color_map' && !by_comp_key) {
+                      legend = document.createElement('table')
+                      legend.style.fontSize = "small"
+                      row = legend.insertRow();
+                      cell = document.createElement('th')
+                      cell.appendChild(document.createTextNode('Colour'));
+                      row.appendChild(cell)
+                      cell = document.createElement('th')
+                      cell.appendChild(document.createTextNode('Component'));
+                      row.appendChild(cell)
+                      cell = document.createElement('th')
+                      cell.appendChild(document.createTextNode('Contribution'));
+                      row.appendChild(cell)
+
+                      for (i in  result[f]) {
+                          row = legend.insertRow();
+                          cell = row.insertCell()
+                          cell.style.backgroundColor = result[f][i][1]
+                          cell = row.insertCell()
+                          cell.appendChild(document.createTextNode(result[f][i][0]))
+                          cell = row.insertCell()
+                          value = document.createTextNode(result[f][i][2])
+                          cell.appendChild(value)
+                          cell.style.textAlign = 'right'
+                      }
+                     element.appendChild(legend);
+                  } else if (element) {
+                      element.textContent = result[f];
+                  }
+            }
+            if (result.slat_id_status == 'Done') {
+                clearInterval(refreshIntervalId);
+                element = document.getElementById('slat_id_status')
+                if (element) {
+                    element.hidden = true;
+                };
+            }
+      }});
+    }
+
+    var refreshIntervalId = setInterval(function() {
+      poll();
+    },250);
+  })();
+</script>
 <div class="project_title">
 <b>Project Analysis:</b> {{ project.title_text }}
 </div>
 
-<p><b>Annual Cost Mean:</b> {{ structure.AnnualCost.mean|floatformat:2 }}</p>
-<p><b>Annual Cost SD log:</b> {{ structure.AnnualCost.sd_ln|floatformat:2 }}</p>
+<p><b><span id="slat_id_status"></span></b></p>
+<p>Mean annual cost: <span id="slat_id_mean_annual_cost">(waiting)</span>
+  ln std dev: <span id="slat_id_sd_ln_annual_cost">(waiting)</span></p>
+<hr/>
+<div style="position: relative;  width:50%" class="chart-container" style="position: relative; ">
+  <canvas class="chart" id="slat_id_cost_chart"></canvas> 
+</div>
+<div style="position: relative;  width:50%" class="chart-container" style="position: relative; ">
+  <canvas class="chart" id="slat_id_by_floor_chart"></canvas> 
+</div>
+<div style="position: relative;  width:50%;">
+  <div style="position: relative;  width:50%" class="chart-container" style="position: relative; ">
+    <canvas class="chart" id="slat_id_by_comp_chart"></canvas> 
+  </div>
+  <br/>
+  <span id="slat_id_by_comp_chart_color_map"></span>
+</div>
 
-
-{% if chart %} 
-    <div style="position: relative;  width:50%">
-      {{ chart.as_html }}
-    </div>
-    <hr />
-{% endif %}
-
-{% if by_fate_chart %} 
-    {{ by_fate_chart.as_html }}
-    <hr />
-{% endif %}
-
-{% if s_ns_chart %} 
-    {{ s_ns_chart.as_html }}
-    <hr />
-{% endif %}
-
-{% if by_floor_bar_chart %} 
-    <div style="position: relative;  width:50%">
-      {{ by_floor_bar_chart.as_html }}
-    </div>
-    <hr />
-{% endif %}
-
-{% if by_comp_pie_chart %} 
-    <div style="position: relative;  width:100%;">
-      <table border="0"><tr><td width="50%">
-            {{ by_comp_pie_chart.as_html }}
-        </td>
-        <td>
-          <table style="font-size: small;"><tr><td><b>Colour</b></td><td><b>Amount</b></td><td><b>Component</b></td></tr>
-            {% for item in by_comp_pie_chart_legend %}
-            <tr><td style="background-color:{{item.1}}"></td>
-              <td style="text-align:right">{{item.2|floatformat:2}}</td>
-              <td>{{item.0}}</td></tr>
-            {% endfor %}
-          </table>
-      </td></tr></table>
-    </div>
-    <hr />
-{% endif %}
 <a href="{% url 'slat:floor_by_floor' project.id %}">Detailed Analysis</a><br /><br/>
 <a href="{% url 'slat:project' project.id %}">Return to Project</a><br /><br/>
 <a href="{% url 'slat:index' %}">Return to Project List</a>

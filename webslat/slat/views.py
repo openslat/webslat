@@ -34,7 +34,7 @@ from jchart.config import Axes, DataSet, rgba, ScaleLabel, Legend, Title
 import seaborn as sns
 import json
 import celery_tasks
-from .tasks import ImportETABS, Incremental_Test, Project_Basic_Stats
+from .tasks import *
 from .etabs import ETABS_preprocess
 import celery
 import tempfile
@@ -46,138 +46,6 @@ from .webmodels import *
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
-
-class ExpectedLoss_Over_Time_Chart(Chart):
-    chart_type = 'line'
-    legend = Legend(display=False)
-    title = Title(display=True, text="Expected Loss over Time")
-    scales = {
-        'xAxes': [Axes(type='linear', 
-                       position='bottom', 
-                       scaleLabel=ScaleLabel(display=True, 
-                                             labelString='Years From Present'))],
-        'yAxes': [Axes(type='linear', 
-                       position='left',
-                       scaleLabel=ScaleLabel(display=True, 
-                                             labelString='Expected Loss ($k)'))],
-    }
-
-    def __init__(self, project):
-        super(ExpectedLoss_Over_Time_Chart, self).__init__()
-        building = project.model()
-        im_func = project.IM.model()
-        
-        xlimit = im_func.plot_max()
-        
-        self.data = []
-
-        rate = 0.06
-
-        for i in range(20):
-            year = (i + 1) * 5
-            loss = building.E_cost(year, rate) / 1000
-            self.data.append({'x': year, 'y': loss})
-        
-        if isnan(building.getRebuildCost().mean()):
-            if isnan(building.AnnualCost().mean()):
-                title = "Missing data, somewhere; cost is NAN"
-            else:
-                title = "EAL=${}\nDiscount rate = {}%".format(round(building.AnnualCost().mean()), 100 * rate)
-        else:
-            title = "EAL=${}\n({} % of rebuild cost)\nDiscount rate = {}%".format(
-                round(building.AnnualCost().mean()),
-                round(10000 * 
-                      building.AnnualCost().mean()/building.getRebuildCost().mean()) /
-                100,
-                100 * rate)
-        self.title['text'] = title
-        
-    def get_datasets(self, *args, **kwargs):
-        return [
-            DataSet(
-                type='line',
-                data=self.data,
-                borderColor=rgba(0x34,0x64,0xC7,1.0),
-                backgroundColor=rgba(0,0,0,0.0)
-            )]
-                
-
-class ByFloorChart(Chart):
-    chart_type = 'horizontalBar'
-    legend = Legend(display=False)
-    title = Title(display=True, text="Mean Annual Repair Cost by Floor")
-    scales = {
-        'xAxes': [Axes(type='linear', 
-                       position='bottom', 
-                       scaleLabel=ScaleLabel(display=True, 
-                                             labelString='Cost ($)'))],
-        'yAxes': [Axes(position='left',
-                       scaleLabel=ScaleLabel(display=True, 
-                                             labelString='Floor'))],
-    }
-    
-    def __init__(self, data):
-        super(ByFloorChart, self).__init__()
-        self.labels = []
-        self.costs = []
-        # Skip the first entry, which are the column labels:
-        for label, costs in data[1:]:
-            self.labels.append(label)
-            self.costs.append("{:>.2f}".format(costs))
-        #self.title['text'] = 'By Floor'
-        
-    def get_labels(self, **kwargs):
-        return self.labels
-
-    def get_datasets(self, **kwargs):
-        return [DataSet(label='Bar Chart',
-                        data=self.costs,
-                        borderWidth=1,
-                        borderColor=rgba(0,0,0,1.0),
-                        backgroundColor=rgba(0x34,0x64,0xC7,1.0))]
-
-
-class ByCompPieChart(Chart):
-    chart_type = 'pie'
-    legend = Legend(display=False)
-    title = Title(display=True)
-    
-    def __init__(self, data, title):
-        super(ByCompPieChart, self).__init__()
-        self.title['text'] = title
-        self.labels = []
-        self.costs = []
-        # Skip the first entry, which are the column labels:
-        for label, costs in data[1:]:
-            self.labels.append(label)
-            self.costs.append("{:>.2f}".format(costs))
-        #self.title['text'] = 'By Floor'
-
-        # Assign colors
-        palette = sns.color_palette(None, len(self.costs))
-        colors = []
-        for r, g, b in palette:
-            r = int(r * 255)
-            g = int(g * 255)
-            b = int(b * 255)
-            colors.append(rgba(r, g, b, 0.5))
-
-        self._colors = colors
-        self._color_map = list(zip(self.labels, self._colors, self.costs))
-
-    def get_color_map(self):
-        return self._color_map
-    
-    def get_labels(self, **kwargs):
-        return self.labels
-
-    def get_datasets(self, **kwargs):
-        return [DataSet(label='Pie Chart',
-                        data=self.costs,
-                        borderWidth=1,
-                        borderColor=rgba(0,0,0,1.0),
-                        backgroundColor=self._colors)]
-
 
 
 @login_required
@@ -2161,152 +2029,11 @@ def analysis(request, project_id):
 
     if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
-
-    chart = None
-    jchart = None
-    by_fate_chart = None
-    by_floor_bar_chart = None
-    by_comp_pie_chart = None
-    by_comp_pie_chart_legend = None
-
-    if project.IM:
-        building = project.model()
-        im_func = project.IM.model()
-        
-        xlimit = im_func.plot_max()
-        
-        data = [['Year', 'Loss']]
-
-        rate = 0.06
-        for i in range(20):
-            year = (i + 1) * 5
-            loss = building.E_cost(year, rate) / 1000
-            data.append([year, loss])
-        
-        chart = ExpectedLoss_Over_Time_Chart(project)
-                                              
-        
-        if False:
-            im_func = project.IM.model()
-            columns = ['IM', 'Repair Costs']
-            if im_func.DemolitionRate() or im_func.CollapseRate():
-                columns.append('Total Costs')
-
-            data = [columns]
-            xlimit = im_func.plot_max()
-            for i in range(10):
-                im = i/10 * xlimit
-                new_data = [im]
-                costs = building.CostsByFate(im)
-                new_data.append(costs[0].mean())
-
-
-                if im_func.DemolitionRate() or im_func.CollapseRate():
-                    non_repair_cost = new_data[1]
-                    if im_func.DemolitionRate():
-                        non_repair_cost = non_repair_cost + costs[1].mean()
-                    if im_func.CollapseRate():
-                        non_repair_cost = non_repair_cost + costs[2].mean()
-                    new_data.append(non_repair_cost)
-                data.append(new_data)
-
-            data_source = SimpleDataSource(data=data)
-            by_fate_chart = AreaChart(data_source, options={'title': 'Cost | IM',
-                                                            'hAxis': {'logScale': True, 'title': project.im_label()},
-                                                            'vAxis': {'logScale': True, 'format': 'decimal',
-                                                                      'title': 'Cost ($)'},
-                                                            'pointSize': 5})
-
-        levels = {}
-        for l in project.levels():
-            levels[l] = []
-        demand_groups = EDP_Grouping.objects.filter(project=project)
-        for edp in demand_groups:
-            for c in Component_Group.objects.filter(demand=edp):
-                levels[edp.level].append(c)
-
-        if False:
-            # Split repair costs by Structural and Non-Structural Components
-            im_func = project.IM.model()
-            columns = ['IM', 'Structural', 'Non-Structural', 'Total']
-
-            structural_components = []
-            non_structural_components = []
-            demands = EDP.objects.filter(project=project)
-            for edp in demands:
-                for c in Component_Group.objects.filter(demand=edp):
-                    floors[edp.floor].append(c)
-                    if c.component.structural != 0:
-                        structural_components.append(c)
-                    else:
-                        non_structural_components.append(c)
-
-            data = [columns]
-            xlimit = im_func.plot_max()
-            for i in range(10):
-                im = i/10 * xlimit
-                new_data = [im]
-
-                costs = 0
-                for cg in structural_components:
-                    costs = costs + cg.model().E_Cost_IM(im)
-                new_data.append(costs)
-
-                costs = 0
-                for cg in non_structural_components:
-                    costs = costs + cg.model().E_Cost_IM(im)
-                new_data.append(costs)
-
-                total_cost = building.Cost(im, False)
-                new_data.append(total_cost.mean())
-                data.append(new_data)
-
-            data_source = SimpleDataSource(data=data)
-            s_ns_chart = AreaChart(data_source, options={'title': 'Cost | IM',
-                                                         'hAxis': {'logScale': True, 'title': project.im_label()},
-                                                         'vAxis': {'logScale': True, 'format': 'decimal',
-                                                                   'title': 'Cost ($)' ,
-                                                                   'viewWindow': {'min': 1}},
-                                                         'pointSize': 5})
-
-        columns = ['Floor', 'Cost']
-        data = [columns]
-        
-        xlimit = im_func.plot_max()
-        ordered_levels = project.levels()
-        ordered_levels.sort(key=lambda x: x.level, reverse=True)
-        for l in ordered_levels:
-            costs = 0
-            for c in levels[l]:
-                costs = costs + c.model().E_annual_cost()
-            data.append([l.label, costs])
-
-        by_floor_bar_chart = ByFloorChart(data)
-
-        columns = ['Component Type', 'Cost']
-        data = [columns]
-        groups = {}
-        demands = EDP_Grouping.objects.filter(project=project)
-        for edp in demands:
-            for c in Component_Group.objects.filter(demand=edp):
-                type = c.component.name
-                if not groups.get(type):
-                    groups[type] = 0
-                groups[type] = groups[type] + c.model().E_annual_cost()
-
-        
-        for key in groups.keys():
-            data.append([key, groups[key]])
-
-        by_comp_pie_chart = ByCompPieChart(data, 'Mean Annual Repair Cost By Component Type')
-        by_comp_pie_chart_legend = by_comp_pie_chart.get_color_map()
-
-    return render(request, 'slat/analysis.html', {'project': project, 
-                                                  'structure': project.model(),
-                                                  'chart': chart,
-                                                  'by_floor_bar_chart': by_floor_bar_chart,
-                                                  'by_comp_pie_chart': by_comp_pie_chart,
-                                                  'by_comp_pie_chart_legend': by_comp_pie_chart_legend})
+    
+    job = Project_Basic_Analysis.delay(project_id)
+    return render(request, 'slat/analysis.html', 
+                  {'project': project, 
+                   'task_id': job.id})
 
 class ComponentAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
@@ -2886,6 +2613,23 @@ def project_basic_status_poll_state(request):
         if 'task_id' in request.POST.keys() and request.POST['task_id']:
             task_id = request.POST['task_id']
             task = Project_Basic_Stats.AsyncResult(task_id)
+            data = task.result or task.data
+        else:
+            data = 'No task_id in the request'
+    else:
+        data = 'This is not an ajax request'
+        
+    json_data = json.dumps(data)
+
+    return HttpResponse(json_data, content_type='application/json')
+
+def project_basic_analysis_poll_state(request, project_id):
+    """ A view to report the progress to the user """
+    data = 'Fail'
+    if request.is_ajax():
+        if 'task_id' in request.POST.keys() and request.POST['task_id']:
+            task_id = request.POST['task_id']
+            task = Project_Basic_Analysis.AsyncResult(task_id)
             data = task.result or task.data
         else:
             data = 'No task_id in the request'

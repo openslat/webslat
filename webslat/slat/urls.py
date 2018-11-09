@@ -72,4 +72,5 @@ urlpatterns = [
     url(r'^test/(?P<project_id>[0-9]+)$', views.test, name='test'),
     url(r'^test/incremental_test_poll_state$', views.incremental_test_poll_state,name='incremental_test_poll_state'),
     url(r'^project/project_basic_status_poll_state$', views.project_basic_status_poll_state,name='project_basic_status_poll_state'),
+    url(r'^project/(?P<project_id>[0-9]+)/project_basic_analysis_poll_state$', views.project_basic_analysis_poll_state,name='project_basic_analysis_poll_state'),
 ]
