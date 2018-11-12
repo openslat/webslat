@@ -66,6 +66,9 @@
                 if (element) {
                     element.hidden = true;
                 };
+            } else if (RegExp("^Error:").test(result.slat_id_status)) {
+                if (element) element.style.color = 'red';
+                clearInterval(refreshIntervalId);
             }
       }});
     }

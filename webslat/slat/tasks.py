@@ -423,76 +423,79 @@ def Project_Basic_Analysis(project_id):
         values['slat_id_by_comp_chart_color_map'] = by_comp_chart.get_color_map()
         values['slat_id_status'] = 'Done'
     else:
-        values = {'slat_id_status': 'No hazard defined.'}
+        values = {'slat_id_status': 'Error: No hazard defined.'}
     return values
 
 @task
 def Project_Detailed_Analysis(project_id):
-    s = time.time()
-    value = {'slat_id_status': 'Calculating...'}
-    
     project = Project.objects.get(pk=project_id)
+    if project.IM:
+        s = time.time()
+        value = {'slat_id_status': 'Calculating...'}
 
-    groups = Component_Group.objects.filter(demand__project=project)
-    level_totals = {}
-    for l in project.levels():
-        level_totals[l.id] = {'X': 0, 'Y': 0, 'U': 0, 'Total': 0}
 
-    for c in groups.order_by('?'):
-        models = c.model().Models()
-        level_id = c.demand.level.id
-        
-        value['slat_id_status'] = "Calculating X cost for group #{} ({}).".format(c.id, c.demand.level.label)
+        groups = Component_Group.objects.filter(demand__project=project)
+        level_totals = {}
+        for l in project.levels():
+            level_totals[l.id] = {'X': 0, 'Y': 0, 'U': 0, 'Total': 0}
+
+        for c in groups.order_by('?'):
+            models = c.model().Models()
+            level_id = c.demand.level.id
+
+            value['slat_id_status'] = "Calculating X cost for group #{} ({}).".format(c.id, c.demand.level.label)
+            current_task.update_state(meta=value)
+
+            cost = models['X'].E_annual_cost()
+            current_cost = cost
+            value['slat_comp_id_{}_x'.format(c.id)] = cost
+            value['slat_comp_id_{}_total'.format(c.id)] = current_cost
+            level_totals[level_id]['X'] = level_totals[level_id]['X'] + cost
+            level_totals[level_id]['Total'] = level_totals[level_id]['Total'] + cost
+            value['slat_comp_id_flr_{}_x'.format(level_id)] = level_totals[level_id]['X']
+            value['slat_comp_id_flr_{}_total'.format(level_id)] = level_totals[level_id]['Total']
+
+            value['slat_id_status'] = "Calculating Y cost for group #{} ({}).".format(c.id, c.demand.level.label)
+            current_task.update_state(meta=value)
+
+            cost = models['Y'].E_annual_cost()
+            current_cost += cost
+            value['slat_comp_id_{}_y'.format(c.id)] = cost
+            value['slat_comp_id_{}_total'.format(c.id)] = current_cost
+            level_totals[level_id]['Y'] = level_totals[level_id]['Y'] + cost
+            level_totals[level_id]['Total'] = level_totals[level_id]['Total'] + cost
+            value['slat_comp_id_flr_{}_y'.format(level_id)] = level_totals[level_id]['Y']
+            value['slat_comp_id_flr_{}_total'.format(level_id)] = level_totals[level_id]['Total']
+            value['slat_id_status'] = "Calculating U cost for group #{} ({}).".format(c.id, c.demand.level.label)
+            current_task.update_state(meta=value)
+
+            cost = models['Y'].E_annual_cost()
+            current_cost += cost
+            value['slat_comp_id_{}_total'.format(c.id)] = current_cost
+            value['slat_comp_id_{}_u'.format(c.id)] = models['U'].E_annual_cost()
+            value['slat_comp_id_{}_total'.format(c.id)] = current_cost
+            level_totals[level_id]['U'] = level_totals[level_id]['U'] + cost
+            value['slat_comp_id_flr_{}_u'.format(level_id)] = level_totals[level_id]['U']
+            value['slat_comp_id_flr_{}_total'.format(level_id)] = level_totals[level_id]['Total']
+            level_totals[level_id]['Total'] = level_totals[level_id]['Total'] + cost
+            current_task.update_state(meta=value)
+
+        value['slat_id_status'] = 'Calculating annual cost.'
+        current_task.update_state(meta=value)
+        annual_cost = project.model().AnnualCost()
+        value['slat_id_mean_annual_cost'] = annual_cost.mean()
+        value['slat_id_sd_ln_annual_cost'] = annual_cost.sd_ln()
+        value['slat_id_status'] = 'Expected Annual Losses'
         current_task.update_state(meta=value)
 
-        cost = models['X'].E_annual_cost()
-        current_cost = cost
-        value['slat_comp_id_{}_x'.format(c.id)] = cost
-        value['slat_comp_id_{}_total'.format(c.id)] = current_cost
-        level_totals[level_id]['X'] = level_totals[level_id]['X'] + cost
-        level_totals[level_id]['Total'] = level_totals[level_id]['Total'] + cost
-        value['slat_comp_id_flr_{}_x'.format(level_id)] = level_totals[level_id]['X']
-        value['slat_comp_id_flr_{}_total'.format(level_id)] = level_totals[level_id]['Total']
-        
-        value['slat_id_status'] = "Calculating Y cost for group #{} ({}).".format(c.id, c.demand.level.label)
+        value['slat_id_status'] = "Plotting Expected Loss Over Time."
         current_task.update_state(meta=value)
 
-        cost = models['Y'].E_annual_cost()
-        current_cost += cost
-        value['slat_comp_id_{}_y'.format(c.id)] = cost
-        value['slat_comp_id_{}_total'.format(c.id)] = current_cost
-        level_totals[level_id]['Y'] = level_totals[level_id]['Y'] + cost
-        level_totals[level_id]['Total'] = level_totals[level_id]['Total'] + cost
-        value['slat_comp_id_flr_{}_y'.format(level_id)] = level_totals[level_id]['Y']
-        value['slat_comp_id_flr_{}_total'.format(level_id)] = level_totals[level_id]['Total']
-        value['slat_id_status'] = "Calculating U cost for group #{} ({}).".format(c.id, c.demand.level.label)
-        current_task.update_state(meta=value)
+        value['slat_id_chart'] = Command_String_from_Chart(ExpectedLoss_Over_Time_Chart(project))
+        value['slat_id_status'] = 'Done'
 
-        cost = models['Y'].E_annual_cost()
-        current_cost += cost
-        value['slat_comp_id_{}_total'.format(c.id)] = current_cost
-        value['slat_comp_id_{}_u'.format(c.id)] = models['U'].E_annual_cost()
-        value['slat_comp_id_{}_total'.format(c.id)] = current_cost
-        level_totals[level_id]['U'] = level_totals[level_id]['U'] + cost
-        value['slat_comp_id_flr_{}_u'.format(level_id)] = level_totals[level_id]['U']
-        value['slat_comp_id_flr_{}_total'.format(level_id)] = level_totals[level_id]['Total']
-        level_totals[level_id]['Total'] = level_totals[level_id]['Total'] + cost
-        current_task.update_state(meta=value)
-
-    value['slat_id_status'] = 'Calculating annual cost.'
-    current_task.update_state(meta=value)
-    annual_cost = project.model().AnnualCost()
-    value['slat_id_mean_annual_cost'] = annual_cost.mean()
-    value['slat_id_sd_ln_annual_cost'] = annual_cost.sd_ln()
-    value['slat_id_status'] = 'Expected Annual Losses'
-    current_task.update_state(meta=value)
-    
-    value['slat_id_status'] = "Plotting Expected Loss Over Time."
-    current_task.update_state(meta=value)
-  
-    value['slat_id_chart'] = Command_String_from_Chart(ExpectedLoss_Over_Time_Chart(project))
-    value['slat_id_status'] = 'Done'
-    
+    else:
+        value = {'slat_id_status': 'Error: No hazard defined.'}
     return value
         
 @task
