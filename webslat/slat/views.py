@@ -42,7 +42,6 @@ import os, sys
 import logging
 from django.template import Context, Template
 import pickle
-from .webmodels import *
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
