@@ -2548,23 +2548,20 @@ def floor_by_floor(request, project_id):
     if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
         raise PermissionDenied
 
-    data = []
-    for level in project.levels():
-        this_level = {'level': level, 'components': []}
-        total_costs = {'X': 0, 'Y': 0, 'U': 0}
-        for cg in Component_Group.objects.filter(demand__project=project,
-                                                 demand__level=level).\
-                                                 order_by("component"):
-            total_costs['X'] += cg.model().Deaggregated_E_annual_cost()['X']
-            total_costs['Y'] += cg.model().Deaggregated_E_annual_cost()['Y']
-            total_costs['U'] += cg.model().Deaggregated_E_annual_cost()['U']
-            this_level['total_costs'] = total_costs
-            this_level['components'].append(cg)
-        data.append(this_level)
-
+    project = Project.objects.get(pk=project_id)
+    level_map = []
+    for l in project.levels():
+        this_level = {'label': l.label, 'id': l.id, 'components': []}
+        groups = Component_Group.objects.filter(demand__level=l, demand__project=project)
+        for g in groups:
+            this_level['components'].append(g)
+        level_map.append(this_level)
+                    
+    job = Project_Detailed_Analysis.delay(project_id)
     return render(request, 'slat/floor_by_floor.html',
                   {'project': project,
-                   'data': data})
+                   'level_map': level_map,
+                   'task_id': job.id})
 
 
 def test(request, project_id=None):
@@ -2630,6 +2627,23 @@ def project_basic_analysis_poll_state(request, project_id):
         if 'task_id' in request.POST.keys() and request.POST['task_id']:
             task_id = request.POST['task_id']
             task = Project_Basic_Analysis.AsyncResult(task_id)
+            data = task.result or task.data
+        else:
+            data = 'No task_id in the request'
+    else:
+        data = 'This is not an ajax request'
+        
+    json_data = json.dumps(data)
+
+    return HttpResponse(json_data, content_type='application/json')
+
+def project_detailed_analysis_poll_state(request, project_id):
+    """ A view to report the progress to the user """
+    data = 'Fail'
+    if request.is_ajax():
+        if 'task_id' in request.POST.keys() and request.POST['task_id']:
+            task_id = request.POST['task_id']
+            task = Project_Detailed_Analysis.AsyncResult(task_id)
             data = task.result or task.data
         else:
             data = 'No task_id in the request'
