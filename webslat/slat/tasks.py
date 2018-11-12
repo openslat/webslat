@@ -401,26 +401,29 @@ def Project_Basic_Stats(project_id):
 @task
 def Project_Basic_Analysis(project_id):
     project = Project.objects.get(pk=project_id)
-    values = {'slat_id_status': 'Calculating annual cost.'}
-    current_task.update_state(meta=values)
-    annual_cost = project.model().AnnualCost()
-    values['slat_id_mean_annual_cost'] = "{:>.2f}".format(annual_cost.mean())
-    values['slat_id_sd_ln_annual_cost'] = "{:>.2f}".format(annual_cost.sd_ln())
-    values['slat_id_status'] = 'Expected Annual Losses'
-    current_task.update_state(meta=values)
-    
-    values['slat_id_cost_chart'] = Command_String_from_Chart(ExpectedLoss_Over_Time_Chart(project))
-    values['slat_id_status'] = 'Plotting Loss by Floor'
-    current_task.update_state(meta=values)
+    if project.IM:
+        values = {'slat_id_status': 'Calculating annual cost.'}
+        current_task.update_state(meta=values)
+        annual_cost = project.model().AnnualCost()
+        values['slat_id_mean_annual_cost'] = "{:>.2f}".format(annual_cost.mean())
+        values['slat_id_sd_ln_annual_cost'] = "{:>.2f}".format(annual_cost.sd_ln())
+        values['slat_id_status'] = 'Expected Annual Losses'
+        current_task.update_state(meta=values)
+        
+        values['slat_id_cost_chart'] = Command_String_from_Chart(ExpectedLoss_Over_Time_Chart(project))
+        values['slat_id_status'] = 'Plotting Loss by Floor'
+        current_task.update_state(meta=values)
 
-    values['slat_id_by_floor_chart'] = Command_String_from_Chart(ByFloorChart(project))
-    values['slat_id_status'] = 'Plotting Loss by Component'
-    current_task.update_state(meta=values)
+        values['slat_id_by_floor_chart'] = Command_String_from_Chart(ByFloorChart(project))
+        values['slat_id_status'] = 'Plotting Loss by Component'
+        current_task.update_state(meta=values)
 
-    by_comp_chart = ByCompPieChart(project)
-    values['slat_id_by_comp_chart'] = Command_String_from_Chart(by_comp_chart)
-    values['slat_id_by_comp_chart_color_map'] = by_comp_chart.get_color_map()
-    values['slat_id_status'] = 'Done'
+        by_comp_chart = ByCompPieChart(project)
+        values['slat_id_by_comp_chart'] = Command_String_from_Chart(by_comp_chart)
+        values['slat_id_by_comp_chart_color_map'] = by_comp_chart.get_color_map()
+        values['slat_id_status'] = 'Done'
+    else:
+        values = {'slat_id_status': 'No hazard defined.'}
     return values
 
 @task
