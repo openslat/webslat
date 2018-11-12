@@ -480,7 +480,6 @@ def project(request, project_id=None):
 
         return render(request, 'slat/project.html', { 
             'task_id': job.id,
-            'webproject': WebProject(project_id),
             'form': form,
             'form3': form3, 
             'levels': levels, 
