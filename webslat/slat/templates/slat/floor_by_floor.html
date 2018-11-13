@@ -89,7 +89,8 @@
 {% for level in level_map %}
    <p><b>{{ level.label }}</b></p>
     <p><b><a href={% url 'slat:level_cgroups' project.id level.id %}>{{ level.label }}</a></b>
-      contributes <span id="slat_level_contrib_id_{{level.id }}"></span>
+      contributes $<span id="slat_level_contrib_id_{{level.id }}">--.--</span>
+      (<span id="slat_level_pct_id_{{level.id }}">--.--</span>%)
       to the total annual expected cost.
     <table border="1">
       <tr>

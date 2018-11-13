@@ -469,7 +469,7 @@ def Project_Detailed_Analysis(project_id):
             value['slat_id_status'] = "Calculating U cost for group #{} ({}).".format(c.id, c.demand.level.label)
             current_task.update_state(meta=value)
 
-            cost = models['Y'].E_annual_cost()
+            cost = models['U'].E_annual_cost()
             current_cost += cost
             value['slat_comp_id_{}_total'.format(c.id)] = current_cost
             value['slat_comp_id_{}_u'.format(c.id)] = models['U'].E_annual_cost()
@@ -479,12 +479,16 @@ def Project_Detailed_Analysis(project_id):
             value['slat_comp_id_flr_{}_total'.format(level_id)] = level_totals[level_id]['Total']
             level_totals[level_id]['Total'] = level_totals[level_id]['Total'] + cost
             current_task.update_state(meta=value)
+            value['slat_level_contrib_id_{}'.format(level_id)] = level_totals[level_id]['Total']
 
         value['slat_id_status'] = 'Calculating annual cost.'
         current_task.update_state(meta=value)
         annual_cost = project.model().AnnualCost()
         value['slat_id_mean_annual_cost'] = annual_cost.mean()
         value['slat_id_sd_ln_annual_cost'] = annual_cost.sd_ln()
+        for l in project.levels():
+            value['slat_level_pct_id_{}'.format(l.id)] = 100 * level_totals[l.id]['Total']/annual_cost.mean()
+
         value['slat_id_status'] = 'Expected Annual Losses'
         current_task.update_state(meta=value)
 
