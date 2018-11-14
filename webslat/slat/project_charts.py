@@ -2,8 +2,12 @@ from jchart import Chart
 from jchart.config import Axes, DataSet, rgba, ScaleLabel, Legend, Title
 import seaborn as sns
 from math import *
-from  .models import *
+from .models import *
+import sys
 
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+    
 def Command_String_from_Chart(chart):
     try:
         html = chart.as_html()
@@ -13,6 +17,7 @@ def Command_String_from_Chart(chart):
         return result
     except Exception as e:
         eprint("Error converting command string for chart")
+        eprint(e)
         return None
 
 
@@ -312,3 +317,75 @@ class ByCompPieChart(Chart):
                         backgroundColor=self._colors)]
 
 
+class IMDemandPlot(Chart):
+    chart_type = 'line'
+    legend = Legend(display=True)
+    title = Title(display=True, text="Hazard Curve")
+    scales = {
+        'xAxes': [Axes(type='linear', 
+                       position='bottom', 
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Intensity Measure'))],
+        'yAxes': [Axes(type='linear', 
+                       position='left',
+                       scaleLabel=ScaleLabel(display=True, 
+                                             labelString='Demand'))]
+    }
+    
+    
+    def __init__(self, project, demand_type, direction):
+        super(IMDemandPlot, self).__init__()
+
+        if demand_type == 'D':
+            demand_label  = 'Drift (radians)'
+        elif demand_type == 'A':
+            demand_label  = 'Acceleration (g)'
+        else:
+            raise ValueError("UNKNOWN DEMAND TYPE: {}".format(demand_type))
+            
+        self.title['text'] = "{} {}".format(project.title_text, demand_label)
+        self.scales['yAxes'][0]['scaleLabel']['labelString'] = demand_label
+        xlimit = project.IM.model().plot_max()
+
+        palette = sns.color_palette(None, len(project.levels()))
+        colors = []
+        for r, g, b in palette:
+            r = int(r * 255)
+            g = int(g * 255)
+            b = int(b * 255)
+            colors.append(rgba(r, g, b, 0.5))
+
+        self._colors = colors
+        N = 25
+        self._data = []
+        for level in project.levels():
+            points = []
+            try:
+                grouping = EDP_Grouping.objects.get(project=project, 
+                                                    type=demand_type,
+                                                    level=level)
+                if direction == 'X':
+                    demand_func = grouping.demand_x.model()
+                elif direction == 'Y':
+                    demand_func = grouping.demand_y.model()
+                else:
+                    raise ValueError("UNKNOWN DIRECTION: {}".format(direction))
+                
+                for i in range(1,N +1):
+                    x = i/N * xlimit
+                    points.append({'x': x, 'y': demand_func.Median(x)})
+                self._data.append({'label':level.label, 'points': points})
+            except:
+                continue
+            
+    def get_datasets(self, *args, **kwargs):
+        result = []
+        for d in range(len(self._data)):
+            result.append(DataSet(
+                type='line',
+                label=self._data[d]['label'],
+                data=self._data[d]['points'],
+                borderColor=self._colors[d],
+                backgroundColor=rgba(0,0,0,0))
+            )
+        return(result)

@@ -2651,3 +2651,32 @@ def project_detailed_analysis_poll_state(request, project_id):
     json_data = json.dumps(data)
 
     return HttpResponse(json_data, content_type='application/json')
+
+@login_required
+def project_demand_plots(request, project_id):
+    project = get_object_or_404(Project, pk=project_id)
+
+    if not project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL:
+        raise PermissionDenied
+    
+    job = Project_Demand_Plots.delay(project_id)
+    return render(request, 'slat/demand_plots.html', 
+                  {'project': project, 
+                   'task_id': job.id})
+
+def project_demand_plots_poll_state(request, project_id):
+    """ A view to report the progress to the user """
+    data = 'Fail'
+    if request.is_ajax():
+        if 'task_id' in request.POST.keys() and request.POST['task_id']:
+            task_id = request.POST['task_id']
+            task = Project_Demand_Plots.AsyncResult(task_id)
+            data = task.result or task.data
+        else:
+            data = 'No task_id in the request'
+    else:
+        data = 'This is not an ajax request'
+        
+    json_data = json.dumps(data)
+
+    return HttpResponse(json_data, content_type='application/json')

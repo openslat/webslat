@@ -316,14 +316,14 @@ def ImportETABS(user_id, preprocess_data_id):
         for im in im_range:
             drift = float(curves.loc[
                 lambda x: map(
-                    lambda a, b: a==im and b=='Story1', 
+                    lambda a, b: a==im and b==level.label,
                     x['IM'], x['Story']
                 )]['Drift_X'])
             dispersion = dispersions.loc[lambda x: x['IM']==im]['βsd']
             EDP_Point(demand=edp_x, im=im, median_x=drift, sd_ln_x=dispersion).save()
             drift = float(curves.loc[
                 lambda x: map(
-                    lambda a, b: a==im and b=='Story1', 
+                    lambda a, b: a==im and b==level.label,
                     x['IM'], x['Story']
                 )]['Drift_Y'])
             EDP_Point(demand=edp_y, im=im, median_x=drift, sd_ln_x=dispersion).save()
@@ -345,7 +345,7 @@ def ImportETABS(user_id, preprocess_data_id):
         for im in im_range:
             accel = float(curves.loc[
                 lambda x: map(
-                    lambda a, b: a==im and b=='Story1', 
+                    lambda a, b: a==im and b==level.label,
                     x['IM'], x['Story']
                 )]['Accel_X'])
             dispersion = dispersions.loc[lambda x: x['IM']==im]['βfa']
@@ -353,7 +353,7 @@ def ImportETABS(user_id, preprocess_data_id):
             
             accel = float(curves.loc[
                 lambda x: map(
-                    lambda a, b: a==im and b=='Story1', 
+                    lambda a, b: a==im and b==level.label,
                     x['IM'], x['Story']
                 )]['Accel_Y'])
             EDP_Point(demand=edp_y, im=im, median_x=accel, sd_ln_x=dispersion).save()
@@ -535,3 +535,26 @@ def Incremental_Test(project_id):
     
     return value
         
+
+
+@task
+def Project_Demand_Plots(project_id):
+    project = Project.objects.get(pk=project_id)
+    values = {'slat_id_status': 'Plotting X Drifts.'}
+    current_task.update_state(meta=values)
+
+    values['slat_id_chart_drift_x'] = Command_String_from_Chart(IMDemandPlot(project, 'D', 'X'))
+    values['slat_id_status'] = 'Plotting Y Drifts.'
+    current_task.update_state(meta=values)
+    
+    values['slat_id_chart_drift_y'] = Command_String_from_Chart(IMDemandPlot(project, 'D', 'Y'))
+    values['slat_id_status'] = 'Plotting X Accelerations.'
+    current_task.update_state(meta=values)
+
+    values['slat_id_chart_accel_x'] = Command_String_from_Chart(IMDemandPlot(project, 'A', 'X'))
+    values['slat_id_status'] = 'Plotting Y Accelerations.'
+    current_task.update_state(meta=values)
+
+    values['slat_id_chart_accel_y'] = Command_String_from_Chart(IMDemandPlot(project, 'A', 'Y'))
+    values['slat_id_status'] = 'Done'
+    return values
