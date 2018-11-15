@@ -558,3 +558,26 @@ def Project_Demand_Plots(project_id):
     values['slat_id_chart_accel_y'] = Command_String_from_Chart(IMDemandPlot(project, 'A', 'Y'))
     values['slat_id_status'] = 'Done'
     return values
+
+@task
+def HandleChange(object):
+    logger = HandleChange.get_logger()
+    logger.info("> HandleChange({})".format(object))
+    logger.info(type(object))
+    if type(object) == Project:
+        object.model().Clear_Cache()
+        object._make_model()
+        object.IM._make_model() # In case collapse or demolition values changed
+    elif type(object) == IM:
+        object._make_model()
+    elif type(object) == EDP:
+        object._make_model()
+    elif type(object) == Component_Group:
+        object._make_model({'X': True, 'Y': True, 'U':True})
+        project = object.demand.project
+        project._make_model()
+    else:
+        logger.info("**** I DON'T KNOW WHAT IT IS ****")
+
+
+

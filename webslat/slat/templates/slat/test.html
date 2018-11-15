@@ -28,7 +28,7 @@
     var task_id = "{{task_id}}";
 
       poll_xhr = $.ajax({
-        url:'incremental_test_poll_state',
+        url: "{% url 'slat:generic_poll_state' %}",
         type: 'POST',
         data: {
             task_id: task_id,

@@ -29,7 +29,7 @@
 
       console.log(task_id);
       poll_xhr = $.ajax({
-        url:'project_basic_analysis_poll_state',
+        url: "{% url 'slat:generic_poll_state' %}",
         type: 'POST',
         data: {
             task_id: task_id,

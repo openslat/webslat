@@ -31,7 +31,7 @@
 
       console.log(task_id);
       poll_xhr = $.ajax({
-        url:'celery_poll_state',
+        url: "{% url 'slat:generic_poll_state' %}",
         type: 'POST',
         data: {
             task_id: task_id,

@@ -33,6 +33,7 @@ from jchart import Chart
 from jchart.config import Axes, DataSet, rgba, ScaleLabel, Legend, Title
 import seaborn as sns
 import json
+from celery.result import AsyncResult
 import celery_tasks
 from .tasks import *
 from .etabs import ETABS_preprocess
@@ -2385,23 +2386,6 @@ def password_change(request):
         'form': form
     })
 
-def celery_poll_state(request):
-    """ A view to report the progress to the user """
-    data = 'Fail'
-    if request.is_ajax():
-        if 'task_id' in request.POST.keys() and request.POST['task_id']:
-            task_id = request.POST['task_id']
-            task = ImportETABS.AsyncResult(task_id)
-            data = task.result or task.data
-        else:
-            data = 'No task_id in the request'
-    else:
-        data = 'This is not an ajax request'
-
-    json_data = json.dumps(data)
-
-    return HttpResponse(json_data, content_type='application/json')
-
 def etabs_confirm(request, preprocess_id):
     preprocess_data = ETABS_Preprocess.objects.get(id=preprocess_id)
     if request.POST:
@@ -2584,74 +2568,6 @@ def test(request, project_id=None):
         # This should never happen!
         raise(ValueError("POST not supported"))
 
-def incremental_test_poll_state(request):
-    """ A view to report the progress to the user """
-    data = 'Fail'
-    if request.is_ajax():
-        if 'task_id' in request.POST.keys() and request.POST['task_id']:
-            task_id = request.POST['task_id']
-            task = Incremental_Test.AsyncResult(task_id)
-            data = task.result or task.data
-        else:
-            data = 'No task_id in the request'
-    else:
-        data = 'This is not an ajax request'
-        
-    json_data = json.dumps(data)
-
-    return HttpResponse(json_data, content_type='application/json')
-
-def project_basic_status_poll_state(request):
-    """ A view to report the progress to the user """
-    data = 'Fail'
-    if request.is_ajax():
-        if 'task_id' in request.POST.keys() and request.POST['task_id']:
-            task_id = request.POST['task_id']
-            task = Project_Basic_Stats.AsyncResult(task_id)
-            data = task.result or task.data
-        else:
-            data = 'No task_id in the request'
-    else:
-        data = 'This is not an ajax request'
-        
-    json_data = json.dumps(data)
-
-    return HttpResponse(json_data, content_type='application/json')
-
-def project_basic_analysis_poll_state(request, project_id):
-    """ A view to report the progress to the user """
-    data = 'Fail'
-    if request.is_ajax():
-        if 'task_id' in request.POST.keys() and request.POST['task_id']:
-            task_id = request.POST['task_id']
-            task = Project_Basic_Analysis.AsyncResult(task_id)
-            data = task.result or task.data
-        else:
-            data = 'No task_id in the request'
-    else:
-        data = 'This is not an ajax request'
-        
-    json_data = json.dumps(data)
-
-    return HttpResponse(json_data, content_type='application/json')
-
-def project_detailed_analysis_poll_state(request, project_id):
-    """ A view to report the progress to the user """
-    data = 'Fail'
-    if request.is_ajax():
-        if 'task_id' in request.POST.keys() and request.POST['task_id']:
-            task_id = request.POST['task_id']
-            task = Project_Detailed_Analysis.AsyncResult(task_id)
-            data = task.result or task.data
-        else:
-            data = 'No task_id in the request'
-    else:
-        data = 'This is not an ajax request'
-        
-    json_data = json.dumps(data)
-
-    return HttpResponse(json_data, content_type='application/json')
-
 @login_required
 def project_demand_plots(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
@@ -2664,13 +2580,13 @@ def project_demand_plots(request, project_id):
                   {'project': project, 
                    'task_id': job.id})
 
-def project_demand_plots_poll_state(request, project_id):
+def generic_poll_state(request):
     """ A view to report the progress to the user """
     data = 'Fail'
     if request.is_ajax():
         if 'task_id' in request.POST.keys() and request.POST['task_id']:
             task_id = request.POST['task_id']
-            task = Project_Demand_Plots.AsyncResult(task_id)
+            task = AsyncResult(task_id)
             data = task.result or task.data
         else:
             data = 'No task_id in the request'
@@ -2678,5 +2594,12 @@ def project_demand_plots_poll_state(request, project_id):
         data = 'This is not an ajax request'
         
     json_data = json.dumps(data)
-
     return HttpResponse(json_data, content_type='application/json')
+
+
+@receiver(post_save, sender=Project)
+@receiver(post_save, sender=IM)
+@receiver(post_save, sender=Component_Group)
+def queue_task(sender, instance, created, **kwargs):
+    eprint("> queue_task({}, {}, {}, {})".format(sender, instance, created, kwargs))
+    HandleChange.delay(object=instance)
