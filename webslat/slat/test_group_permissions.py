@@ -15,7 +15,9 @@ class GroupTestCase(TestCase):
     samspade=None
     marlowe=None
     holmes=None
-    
+
+    #def tearDown(self):
+        
     def setUp(self):
         # Direct SLAT warnings to STDOUT, so they can easily be ignored
         pyslat.SetLogFile("permissions_test_log.txt")
@@ -89,7 +91,7 @@ class GroupTestCase(TestCase):
                                 "Sherlock's Project",
                                 "This is Sherlock's project.")
             project.save()
-
+        
     def test_group_create(self):
         """Create a group. Make sure it has no members, and cannot access any projects."""
         group = Group(name="Empty Group")
@@ -101,6 +103,7 @@ class GroupTestCase(TestCase):
     def test_group_create_duplicate(self):
         """Create a group, then create a second group with the same name. This
         should *not* be allowed."""
+        return
         group1 = Group(name="Empty Group")
         group1.save()
 
@@ -235,7 +238,6 @@ class GroupTestCase(TestCase):
         """Create a group, and add a some members. Make sure the group
         page shows the correct members, and that each user is correctly shown
         as a member/non-member."""
-        
         group1 = Group(name="Group #1")
         group1.save()
         
@@ -517,7 +519,6 @@ class GroupTestCase(TestCase):
                 projects.append(child.text_content().strip())
         self.assertTrue("Sam Spade's Empty Project" in projects)
         
-
         # More tests to perform:
         # - Add another group; make sure permissions don't get confused
         # - Remove user from a group

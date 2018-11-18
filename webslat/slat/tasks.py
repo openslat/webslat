@@ -385,14 +385,12 @@ def Project_Basic_Stats(project_id):
     before = time.time()
     values['slat_id_cost_chart'] = Command_String_from_Chart(IMCostChart(project))
     after = time.time()
-    eprint("IMCostChart: {}".format(after - before))
     values['slat_id_status'] = 'Plotting PDF'
     current_task.update_state(meta=values)
 
     before = after
     values['slat_id_pdf_chart'] = Command_String_from_Chart(IMPDFChart(project))
     after = time.time()
-    eprint("IMPDFChart: {}".format(after - before))
     
     values['slat_id_status'] = 'Done'
     current_task.update_state(meta=values)
@@ -560,19 +558,43 @@ def Project_Demand_Plots(project_id):
     return values
 
 @task
-def HandleChange(object):
+def HandleChange(object_class, object_id):
     logger = HandleChange.get_logger()
-    logger.info("> HandleChange({})".format(object))
-    logger.info(type(object))
-    if type(object) == Project:
+    #logger.info("> HandleChange({}, {})".format(object_class, object_id))
+
+    if object_class == Project:
+        object = Project.objects.get(pk=object_id)
         object.model().Clear_Cache()
         object._make_model()
-        object.IM._make_model() # In case collapse or demolition values changed
-    elif type(object) == IM:
+        if object.IM:
+            old_mean_im_collapse = object.IM.model()._collapse and \
+                                   object.IM.model()._collapse.get_mean_X()
+            old_sd_ln_im_collapse = object.IM.model()._collapse and \
+                                    object.IM.model()._collapse.get_sigma_lnX()
+            new_mean_im_collapse = object.mean_im_collapse
+            new_sd_ln_im_collapse = object.sd_ln_im_collapse
+
+            old_mean_im_demolition = object.IM.model()._demolition and \
+                                     object.IM.model()._demolition.get_mean_X()
+            old_sd_ln_im_demolition = object.IM.model()._demolition and \
+                                      object.IM.model()._demolition.get_sigma_lnX()
+            new_mean_im_demolition = object.mean_im_demolition
+            new_sd_ln_im_demolition = object.sd_ln_im_demolition
+
+            if (old_mean_im_collapse != new_mean_im_collapse) or \
+               (old_sd_ln_im_collapse != new_sd_ln_im_collapse) or \
+               (old_mean_im_demolition != new_mean_im_demolition) or \
+               (old_sd_ln_im_demolition != new_sd_ln_im_demolition):
+                logger.info("REMODELING IM")
+                object.IM._make_model() # In case collapse or demolition values changed
+    elif object_class == IM:
+        object = IM.objects.get(pk=object_id)
         object._make_model()
-    elif type(object) == EDP:
+    elif object_class == EDP:
+        object = EDP.objects.get(pk=object_id)
         object._make_model()
-    elif type(object) == Component_Group:
+    elif object_class == Component_Group:
+        object = Component_Group.objects.get(pk=object_id)
         object._make_model({'X': True, 'Y': True, 'U':True})
         project = object.demand.project
         project._make_model()

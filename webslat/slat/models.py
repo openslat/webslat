@@ -355,6 +355,8 @@ class IM(models.Model):
         return "Spectral Acceleration (g)"
     
     def _make_model(self):
+        old_model = pyslat.im.lookup(self.id)
+        
         try:
             project = Project.objects.get(IM=self)
         except:
@@ -420,6 +422,9 @@ class IM(models.Model):
                 pyslat.MakeLogNormalDist(
                     project.mean_im_demolition, pyslat.LOGNORMAL_MU_TYPE.MEAN_X,
                     project.sd_ln_im_demolition, pyslat.LOGNORMAL_SIGMA_TYPE.SD_LN_X))
+
+        if old_model:
+            old_model._func.replace(im_func._func)
 
     def model(self):
         if not pyslat.im.lookup(self.id):

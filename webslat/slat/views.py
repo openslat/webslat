@@ -42,6 +42,7 @@ import tempfile
 import os, sys
 import logging
 from django.template import Context, Template
+from django.db.models.signals import pre_delete
 import pickle
 
 def eprint(*args, **kwargs):
@@ -2597,9 +2598,14 @@ def generic_poll_state(request):
     return HttpResponse(json_data, content_type='application/json')
 
 
+# Notify the Celery task when things change that may require remodelling.
 @receiver(post_save, sender=Project)
 @receiver(post_save, sender=IM)
 @receiver(post_save, sender=Component_Group)
-def queue_task(sender, instance, created, **kwargs):
-    eprint("> queue_task({}, {}, {}, {})".format(sender, instance, created, kwargs))
-    HandleChange.delay(object=instance)
+def queue_task(sender, instance, **kwargs):
+    HandleChange.delay(object_class=type(instance), object_id=instance.id)
+
+@receiver(pre_delete, sender=Component_Group)
+def queue_delete_task(sender, instance, **kwargs):
+    project = instance.demand.project
+    HandleChange.delay(object_class=type(project), object_id=project.id)
