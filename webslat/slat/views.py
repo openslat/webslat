@@ -22,8 +22,8 @@ from  .models import *
 from .component_models import *
 from slat.constants import *
 from django.contrib.auth.decorators import login_required
-from registration.backends.simple.views import RegistrationView
-from registration.forms import RegistrationForm
+from django_registration.backends.one_step.views import RegistrationView
+from django_registration.forms import RegistrationForm
 from django.forms import ModelForm
 import sys
 from random import randint
@@ -2603,9 +2603,11 @@ def generic_poll_state(request):
 @receiver(post_save, sender=IM)
 @receiver(post_save, sender=Component_Group)
 def queue_task(sender, instance, **kwargs):
-    HandleChange.delay(object_class=type(instance), object_id=instance.id)
+    oc = str(type(instance))
+    id = instance.id
+    HandleChange.delay(object_class=oc, object_id=id)
 
 @receiver(pre_delete, sender=Component_Group)
 def queue_delete_task(sender, instance, **kwargs):
     project = instance.demand.project
-    HandleChange.delay(object_class=type(project), object_id=project.id)
+    HandleChange.delay(object_class=str(type(project)), object_id=project.id)

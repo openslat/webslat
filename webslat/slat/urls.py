@@ -6,10 +6,10 @@ from . import component_views
 
 app_name = 'slat'
 urlpatterns = [    
-    url(r'^accounts/register/$',
+    url(r'^accounts/django_register/$',
         views.SLATRegistrationView.as_view(),
         name='registration_register'),
-    url(r'^accounts/', include('registration.backends.simple.urls')),
+    url(r'^accounts/', include('django_registration.backends.one_step.urls')),
     url(r'^password_reset/$', auth_views.PasswordResetView.as_view(), name='password_reset'),
     url(r'^password_reset/done/$', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),
     url(r'^password_change/$', views.password_change, name='password_change'),

@@ -561,8 +561,9 @@ def Project_Demand_Plots(project_id):
 def HandleChange(object_class, object_id):
     logger = HandleChange.get_logger()
     #logger.info("> HandleChange({}, {})".format(object_class, object_id))
-
-    if object_class == Project:
+    #eprint("> HandleChange({}, {})".format(object_class, object_id))
+    
+    if object_class == "<class 'slat.models.Project'>":
         object = Project.objects.get(pk=object_id)
         object.model().Clear_Cache()
         object._make_model()
@@ -587,13 +588,13 @@ def HandleChange(object_class, object_id):
                (old_sd_ln_im_demolition != new_sd_ln_im_demolition):
                 logger.info("REMODELING IM")
                 object.IM._make_model() # In case collapse or demolition values changed
-    elif object_class == IM:
+    elif object_class == "<class 'slat.models.IM'>":
         object = IM.objects.get(pk=object_id)
         object._make_model()
-    elif object_class == EDP:
+    elif object_class == "<class 'slat.models.IM'>":
         object = EDP.objects.get(pk=object_id)
         object._make_model()
-    elif object_class == Component_Group:
+    elif object_class == "<class 'slat.models.Component_Group'>":
         object = Component_Group.objects.get(pk=object_id)
         object._make_model({'X': True, 'Y': True, 'U':True})
         project = object.demand.project
