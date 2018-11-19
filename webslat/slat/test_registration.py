@@ -51,7 +51,7 @@ class RegistrationTestCase(TestCase):
         self.assertEqual(len(User.objects.all()), 0)
 
         # Register a user, with a good password:
-        response = c.post('/slat/accounts/register/',
+        response = c.post('/slat/accounts/django_register/',
                           {
                               'first_name':'Samuel',
                               'last_name':'Spade',
