@@ -33,7 +33,6 @@ Component Groups for {{ level.label }}
 </div>
 {% endif %}
 <hr/>
-<p><b>HERE I AM</b></p>
 {{ form.errors }}
 <table border="1">
   <tr style="border-width:1px; border-style:solid solid hidden solid">
@@ -102,16 +101,16 @@ Component Groups for {{ level.label }}
     </td></tr>
 {% endfor %}
 <tr><td colspan="5"></td>
-  <td bgcolor="lightgray"><b>{{ totals.X|floatformat:2 }}</b></td>
-  <td bgcolor="lightgray"><b>{{ totals.Y|floatformat:2 }}</b></td>
-  <td bgcolor="lightgray"><b>{{ totals.U|floatformat:2 }}</b></td>
-  <td bgcolor="lightgray"><b>{{ totals.composite|floatformat:2 }}</b></td>
+  <td bgcolor="lightgray" title="Total cost of components sensitive to demands in the X direction."><b>{{ totals.X|floatformat:2 }}</b></td>
+  <td bgcolor="lightgray" title="Total cost of components sensitive to demands in the Y direction."><b>{{ totals.Y|floatformat:2 }}</b></td>
+  <td bgcolor="lightgray" title="Total cost of components sensitive to demands in either direction."><b>{{ totals.U|floatformat:2 }}</b></td>
+  <td bgcolor="lightgray" title="Total cost of components, all directions."><b>{{ totals.composite|floatformat:2 }}</b></td>
   <td colspan="3"></td></tr>
 <tr><td colspan="5"></td>
   {% if totals.composite %}
-  <td bgcolor="lightgray" align="right"><b>{{ totals.X|div:totals.composite|mul:100|floatformat:0 }}%</b></td>
-  <td bgcolor="lightgray" align="right"><b>{{ totals.Y|div:totals.composite|mul:100|floatformat:0 }}%</b></td>
-  <td bgcolor="lightgray" align="right"><b>{{ totals.U|div:totals.composite|mul:100|floatformat:0 }}%</b></td>
+  <td bgcolor="lightgray" align="right" title="Relative cost of components sensitive to demands in the X direction."><b>{{ totals.X|div:totals.composite|mul:100|floatformat:0 }}%</b></td>
+  <td bgcolor="lightgray" align="right" title="Relative cost of components sensitive to demands in the Y direction."><b>{{ totals.Y|div:totals.composite|mul:100|floatformat:0 }}%</b></td>
+  <td bgcolor="lightgray" align="right" title="Relative cost of components sensitive to demands in either direction."><b>{{ totals.U|div:totals.composite|mul:100|floatformat:0 }}%</b></td>
   {% else %}
   <td bgcolor="lightgray" align="right"><b>--%</b></td>
   <td bgcolor="lightgray" align="right"><b>--%</b></td>
