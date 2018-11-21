@@ -210,7 +210,10 @@ function Refresh( ) {
     {% if form.instance.IM %}
 	<td><form action="{% url 'slat:levels' form.instance.id %}" method="get">
           {% csrf_token %}
-          <input type="submit" value="Engineering Demands" class="normal"/>
+          <input type="submit" 
+                 title="View and edit the engineering demand parameters."
+                 value="Engineering Demands" 
+                 class="normal"/>
         </form></td>
      {% endif %}
     {% if form.instance.IM %}

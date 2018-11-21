@@ -14,30 +14,43 @@
 {% block content %}
 <div class="project_title">
 Component Groups for {{ level.label }}
+{% if charts2.A and charts2.D %}
+<div>
+<div style="width:50%; float:left" title="Rate-of-Exceedance curve for acceleration.">
+      {{ charts2.A.as_html }}
 </div>
-
-<table width="80%"><tr><td width="50%">
-  {{ charts2.A.as_html }}
-</td><td width="50%">
-  {{ charts2.D.as_html }}
-</td></tr></table>
+<div style="float:right; width:50%" title="Rate-of-Exceedance curve for drift.">
+      {{ charts2.D.as_html }}
+</div>
+</div>
+{% elif charts2.A %}
+<div style="width:50%" title="Rate-of-Exceedance curve for acceleration.">
+      {{ charts2.A.as_html }}
+</div>
+{% else %}
+<div style="width:50%" title="Rate-of-Exceedance curve for drift.">
+      {{ charts2.D.as_html }}
+</div>
+{% endif %}
 <hr/>
+<p><b>HERE I AM</b></p>
 {{ form.errors }}
 <table border="1">
   <tr style="border-width:1px; border-style:solid solid hidden solid">
     <th></th>
-    <th colspan="3" align="center">Count</th>
-    <th align="center">Adjustment</th>
-    <th colspan="4" align="center">E annual cost</th>
+    <th colspan="3" align="center" title="Number of components, grouped by demand direction.">Count</th>
+    <th align="center" title="The cost of components in this group, relative to the default value.">Adjustment</th>
+    <th colspan="4" align="center" title="The mean annual cost for this component group, grouped by demand direction.">E annual cost</th>
     <th colspan="2"></th></tr>
-    <tr><th>Component</th><th style="border-style:none" align="center">X</th>
-      <th style="border-style:none" align="center">Y</th>
-      <th style="border-style:none" align="center">U</th>
-      <th align="center">Factor</th>
-      <th style="border-style:none" align="center">X</th>
-      <th style="border-style:none" align="center">Y</th>
-      <th style="border-style:none" align="center">U</th>
-      <th style="border-style:none" align="center">Total</th>
+    <tr><th title="The component type">Component</th>
+      <th style="border-style:none" align="center" title="Number of components sensitive to demand in the X direction.">X</th>
+      <th style="border-style:none" align="center" title="Number of components sensitive to demand in the Y direction.">Y</th>
+      <th style="border-style:none" align="center" title="Number of components sensitive to demand in either direction.">U</th>
+      <th align="center" title="The cost of components in this group, relative to the default value.">Factor</th>
+      <th style="border-style:none" align="center" title="Cost of the components which are sensitive to demand in the X direction.">X</th>
+      <th style="border-style:none" align="center" title="Cost of the components which are sensitive to demand in the Y direction.">Y</th>
+      <th style="border-style:none" align="center" title="Cost of the components which are sensitive to demand in either direction.">U</th>
+      <th style="border-style:none" align="center" title="Total cost of components in all directions.">Total</th>
       <th colspan="2"></th></tr>
 {% for cg in cgs %}
 <tr><td>
@@ -47,7 +60,7 @@ Component Groups for {{ level.label }}
         <table border="0"><tr><td><b>Comment:</b></td><td><i>{{cg.comment}}</i></td></tr></table>
     {% endif %}
     <!--</a>--></td>
-    <td align="RIGHT">{{ cg.quantity_x }}</td>
+    <td align="RIGHT"><span title="Hover X">{{ cg.quantity_x }}</span></td>
     <td align="RIGHT">{{ cg.quantity_y }}</td>
     <td align="RIGHT">{{ cg.quantity_u }}</td>
    <td align="RIGHT">{{ cg.cost_adj|floatformat:2 }}</td>
@@ -59,7 +72,7 @@ Component Groups for {{ level.label }}
       {% if cg.pattern %} 
         <form action="{% url 'slat:compgrouppattern' project.id cg.pattern.id  %}" method="get">
         {% csrf_token %}
-        <input type="submit" name='edit' value="Edit Pattern" class="table"/>
+        <input type="submit" name='edit' value="Edit Pattern" class="table" title="Click to edit this pattern."/>
         </form>
       {% else %}
         <form action="{% url 'slat:level_compgroup' project.id level.id cg.id  %}" method="get">
@@ -71,19 +84,19 @@ Component Groups for {{ level.label }}
     {% if cg.pattern %}
         <form action="{% url 'slat:level_compgroup' project.id level.id cg.id  %}" method="post">
             {% csrf_token %}
-          <input type="submit" name='separate' value="Separate" class="table"/>
+          <input type="submit" name='separate' value="Separate" class="table" title="Click to separate this instance from the pattern."/>
         </form>
     {% else %}
         <form action="{% url 'slat:level_compgroup' project.id level.id cg.id  %}" method="post">
             {% csrf_token %}
-          <input type="submit" name='delete' value="Delete" class="table"/>
+          <input type="submit" name='delete' value="Delete" class="table" title="Click to delete this component group."/>
         </form>
     {% endif %}
     </td><td>
         {% if not cg.pattern %}
         <form action="{% url 'slat:level_compgroup' project.id level.id cg.id  %}" method="post">
             {% csrf_token %}
-          <input type="submit" name='make_pattern' value="Make Pattern" class="table"/>
+          <input type="submit" name='make_pattern' value="Make Pattern" class="table" title="Click to turn this component group into a pattern."/>
         </form>
     {% endif %}
     </td></tr>

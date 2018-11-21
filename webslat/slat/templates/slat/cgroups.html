@@ -15,10 +15,16 @@ Component Groups for {{ project.title_text }}
 <p>Component Groups for <i>{{ project.title_text }}</i></P>
 {{ form.errors }}
 
-<table border="1"><tr><th>Component</th><th>X</th><th>Y</th><th>U</th><th>Mult</th><th>Levels</th><th></th><th></th></tr>
+<table border="1"><tr><th title="The component ID">Component</th>
+    <th title="The number of components affected by demand in the X direction.">X</th>
+    <th title="The number of components affected by demand in the Y direction.">Y</th>
+    <th title="The number of components affected by non-directional demand.">U</th>
+    <th title="The cost of components in this group, relative to the default value.">Mult</th>
+    <th title="The levels on which this group is found.">Levels</span></th>
+    <th></th><th></th></tr>
 {% for cg in data %}
 <tr>
-  <td align="right">{{ cg.component.ident }}</td>
+  <td align="right" title="{{ cg.component.name }}">{{ cg.component.ident }}</td>
   <td align="right">{{ cg.count_x }}</td>
   <td align="right">{{ cg.count_y }}</td>
   <td align="right">{{ cg.count_u }}</td>
@@ -28,7 +34,8 @@ Component Groups for {{ project.title_text }}
     {{ cg.levels.0.label }}
     {% else %}
     <details>
-      <summary> (on {{ cg.levels|length }} levels)</summary>
+      <summary title="{% for l in project.levels %}{% if l in cg.levels %}{{ l.label }}&#10;{% endif %}{% endfor %}">
+ (on {{ cg.levels|length }} levels)</summary>
       {% for l in project.levels %}
         {% if l in cg.levels %}
            <b>{{ l.label }}</b>
@@ -48,7 +55,7 @@ Component Groups for {{ project.title_text }}
     {% endif %}
     {% csrf_token %}
     <input type="hidden" name="next_url" value={{request.path}}>
-    <input type="submit" name='edit' value="Edit" class="table"/>
+    <input type="submit" name='edit' value="Edit" class="table"/ title="Click to change this component group.">
     </form>
   </td>
   <td>
@@ -59,7 +66,7 @@ Component Groups for {{ project.title_text }}
     {% endif %}
     {% csrf_token %}
     <input type="hidden" name="next_url" value={{request.path}}>
-    <input type="submit" name='delete' value="Delete" class="table"/>
+    <input type="submit" name='delete' value="Delete" class="table" title="Click to delete this component group, and remove it from all floors."/>
     </form>
   </td>
   </tr>
