@@ -91,24 +91,29 @@
 <div class="project_title">
 <b>Demand Plots:</b> {{ project.title_text }}
 </div>
-<table width="100%"><tr><td width="50%">
+<div>
+<div style="width:50%; float:left">
 <div style="position: relative;  width:100%" class="chart-container" style="position: relative; ">
   <canvas class="chart" id="slat_id_chart_drift_x"></canvas> 
 </div>
-</td><td width="50%">
+</div>
+<div style="width:50%; float:right">
 <div style="position: relative;  width:100%" class="chart-container" style="position: relative; ">
   <canvas class="chart" id="slat_id_chart_drift_y"></canvas> 
 </div>
-</td></tr>
-<tr><td width="50%">
+</div>
+</div>
+<div>
+  <div style="width:50%; float:left">
 <div style="position: relative;  width:100%" class="chart-container" style="position: relative; ">
   <canvas class="chart" id="slat_id_chart_accel_x"></canvas> 
 </div>
-</td><td width="50%">
+  </div>
+  <div style="width:50%; float:right">
 <div style="position: relative;  width:100%" class="chart-container" style="position: relative; ">
   <canvas class="chart" id="slat_id_chart_accel_y"></canvas> 
 </div>
-</td></tr></table>
+</div></div>
 <a href="{% url 'slat:floor_by_floor' project.id %}">Detailed Analysis</a><br /><br/>
 <a href="{% url 'slat:project' project.id %}">Return to Project</a><br /><br/>
 <a href="{% url 'slat:index' %}">Return to Project List</a>
