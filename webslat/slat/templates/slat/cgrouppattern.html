@@ -4,6 +4,16 @@
     <link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
     <script src="{% static "js/jquery-3.2.1.min.js" %}"></script>
     <script src="{% static "js/slat-utils.js" %}"></script>
+    <script type="text/javascript">
+      var check_all = function(state) {
+          var items = document.getElementsByTagName("input")
+          for (item in items) {
+              if (items[item].type == 'checkbox') {
+                  items[item].checked = state
+              }
+           }
+      }
+    </script>
     {{ form.media }}
 {% endblock %}
 
@@ -31,6 +41,9 @@
       </table>
     <br />
     <hr/>
+    <a href="javascript:check_all(true)" class="link_button">Select All Levels</a>
+    <a href="javascript:check_all(false)" class="link_button">Unselect All Levels</a>
+
     {% if level_form %}
         <table><tr><td>
         {{ level_form }}
