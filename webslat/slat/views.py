@@ -395,13 +395,17 @@ class ETABS_Confirm_Form(Form):
 
             self.fields['Manual_Tx']= FloatField(required=False)
             self.fields['Manual_Tx'].widget.attrs['disabled'] = 'true'
+            self.fields['Manual_Tx'].widget.attrs['title'] = "Choose 'Manual X Period' to specify your own X period here."
             self.fields['Manual_Ty']= FloatField(required=False)
             self.fields['Manual_Ty'].widget.attrs['disabled'] = 'true'
+            self.fields['Manual_Ty'].widget.attrs['title'] = "Choose 'Manual Y Period' to specify your own Y period here."
 
             self.fields['Period'] = ChoiceField(choices=[['TX', 'Tx'], ['TY', 'Ty'], ['AVERAGE', 'Average'], ['MANUAL', 'Manual']])
             self.fields['Period'].widget.attrs['onchange'] = 'Refresh_Period()'
+            self.fields['Period'].widget.attrs['title'] = 'Select the period to use for the hazard curve.'
             self.fields['Manual_Period'] = FloatField(required=False)
             self.fields['Manual_Period'].widget.attrs['disabled'] = 'true'
+            self.fields['Manual_Period'].widget.attrs['title'] = "Choose 'Manual' to specify your own hazard curve period here."
             
             drift_choices = list(map(lambda x: [x, x], pickle.loads(preprocess_data.drift_choices)))
             self.fields['x_drift_case'] = ChoiceField(choices=drift_choices)
