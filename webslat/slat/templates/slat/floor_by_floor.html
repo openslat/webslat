@@ -83,8 +83,8 @@
 <b>Project Analysis:</b> {{ project.title_text }}
 </div>
 
-<p><b>Annual Cost Mean:</b><span id="slat_id_mean_annual_cost"></span></p>
-<p><b>Annual Cost SD log:</b><span id="slat_id_sd_ln_annual_cost"></span></p>
+<p title="Mean annual cost of repair for the structure."><b>Annual Cost Mean:</b><span id="slat_id_mean_annual_cost"></span></p>
+<p title="Standard deviation of the log of the cost of repair for the structure."><b>Annual Cost SD log:</b><span id="slat_id_sd_ln_annual_cost"></span></p>
 
 {% for level in level_map %}
    <p><b>{{ level.label }}</b></p>
@@ -100,16 +100,16 @@
         <th colspan="4" align="center" style="background:darkgray">Cost</th>
       </tr>
       <tr>
-        <th style="background:lightgray">ID</th>
-        <th style="background:lightgray">Name</th>
-        <th style="background:darkgray">Adj</th>
-        <th style="background:lightgray">X</th>
-        <th style="background:lightgray">Y</th>
-        <th style="background:lightgray">U</th>
-        <th style="background:darkgray">X</th>
-        <th style="background:darkgray">X</th>
-        <th style="background:darkgray">U</th>
-        <th style="background:darkgray">Total</th>
+        <th style="background:lightgray" title="Compenent Identifier">ID</th>
+        <th style="background:lightgray" title="Component Name">Name</th>
+        <th style="background:darkgray" title="The cost of components in this group, relative to the default value.">Adj</th>
+        <th style="background:lightgray" title="Number of components sensitive to demand in the X direction.">X</th>
+        <th style="background:lightgray" title="Number of components sensitive to demand in the Y direction.">Y</th>
+        <th style="background:lightgray" title="Number of components sensitive to demand in either direction.">U</th>
+        <th style="background:darkgray" title="Cost of the components which are sensitive to demand in the X direction.">X</th>
+        <th style="background:darkgray" title="Cost of the components which are sensitive to demand in the Y direction.">Y</th>
+        <th style="background:darkgray" title="Cost of the components which are sensitive to demand in either direction.">U</th>
+        <th style="background:darkgray" title="Total cost of this component group, in all directions.">Total</th>
       </tr>
      {% for c in level.components %}
         <tr><td>{{ c.component.ident }}</td>
@@ -131,10 +131,18 @@
         </tr>
      {% endfor %}
      <tr><td colspan="6" align="right">Total</td>
-        <td align="right" style="background:darkgray" id="slat_comp_id_flr_{{ level.id }}_x">-.--</td>
-        <td align="right" style="background:darkgray" id="slat_comp_id_flr_{{ level.id }}_y">-.--</td>
-        <td align="right" style="background:darkgray" id="slat_comp_id_flr_{{ level.id }}_u">-.--</td>
-        <td align="right" style="background:darkgray" id="slat_comp_id_flr_{{ level.id }}_total">-.--</td>
+        <td align="right" style="background:darkgray" id="slat_comp_id_flr_{{ level.id }}_x"
+            title="Total cost of the components which are sensitive to demand in the X direction.">
+          -.--</td>
+        <td align="right" style="background:darkgray" id="slat_comp_id_flr_{{ level.id }}_y"
+            title="Total cost of the components which are sensitive to demand in the Y direction.">
+          -.--</td>
+        <td align="right" style="background:darkgray" id="slat_comp_id_flr_{{ level.id }}_u"
+            title="Total cost of the components which are sensitive to demand in either direction.">
+          -.--</td>
+        <td align="right" style="background:darkgray" id="slat_comp_id_flr_{{ level.id }}_total"
+            title="Total cost of all component groups on this floor, in all directions."
+            >-.--</td>
         </tr>
       </table>
    {% endfor %}

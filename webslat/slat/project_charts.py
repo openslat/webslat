@@ -50,8 +50,8 @@ class ExpectedLoss_Over_Time_Chart(Chart):
         for i in range(20):
             year = (i + 1) * 5
             loss = building.E_cost(year, rate) / 1000
-            self.data.append({'x': year, 'y': loss})
-        
+            self.data.append({'x': year, 'y': round(loss, 2)})
+
         if isnan(building.getRebuildCost().mean()):
             if isnan(building.AnnualCost().mean()):
                 title = "Missing data, somewhere; cost is NAN"
