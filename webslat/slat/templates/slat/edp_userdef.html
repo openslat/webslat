@@ -13,41 +13,45 @@
 </div>
 
 <p><b>Demand: </b>{{ edp }}</p>
+<div style="width:85vw; height:60vh; ">
+  <div style="width:15%; height:80%; float:left; ">
+    <div>
+        <p><b>Interpolation Method:</b>{{ edp.interpolation_method }}</p>
 
-<table><tr><td valign="top">
-<p><b>Interpolation Method:</b>{{ edp.interpolation_method }}</p>
+        <details>
+        <summary>Supplied Points</summary>
+        <br/>
+        <table border='1'><tr><th>IM</th><th>Median(x)</th><th>SD(ln(x))</th></tr>
+        {% for point in points %}
+          <tr><td align='right'>{{ point.im | floatformat:3 }}</td>
+              <td align='right'>{{ point.median_x | floatformat:3 }}</td>
+              <td align='right'>{{ point.sd_ln_x | floatformat:3 }}</td></tr>
+        {% endfor %}
+        </table>
+        </details>
+        <br/>
 
-    <details>
-    <summary>Supplied Points</summary>
-    <br/>
-    <table border='1'><tr><th>IM</th><th>Median(x)</th><th>SD(ln(x))</th></tr>
-    {% for point in points %}
-      <tr><td align='right'>{{ point.im | floatformat:3 }}</td>
-	  <td align='right'>{{ point.median_x | floatformat:3 }}</td>
-	  <td align='right'>{{ point.sd_ln_x | floatformat:3 }}</td></tr>
-    {% endfor %}
-    </table>
-    </details>
-    <br/>
-
-<a href="{% url 'slat:edp_userdef_edit' project.id edp.id %}" class="link_button">Edit Points</a>
-<br/><br/>
-<a href="{% url 'slat:edp_userdef_import' project.id edp.id %}" class="link_button">Import</a>
-<br/><br/>
-<a href="{% url 'slat:edp_choose' project.id edp.id %}">Change Demand Type</a><br/>
-<hr/>
-<p style="padding-top:200%">
-<a href="{% url 'slat:levels' project.id %}">Return to Levels</a><br />
-<a href="{% url 'slat:project' project.id %}">Return to Project</a><br />
-<a href="{% url 'slat:index' %}">Return to Project List</a>
-</p>
-</td><td valign="top">
-{% if charts %} 
-    <div style="position:absolute; width:30%">
-    {% for chart in charts %}
-        {{ chart.as_html }}
-    {% endfor %}
+        <a href="{% url 'slat:edp_userdef_edit' project.id edp.id %}" class="link_button">Edit Points</a>
+        <br/><br/>
+        <a href="{% url 'slat:edp_userdef_import' project.id edp.id %}" class="link_button">Import</a>
+        <br/><br/>
+        <a href="{% url 'slat:edp_choose' project.id edp.id %}">Change Demand Type</a><br/>
+        <hr/>
     </div>
-{% endif %}
-</td></tr></table>
+    <div style="">
+        <a href="{% url 'slat:levels' project.id %}">Return to Levels</a><br />
+        <a href="{% url 'slat:project' project.id %}">Return to Project</a><br />
+        <a href="{% url 'slat:index' %}">Return to Project List</a>
+    </div>
+  </div>
+  {% if charts %} 
+    <div style="width:80%; height:100%; float:right; ">
+        {% for chart in charts %}
+        <div style="width:40%; height:50%">
+            {{ chart.as_html }}
+        </div>
+        {% endfor %}
+  {% endif %}
+  </div>
+</div>
 {% endblock %}
