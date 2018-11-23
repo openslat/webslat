@@ -11,11 +11,10 @@
 <div class="project_title">
 <b>Project:</b>{{ project.title_text }}
 </div>
-
 <p><b>Demand: </b>{{ edp }}</p>
 <div style="width:85vw; height:60vh; ">
   <div style="width:15%; height:80%; float:left; ">
-    <div>
+    <div style="height:100%; display:table">
         <p><b>Interpolation Method:</b>{{ edp.interpolation_method }}</p>
 
         <details>
@@ -38,7 +37,7 @@
         <a href="{% url 'slat:edp_choose' project.id edp.id %}">Change Demand Type</a><br/>
         <hr/>
     </div>
-    <div style="">
+    <div style="display:table-row">
         <a href="{% url 'slat:levels' project.id %}">Return to Levels</a><br />
         <a href="{% url 'slat:project' project.id %}">Return to Project</a><br />
         <a href="{% url 'slat:index' %}">Return to Project List</a>

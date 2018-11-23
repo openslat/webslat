@@ -10,33 +10,38 @@
 {% block content %}
 <div class="project_title">
 <b>Project:</b>{{ project.title_text }}<br/>
-<b>Demand: </b>{{ edp }}
 </div>
-<table><tr><td>
-<table border="1">
-  <tr><th><b>Attribute</b></th><th><b>a</b></th><th><b>b</b></th></tr>
-  <tr><td>Median(x)</td><td>{{ edp.powercurve.median_x_a }}</td><td> {{ edp.powercurve.median_x_b }}</td></tr>
-  <tr><td>Sd_Ln(x)</td><td>{{ edp.powercurve.sd_ln_x_a }}</td><td> {{ edp.powercurve.sd_ln_x_b }}</td></tr>
-</table>
-<form action="{% url 'slat:edp_power_edit' project.id edp.id  %}" method="get">
-    {% csrf_token %}
-    <input type="submit" name='edit' value="Edit" class="normal"/>
-</form>
-<br/>
+<p><b>Demand: </b>{{ edp }}</p>
 
-<a href="{% url 'slat:edp_choose' project.id edp.id %}">Change Demand Type</a><br/>
-<br/>
-<a href="{% url 'slat:levels' project.id %}">Return to Levels</a><br />
-<a href="{% url 'slat:project' project.id %}">Return to Project</a><br />
-<a href="{% url 'slat:index' %}">Return to Project List</a>
-</td>
-</td><td>
-{% if charts %} 
-    <div style="position: relative;  width:100%">
-    {% for chart in charts %}
-        {{ chart.as_html }}
-    {% endfor %}
+<div style="width:85vw; height:60vh; ">
+  <div style="width:15%; height:80%; float:left; ">
+    <div style="height:100%; display:table">
+      <table border="1">
+        <tr><th><b>Attribute</b></th><th><b>a</b></th><th><b>b</b></th></tr>
+        <tr><td>Median(x)</td><td>{{ edp.powercurve.median_x_a }}</td><td> {{ edp.powercurve.median_x_b }}</td></tr>
+        <tr><td>Sd_Ln(x)</td><td>{{ edp.powercurve.sd_ln_x_a }}</td><td> {{ edp.powercurve.sd_ln_x_b }}</td></tr>
+      </table>
+      <form action="{% url 'slat:edp_power_edit' project.id edp.id  %}" method="get">
+        {% csrf_token %}
+        <input type="submit" name='edit' value="Edit" class="normal"/>
+      </form>
+      <a href="{% url 'slat:edp_choose' project.id edp.id %}">Change Demand Type</a><br/>
+      <hr/>
     </div>
-{% endif %}
-</td></tr></table>
+    <div style="display:table-row">
+        <a href="{% url 'slat:levels' project.id %}">Return to Levels</a><br />
+        <a href="{% url 'slat:project' project.id %}">Return to Project</a><br />
+        <a href="{% url 'slat:index' %}">Return to Project List</a>
+    </div>
+  </div>
+  {% if charts %} 
+    <div style="width:80%; height:100%; float:right; ">
+        {% for chart in charts %}
+        <div style="width:40%; height:50%">
+            {{ chart.as_html }}
+        </div>
+        {% endfor %}
+  {% endif %}
+  </div>
+</div>
 {% endblock %}
