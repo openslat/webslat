@@ -71,18 +71,18 @@ served via Apache.
     
         whoami
 
-10. Give `webslat-user` `sudo` privileges, without requiring a password. On the
+1.  Give `webslat-user` `sudo` privileges, without requiring a password. On the
     VM, as `root`, run:
     
         apt-get install sudo
         echo "webslat-user ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
-11. Test `sudo`:
+2.  Test `sudo`:
     
         whoami
         sudo whoami
 
-12. Run these commands:
+3.  Run these commands:
     
     This will install the packages needed to build and run `OpenSLAT`:
     
@@ -102,14 +102,14 @@ served via Apache.
              curl \
              zile
          sudo curl \
-             http://www.antlr.org/download/antlr-4.7-complete.jar \
-             -o /usr/local/lib/antlr-4.7-complete.jar
+             https://www.antlr.org/download/antlr-4.7.1-complete.jar \
+             -o /usr/local/lib/antlr-4.7.1-complete.jar
         
          sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
         
          sudo pip3 install antlr4-python3-runtime numpy typing
 
-1.  Build the libraries:
+4.  Build the libraries:
     
         if [[ -e SLAT ]]; then
             cd SLAT/linux
@@ -121,39 +121,39 @@ served via Apache.
         fi;
         make
 
-2.  Add the search paths to `.profile`, if they aren't already there;
+5.  Add the search paths to `.profile`, if they aren't already there;
     
         if ! grep -q PYTHONPATH .profile; then
             echo export LD_LIBRARY_PATH=~/SLAT/linux/lib >> .profile
             echo export PYTHONPATH=~/SLAT/linux/lib >> .profile
         fi
 
-3.  Run the unit tests:
+6.  Run the unit tests:
     
         source .profile
         cd SLAT/linux/bin
         ./unit_tests
 
-4.  Run the C++ example2 binary:
+1.  Run the C++ example2 binary:
     
         source .profile
         cd SLAT/parser/example2
         ../../linux/bin/example2
 
-5.  Run the example2 Python script:
+2.  Run the example2 Python script:
     
         source .profile
         cd SLAT/parser/example2
         ./example2.py
 
-1.  Run the example2 SLAT script:
+3.  Run the example2 SLAT script:
     
         source .profile
         cd SLAT/parser/example2
         ../../linux/scripts/SlatInterpreter.py \
             example2.slat
 
-1.  Run these commands:
+4.  Run these commands:
     
     This will install the packages needed for `WebSLAT`:
     
@@ -168,7 +168,7 @@ served via Apache.
              supervisor
         sudo pip3 install virtualenv
 
-2.  Set up a virtual python environment
+5.  Set up a virtual python environment
     
         virtualenv webslat-env
         source webslat-env/bin/activate
@@ -185,16 +185,17 @@ served via Apache.
              pandas \
              celery \
              django-celery \
-             redis
-        pip3 install django-registration
-        pip3 install --upgrade django
+             redis==2.10.5 \
+             django-mathfilters \
+             django-registration \
+             anyjson
         deactivate
 
-3.  Copy the `webslat` files to the VM:
+6.  Copy the `webslat` files to the VM:
     
         git clone http://github.com/mikelygee/webslat
 
-4.  Create a temporary directory. This is where `WebSLAT` will store temporary
+7.  Create a temporary directory. This is where `WebSLAT` will store temporary
     files, in particular for passing to the `celery` worker when importing
     `ETABS` data.
     
@@ -202,7 +203,7 @@ served via Apache.
         chmod 775 webslat/webslat/tmp
         sudo chown :www-data webslat/webslat/tmp
 
-5.  Install the config file to allow `supervisord` to start `celery`
+8.  Install the config file to allow `supervisord` to start `celery`
     automatically, then restart the `supervisor` service to ensure that `celery`
     is running.
     
@@ -212,7 +213,7 @@ served via Apache.
         sudo mv webslat-celery.conf /etc/supervisor/conf.d
         sudo systemctl restart supervisor.service
 
-6.  Initialise the databse:
+9.  Initialise the databse:
     As `webslat-user` on the VM, run:
     
         source .profile
@@ -220,14 +221,14 @@ served via Apache.
         cd webslat/webslat
         python3 manage.py migrate
 
-7.  Run the test scripts:
+10. Run the test scripts:
     
         source .profile
         source webslat-env/bin/activate
         cd webslat/webslat
         ./runtests.sh 2>&1
 
-8.  Seed the databse:
+11. Seed the databse:
     
         source .profile
         source webslat-env/bin/activate
@@ -318,7 +319,7 @@ served via Apache.
     </tr>
     </tbody>
     </table>
-9.  Test the `django` server:
+12. Test the `django` server:
     As `webslat-user` on the VM, run:
     
         # Can't run this from this file, because =runserver= won't return.
@@ -333,12 +334,12 @@ served via Apache.
     to confirm the server is working.
     
     Quit `w3m` and kill the server.
-10. User `apache2` to serve `webslat`. First, run:
+13. User `apache2` to serve `webslat`. First, run:
     
         sudo apt-get -y install apache2 \
              libapache2-mod-wsgi-py3
 
-11. Make sure the `apache2` process can read the database file.
+14. Make sure the `apache2` process can read the database file.
     1.  Assign appropriate permissions:
         
             chmod 664 webslat/webslat/db.sqlite3
@@ -351,10 +352,10 @@ served via Apache.
             sudo chown :www-data /home/webslat-user/webslat/webslat
             sudo chown --recursive :www-data /home/webslat-user/webslat/webslat/slat/static
 
-12. Edit `webslat/webslat/webslat/settings.py`
+15. Edit `webslat/webslat/webslat/settings.py`
     1.  Set `DEBUG` to `False`:
         
-            sed -ie "s/DEBUG.*$/DEBUG = False/" \
+            sed -ie "s/DEBUG *=.*$/DEBUG = False/" \
                 webslat/webslat/webslat/settings.py
     
     2.  Set `ALLOWED_HOSTS`:
@@ -367,14 +368,14 @@ served via Apache.
             sed -ie "s/STATIC_ROOT.*/STATIC_ROOT = os.path.join(BASE_DIR, 'static\/')/" \
                 webslat/webslat/webslat/settings.py
 
-13. Create the static files:
+16. Create the static files:
     
         source .profile
         source webslat-env/bin/activate
         cd webslat/webslat
         ./manage.py collectstatic
 
-14. As `root` on the VM, edit `/etc/apache2/sites-available/000-default.conf`, by
+17. As `root` on the VM, edit `/etc/apache2/sites-available/000-default.conf`, by
     adding, inside the `<VirtualHost...>` tag:
     
         if [ $(grep webslat-user -c /etc/apache2/sites-available/000-default.conf) == 0 ]
@@ -401,16 +402,16 @@ served via Apache.
     
         sudo apache2ctl configtest 2>&1
 
-15. Install `libslat` where `apache2` can find it. Run:
+18. Install `libslat` where `apache2` can find it. Run:
     
         sudo ln -s /home/webslat-user/SLAT/linux/lib/libslat.so /usr/local/lib
         sudo ldconfig
 
-16. Restart the server:
+19. Restart the server:
     
         sudo systemctl restart apache2
 
-17. Connect from the browser:
+20. Connect from the browser:
     
         firefox http://localhost:3080
 

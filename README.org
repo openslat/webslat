@@ -75,6 +75,17 @@ served via Apache.
 		 -p 3022 webslat-user@127.0.0.1 
    #+END_SRC
 
+   #+RESULTS:
+   : # Host [127.0.0.1]:3022 found: line 21
+   : /home/mag109/.ssh/known_hosts updated.
+   : Original contents retained as /home/mag109/.ssh/known_hosts.old
+   : 
+   : Number of key(s) added: 1
+   : 
+   : Now try logging into the machine, with:   "ssh -o 'StrictHostKeyChecking no' -p '3022' 'webslat-user@127.0.0.1'"
+   : and check to make sure that only the key(s) you wanted were added.
+   : 
+
 8. Configure =ssh= to use the correct port and user name by default:
    #+ATTR_LATEX: :options language=bash-local
    #+BEGIN_SRC bash :results output :eval ask
@@ -101,6 +112,7 @@ served via Apache.
 
    #+RESULTS:
    : webslat-user
+
 
 10. Give ~webslat-user~ ~sudo~ privileges, without requiring a password. On the
     VM, as ~root~, run:
@@ -144,14 +156,15 @@ served via Apache.
          curl \
          zile
      sudo curl \
-         http://www.antlr.org/download/antlr-4.7-complete.jar \
-         -o /usr/local/lib/antlr-4.7-complete.jar
+         https://www.antlr.org/download/antlr-4.7.1-complete.jar \
+         -o /usr/local/lib/antlr-4.7.1-complete.jar
 
      sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
 
      sudo pip3 install antlr4-python3-runtime numpy typing
     #+END_SRC
 
+    #+RESULTS:
 
 13. Build the libraries:
     #+ATTR_LATEX: :options language=bash-remote
@@ -167,6 +180,8 @@ served via Apache.
       fi;
       make
      #+END_SRC
+
+     #+RESULTS:
 
 14. Add the search paths to ~.profile~, if they aren't already there;
    #+ATTR_LATEX: :options language=bash-remote
@@ -190,9 +205,8 @@ served via Apache.
     #+END_SRC
 
     #+RESULTS:
-    : Running 58 test cases...
-    : Structure: IM Changed; clearing cache.
-    : Structure: IM Changed; clearing cache.
+    : Running 61 test cases...
+
 
 16. Run the C++ example2 binary:
    #+ATTR_LATEX: :options language=bash-remote
@@ -203,6 +217,8 @@ served via Apache.
      ../../linux/bin/example2
     #+END_SRC
 
+    #+RESULTS:
+
 17. Run the example2 Python script:
    #+ATTR_LATEX: :options language=bash-remote
    #+HEADER: :dir /ssh:webslat-vm:
@@ -212,6 +228,7 @@ served via Apache.
      ./example2.py
     #+END_SRC
 
+    #+RESULTS:
 
 18. Run the example2 SLAT script:
    #+ATTR_LATEX: :options language=bash-remote
@@ -223,6 +240,7 @@ served via Apache.
          example2.slat
     #+END_SRC
 
+    #+RESULTS:
 
 19. Run these commands:
 
@@ -241,6 +259,8 @@ served via Apache.
           supervisor
      sudo pip3 install virtualenv
   #+END_SRC
+
+  #+RESULTS:
 
 20. Set up a virtual python environment
    #+ATTR_LATEX: :options language=bash-remote
@@ -261,10 +281,10 @@ served via Apache.
           pandas \
           celery \
           django-celery \
-          redis \
-          django-mathfilters
-     pip3 install django-registration
-     pip3 install --upgrade django
+          redis==2.10.5 \
+          django-mathfilters \
+          django-registration \
+          anyjson
      deactivate
     #+END_SRC
 
@@ -316,6 +336,8 @@ served via Apache.
      python3 manage.py migrate
    #+END_SRC
 
+   #+RESULTS:
+
 25. Run the test scripts:
    #+ATTR_LATEX: :options language=bash-remote
    #+HEADER: :dir /ssh:webslat-vm:
@@ -325,6 +347,8 @@ served via Apache.
       cd webslat/webslat
       ./runtests.sh 2>&1
     #+END_SRC
+
+    #+RESULTS:
 
 26. Seed the databse:
    #+ATTR_LATEX: :options language=bash-remote
@@ -377,6 +401,8 @@ served via Apache.
           libapache2-mod-wsgi-py3
    #+END_SRC
 
+   #+RESULTS:
+
 27. Make sure the ~apache2~ process can read the database file.
     1. Assign appropriate permissions:
        #+ATTR_LATEX: :options language=bash-remote
@@ -404,7 +430,7 @@ served via Apache.
     1. Set =DEBUG= to =False=:
        #+HEADER: :dir /ssh:webslat-vm:
        #+BEGIN_SRC bash :results output :eval ask
-         sed -ie "s/DEBUG.*$/DEBUG = False/" \
+         sed -ie "s/DEBUG *=.*$/DEBUG = False/" \
              webslat/webslat/webslat/settings.py
        #+END_SRC
 
@@ -437,6 +463,8 @@ served via Apache.
      cd webslat/webslat
      ./manage.py collectstatic
     #+END_SRC
+
+    #+RESULTS:
 
 30. As ~root~ on the VM, edit ~/etc/apache2/sites-available/000-default.conf~, by
     adding, inside the ~<VirtualHost...>~ tag:
