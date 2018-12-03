@@ -45,6 +45,11 @@ th {
    background: lightgray;
 }
 
+td.error {
+   background: red;
+   color: white;
+}
+
 label {
    font-size: large;
    color: black;

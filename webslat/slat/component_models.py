@@ -6,13 +6,18 @@
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
 from __future__ import unicode_literals
+from django.forms import ValidationError, formset_factory
+import sys
 
 from django.db import models
+from django.forms import ModelForm, TextInput, NumberInput, HiddenInput
 
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 class ComponentsTab(models.Model):
     key = models.IntegerField(blank=True, null=False, primary_key=True)
-    ident = models.TextField()  # This field type is a guess.
+    ident = models.TextField(unique=True)  # This field type is a guess.
     name = models.TextField(blank=True, null=True)  # This field type is a guess.
     system = models.TextField(blank=True, null=True)  # This field type is a guess.
     units = models.ForeignKey('UnitsTab', models.DO_NOTHING, db_column='units', blank=True, null=True)
@@ -24,8 +29,10 @@ class ComponentsTab(models.Model):
         db_table = 'components_tab'
 
     def __str__(self):
-        return self.ident + ": " + self.name
-
+        if self.ident:
+            return self.ident + ": " + self.name
+        else:
+            return "<new ComponentsTab entry>"
 
 class CostTab(models.Model):
     rowid = models.IntegerField(blank=True, null=False, primary_key=True)
@@ -93,6 +100,9 @@ class UnitsTab(models.Model):
         managed = False
         db_table = 'units_tab'
 
+    def __str__(self):
+        return self.name
+
 class PACT_CatsTab(models.Model):
     rowid = models.IntegerField(blank=True, null=False, primary_key=True)
     ident = models.TextField(blank=True, null=False)
@@ -142,4 +152,80 @@ class CompRouter(object):
         database.
         """
         return None
+        
+class Component_Form(ModelForm):
+    class Meta:
+        model = ComponentsTab
+        fields = '__all__'
+
+        widgets = {
+            'ident': TextInput(attrs={'title': 'Enter the component identifier.'}),
+            'key': HiddenInput,
+        }
+
+    def clean(self):
+        """Basic validation"""
+        # Use the parent's handling of required fields, etc.
+        #super(Component_Form, self).clean()        
+        cleaned_data = self.cleaned_data
+        eprint("> clean: {}".format(cleaned_data))
+        eprint("ident: {} --> {}".format(self.instance.ident, cleaned_data['ident']))
+
+        errors = {}
+        # Make sure that the identifier hasn't been changed to one that's
+        # already in use:
+        if self.instance.ident != cleaned_data['ident']:
+            if len(ComponentsTab.objects.filter(ident=cleaned_data['ident'])) > 0:
+                if ComponentsTab.objects.get(ident=cleaned_data['ident']) != self:
+                   errors['ident'] = 'Identifier must be unique'
+
+        if len(errors) > 0:
+            raise ValidationError(errors)
+
+class Cost_Form(ModelForm):
+    class Meta:
+        model = CostTab
+        fields = '__all__'
+
+        widgets={'state': HiddenInput,
+                 'component': HiddenInput,
+                 'rowid': HiddenInput}
+
+    def clean(self):
+        """Basic validation"""
+        # Use the parent's handling of required fields, etc.
+        cleaned_data = self.cleaned_data
+    
+        errors = {}
+
+        if cleaned_data['min_cost'] < 0:
+            errors['min_cost'] = 'Min cost must be >= $0.00'
+        if cleaned_data['max_cost'] < 0:
+            errors['max_cost'] = 'Max cost must be >= $0.00'
+
+        if cleaned_data['lower_limit'] < 0:
+            errors['lower_limit'] = 'Lower limit must be >= 0'
+        if cleaned_data['upper_limit'] < 0:
+            errors['upper_limit'] = 'Upper limit must be >= 0'
+
+        if len(errors) > 0:
+            raise ValidationError(errors)
+
+class Fragility_Form(ModelForm):
+    class Meta:
+        model = FragilityTab
+        fields = '__all__'
+
+        widgets={'state': HiddenInput,
+                 'component': HiddenInput,
+                 'rowid': HiddenInput}
+
+    def clean(self):
+        """Basic validation"""
+        # Use the parent's handling of required fields, etc.
+        cleaned_data = self.cleaned_data
+        eprint("> Fragility_Form::clean: {}".format(cleaned_data))
+
+        if cleaned_data['median'] < 0:
+            raise ValidationError({'median': 'Median must be >= 0.0'})
         
