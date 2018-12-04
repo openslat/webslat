@@ -1,0 +1,190 @@
+{% extends "base_site.html" %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
+    <script src="{% static "js/jquery-3.2.1.min.js" %}"></script>
+    <script src="{% static "js/slat-utils.js" %}"></script>
+    {{ form.media }}
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} slat {% endblock %}
+{% block title %}WebSLAT: Component {{ component.ident }}{% endblock %}
+{% block content_title %}WebSLAT: Component {{ component.ident }}{% endblock %}
+{% block content %}
+    {% if not component_form.is_valid or not cost_form.is_valid or not fragility_form.is_valid %}
+        {{ component_form.is_valid }}
+    {{ cost_form.is_valid }}
+    {{ fragility_form.is_valid }}
+        <p><b>Errors:</b></p>
+        {{ component_form.errors }}
+        {% for e in cost_form.errors %}
+            {% if e %}
+                <p><i>{{ e }}</i></p>
+            {% endif %}
+        {% endfor %}
+        {% for e in fragility_form.errors %}
+            {% if e %}
+                <p><i>{{ e }}</i></p>
+            {% endif %}
+        {% endfor %}
+        <hr/>
+    {% endif %}
+{% if component_form.instance.key %}
+    <form action="{% url 'slat:edit_component' component_form.instance.key %}" method="post">
+{% else %}
+    <form action="{% url 'slat:edit_component' %}" method="post">
+{% endif %}
+    {% csrf_token %}
+{{ component_form.key }}
+<table>
+  <tr><th>{{ component_form.ident.label }}</th><td>{{ component_form.ident }}</td>
+    {% if component_form.errors.ident %}
+    <td class="error">{{ component_form.errors.ident }}</td>
+    {% endif %}
+  </tr>
+  <tr><th>{{ component_form.name.label }}</th><td>{{ component_form.name }}</td>
+    {% if component_form.errors.name %}
+    <td class="error">{{ component_form.errors.name }}</td>
+    {% endif %}
+  </tr>
+  <tr><th>{{ component_form.system.label }}</th><td>{{ component_form.system }}</td>
+    {% if component_form.errors.system %}
+    <td class="error">{{ component_form.errors.system }}</td>
+    {% endif %}
+  </tr>
+  <tr><th>{{ component_form.units.label }}</th><td>{{ component_form.units }}</td>
+    {% if component_form.errors.units %}
+    <td class="error">{{ component_form.errors.units }}</td>
+    {% endif %}
+  </tr>
+  <tr><th>{{ component_form.demand.label }}</th><td>{{ component_form.demand }}</td>
+    {% if component_form.errors.demand %}
+    <td class="error">{{ component_form.errors.demand }}</td>
+    {% endif %}
+  </tr>
+  <tr><th>{{ component_form.structural.label }}</th><td>{{ component_form.structural }}</td>
+    {% if component_form.errors.structural %}
+    <td class="error">{{ component_form.errors.structural }}</td>
+    {% endif %}
+  </tr>
+</table>
+<hr/>
+ {{ cost_form.management_form }}
+<table border="1">
+  <tr><th style="border-bottom-style:hidden"></th>
+    <th colspan="2" align="center" style="border-bottom-style:hidden; border-left-width:medium"">Lower</th>
+    <th colspan="2" align="center" style="border-bottom-style:hidden; border-left-width:medium"">Upper</th>
+    <th style="border-bottom-style:hidden; border-left-width:medium""></th></tr>
+  <tr><th>State</th><th align="center" style="border-right-style:hidden; border-left-width:medium">Quantity</th>
+    <th align="center">Per-Unit Cost</th>
+    <th align="center" style="border-right-style:hidden; border-left-width:medium">Quantity</th>
+    <th align="center">Per-Unit Cost</th>
+    <th align="center" style="border-left-width:medium">Dispersion</th>
+  </tr>
+{% for cf in cost_form %}
+  {{ cf.rowid }}{{ cf.state }}{{ cf.component }}
+  <tr><td>{{ k }}</td></tr>
+  <tr style="background-color:{% cycle 'lightgray' 'white' as stripe %}"><td>DS{{ cf.state.value }}</td>
+    <td style="border-right-style:hidden; border-left-width:medium">{{ cf.lower_limit }}</td><td>{{ cf.max_cost }}</td>
+    <td style="border-right-style:hidden; border-left-width:medium">{{ cf.upper_limit }}</td><td>{{ cf.min_cost }}</td>
+    <td style="border-left-width:medium">{{ cf.dispersion }}</td>
+    </tr>
+  <tr style="background-color:{{ stripe }}">
+    {% with forloop.counter|cut:" " as index %}
+        {% with cost_form.errors|slice:index|last as errors %}
+            {% if errors %}
+                <td></td> 
+                  {% if errors.lower_limit %}
+                      <td class="error">{{ errors.lower_limit }}</td>
+                  {% else %}
+                      <td></td>
+                  {% endif %}
+                  {% if errors.max_cost %}
+                      <td class="error">{{ errors.max_cost }}</td>
+                  {% else %}
+                      <td></td>
+                  {% endif %}
+                  {% if errors.upper_limit %}
+                      <td class="error">{{ errors.upper_limit }}</td>
+                  {% else %}
+                      <td></td>
+                  {% endif %}
+                  {% if errors.min_cost %}
+                      <td class="error">{{ errors.min_cost }}</td>
+                  {% else %}
+                      <td></td>
+                  {% endif %}
+                  {% if errors.dispersion %}
+                      <td class="error">{{ errors.dispersion }}</td>
+                  {% else %}
+                      <td></td>
+                  {% endif %}
+              {% endif %}
+        {% endwith %}
+    {% endwith %}
+    </td>
+  </tr>
+{% endfor %}
+</table>
+{% comment %}
+{{ cost_form.as_table }}
+{% endcomment %}
+<hr/>
+<table>
+ {{ fragility_form.management_form }}
+  <tr><th>State</th><th>Description</th><th>Repairs</th><th>Median EDP</th><th>Dispersion</th><th>Image</th></tr>
+  {% for i in fragility_form %}
+     {{ i.rowid }}{{ i.state }}
+     <tr style="background-color:{% cycle 'lightgray' 'white' as stripe %}"><td>DS{{ i.state.value }}{{ i.state }}</td>
+       <td>{{ i.description }}</td>
+       <td>{{ i.repairs }}</td>
+       <td>{{ i.median }}</td>
+       <td>{{ i.beta }}</td>
+       <td>
+         {% if i.image %}
+         <img src="{% static "slat/images/" %}{{ i.instance.component.ident }}/{{ i.image.value }}"/>
+         {% endif %}
+       </td></tr>
+    {% with forloop.counter|cut:" " as index %}
+        {% with fragility_form.errors|slice:index|last as errors %}
+            {% if errors %}
+                <tr style="background-color:{{ stripe }}">
+                    <td></td> 
+                      {% if errors.description %}
+                          <td class="error">{{ errors.description }}</td>
+                      {% else %}
+                          <td></td>
+                      {% endif %}
+                      {% if errors.repairs %}
+                          <td class="error">{{ errors.repairs }}</td>
+                      {% else %}
+                          <td></td>
+                      {% endif %}
+                      {% if errors.median %}
+                          <td class="error">{{ errors.median }}</td>
+                      {% else %}
+                          <td></td>
+                      {% endif %}
+                      {% if errors.beta %}
+                          <td class="error">{{ errors.beta }}</td>
+                      {% else %}
+                          <td></td>
+                      {% endif %}
+                          <td></td>
+                  </tr>
+              {% endif %}
+        {% endwith %}
+    {% endwith %}
+  {% endfor %}
+</table>
+<br/>
+<hr/>
+{% if component_form.instance.key %}
+    <input type="submit" value="Submit Changes" class="normal"/>
+{% else %}
+    <input type="submit" value="Create Component" class="normal"/>
+{% endif %}
+</form>
+    <input type="submit" name="cancel" value="Cancel" />
+    <input type="submit" value="Back to Component List" />
+{% endblock %}
