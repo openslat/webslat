@@ -163,6 +163,10 @@ class Component_Form(ModelForm):
             'key': HiddenInput,
         }
 
+        def __init(self, **args):
+            super(ModelForm, self).__init__(args)
+            self.fields['component'].widget.attrs['onchange'] = 'change_component()'
+
     def clean(self):
         """Basic validation"""
         # Use the parent's handling of required fields, etc.
@@ -207,6 +211,8 @@ class Cost_Form(ModelForm):
             errors['lower_limit'] = 'Lower limit must be >= 0'
         if cleaned_data['upper_limit'] < 0:
             errors['upper_limit'] = 'Upper limit must be >= 0'
+        if cleaned_data['dispersion'] < 0:
+            errors['dispersion'] = 'Dispersion must be >= 0'
 
         if len(errors) > 0:
             raise ValidationError(errors)
@@ -224,8 +230,18 @@ class Fragility_Form(ModelForm):
         """Basic validation"""
         # Use the parent's handling of required fields, etc.
         cleaned_data = self.cleaned_data
-        eprint("> Fragility_Form::clean: {}".format(cleaned_data))
 
-        if cleaned_data['median'] < 0:
-            raise ValidationError({'median': 'Median must be >= 0.0'})
+        errors = {}
+
+        if cleaned_data['description'] == "":
+            errors['description'] = "Description required."
+        if cleaned_data['repairs'] == "":
+            errors['repairs'] = "Repairs required."
+        if cleaned_data['median'] <= 0:
+            errors['median'] = "Median must be > 0."
+        if cleaned_data['beta'] <= 0:
+            errors['beta'] = "Beta must be > 0."
+
+        if len(errors) > 0:
+            raise ValidationError(errors)
         

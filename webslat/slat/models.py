@@ -1028,6 +1028,7 @@ class PatternForm(Form):
         self.fields['comment'].widget.attrs['title'] = 'Notes about this component.'
         self.fields['category'].widget.attrs['title'] = 'Narrow the component search by category.'
         self.fields['component'].widget.attrs['title'] = 'Choose the type of component.'
+        self.fields['component'].widget.attrs['onchange'] = 'change_component()'
         
     quantity_x = IntegerField(label="X Count")
     quantity_y = IntegerField(label="Y Count")

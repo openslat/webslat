@@ -55,6 +55,7 @@
        <a href= "{{ cancel_url }}" class="link_button">Cancel</a>
     </td></tr></table>
     </form>
+
     <br/>
 {% endif %}
 	   
@@ -63,7 +64,7 @@
 <a href="{% url 'slat:index' %}">Return to Project List</a>
 <hr/>
 
-<div id="like_count"></div> 
+<div id="component_description"></div> 
 {% endblock %}
 {% block footer %}
 {{ pattern_form.media }}
