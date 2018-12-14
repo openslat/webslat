@@ -8,6 +8,7 @@
 from __future__ import unicode_literals
 from django.forms import ValidationError, formset_factory
 import sys
+import numpy as np
 
 from django.db import models
 from django.forms import ModelForm, TextInput, NumberInput, HiddenInput
@@ -49,7 +50,16 @@ class CostTab(models.Model):
         db_table = 'cost_tab'
 
     def __str__(self):
-        return "CostTab: {} {}".format(self.rowid, self.component)
+        result =  "CostTab: {:4} {:4} {:10} {:4} {:5.3f} {:4} {:5.3f} {:5.3f}".format(
+            self.rowid or "<none>",
+            self.state or "<none>",
+            self.component.ident or "<none>", 
+            self.lower_limit or np.nan, 
+            self.max_cost or np.nan,
+            self.upper_limit or np.nan,
+            self.min_cost or np.nan,
+            self.dispersion or np.nan)
+        return result
 
 
 class DemandsTab(models.Model):
@@ -90,7 +100,10 @@ class FragilityTab(models.Model):
         db_table = 'fragility_tab'
 
     def __str__(self):
-        return "FragilityTab: {} {}".format(self.rowid, self.component)
+        return "FragilityTab: {:4} {:4} {:10}".format(
+            self.rowid or "<none>",
+            self.state or "<none>",
+            self.component.ident or "<none>")
 
 class UnitsTab(models.Model):
     key = models.IntegerField(blank=True, null=False, primary_key=True)
@@ -172,8 +185,6 @@ class Component_Form(ModelForm):
         # Use the parent's handling of required fields, etc.
         #super(Component_Form, self).clean()        
         cleaned_data = self.cleaned_data
-        eprint("> clean: {}".format(cleaned_data))
-        eprint("ident: {} --> {}".format(self.instance.ident, cleaned_data['ident']))
 
         errors = {}
         # Make sure that the identifier hasn't been changed to one that's
@@ -199,23 +210,28 @@ class Cost_Form(ModelForm):
         """Basic validation"""
         # Use the parent's handling of required fields, etc.
         cleaned_data = self.cleaned_data
-    
-        errors = {}
+        if self.is_valid():
+            errors = {}
 
-        if cleaned_data['min_cost'] < 0:
-            errors['min_cost'] = 'Min cost must be >= $0.00'
-        if cleaned_data['max_cost'] < 0:
-            errors['max_cost'] = 'Max cost must be >= $0.00'
+            if cleaned_data['min_cost'] and cleaned_data['min_cost'] < 0:
+                errors['min_cost'] = 'Min cost must be >= $0.00'
+            if cleaned_data['max_cost'] and cleaned_data['max_cost'] < 0:
+                errors['max_cost'] = 'Max cost must be >= $0.00'
 
-        if cleaned_data['lower_limit'] < 0:
-            errors['lower_limit'] = 'Lower limit must be >= 0'
-        if cleaned_data['upper_limit'] < 0:
-            errors['upper_limit'] = 'Upper limit must be >= 0'
-        if cleaned_data['dispersion'] < 0:
-            errors['dispersion'] = 'Dispersion must be >= 0'
+            if cleaned_data['lower_limit'] < 0:
+                errors['lower_limit'] = 'Lower limit must be >= 0'
+            if cleaned_data['upper_limit'] < 0:
+                errors['upper_limit'] = 'Upper limit must be >= 0'
+            if cleaned_data['dispersion'] < 0:
+                errors['dispersion'] = 'Dispersion must be >= 0'
 
-        if len(errors) > 0:
-            raise ValidationError(errors)
+            if len(errors) > 0:
+                raise ValidationError(errors)
+        else:
+            eprint("Cost_Form errors: {}".format(self.errors))
+            eprint("cost_form cleaned_data: {}".format(cleaned_data))
+            #eprint("form: {}".format(self))
+            raise ValidationError(self.errors)
 
 class Fragility_Form(ModelForm):
     class Meta:
@@ -224,24 +240,33 @@ class Fragility_Form(ModelForm):
 
         widgets={'state': HiddenInput,
                  'component': HiddenInput,
-                 'rowid': HiddenInput}
+                 'rowid': HiddenInput,
+                 'image': HiddenInput}
 
     def clean(self):
         """Basic validation"""
         # Use the parent's handling of required fields, etc.
         cleaned_data = self.cleaned_data
+        #eprint("> Fragility_Form::clean()")
 
-        errors = {}
+        if self.is_valid():
+            errors = {}
 
-        if cleaned_data['description'] == "":
-            errors['description'] = "Description required."
-        if cleaned_data['repairs'] == "":
-            errors['repairs'] = "Repairs required."
-        if cleaned_data['median'] <= 0:
-            errors['median'] = "Median must be > 0."
-        if cleaned_data['beta'] <= 0:
-            errors['beta'] = "Beta must be > 0."
+            if cleaned_data['description'] == "":
+                errors['description'] = "Description required."
+            if cleaned_data['repairs'] == "":
+                errors['repairs'] = "Repairs required."
+            if cleaned_data['median'] <= 0:
+                errors['median'] = "Median must be > 0."
+            if cleaned_data['beta'] <= 0:
+                errors['beta'] = "Beta must be > 0."
 
-        if len(errors) > 0:
-            raise ValidationError(errors)
-        
+            if len(errors) > 0:
+                eprint("fragility_form errors: {}".format(errors))
+                raise ValidationError(errors)
+        else:
+            eprint("Fragility_Form errors: {}".format(self.errors))
+            eprint("fragility_form cleaned_data: {}".format(cleaned_data))
+            #eprint("form: {}".format(self))
+            raise ValidationError(self.errors)
+        #eprint("< Fragility_Form::clean()")

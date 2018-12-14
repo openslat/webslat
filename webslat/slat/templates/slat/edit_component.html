@@ -4,6 +4,199 @@
     <link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
     <script src="{% static "js/jquery-3.2.1.min.js" %}"></script>
     <script src="{% static "js/slat-utils.js" %}"></script>
+    <script type="text/javascript">
+      var delete_image = function(index) {
+          var e = document.getElementById("id_form-" + (index - 1) + "-image")
+          e.value = null
+      
+          e = document.getElementById("id_form-" + (index - 1) + "-image-preview")
+          e.hidden = true
+          e = document.getElementById("id_form-" + (index - 1) + "-image-delete-button")
+          e.hidden = true
+      }
+      
+      var replace_image = function(self, index) {
+          var e = document.getElementById("id_form-" + (index - 1) + "-image")
+          console.log("replace " + e.value + " with " + self.files[0].name)
+          e.value = self.files[0].name
+
+          console.log(self.files[0])
+          var img = document.getElementById("id_form-" + (index - 1) + "-image-preview")
+          img.hidden = false
+          img.src = window.URL.createObjectURL(self.files[0]);
+          img.onload = function (e)
+          {
+             window.URL.revokeObjectURL(this.src);
+          }
+
+          e = document.getElementById("id_form-" + (index - 1) + "-image-delete-button")
+          e.hidden = false
+      }
+
+      var add_damage_state = function() {
+          var e = document.getElementById("id_costs")
+          for (i in e.children) {
+            child = e.children[i]
+            if (child.id == "id_form-TOTAL_FORMS") {
+                n_forms = child.value
+                console.log(child.id, child.value)
+                child.value = parseInt(n_forms) + 1
+            }
+          }
+      
+          for (i in e.children) {
+             child = e.children[i]
+      
+            if (child.id == "id_cost_table") {
+               rows = child.rows
+               last_row = rows[rows.length -2]
+
+               var dump_ids = function(element) {
+                   for (x in element.children) {
+                       if (element.children[x].id) {
+                           console.log(element.children[x].id)
+                       }
+                       dump_ids(element.children[x])
+                   }
+               }
+               var set_state = function(element, state) {
+                   for (x in element.children) {
+                       id = element.children[x].id
+                       var patt = new RegExp("^id_form-[0-9]+-state");
+                       if (id && patt.test(id)) {
+                           console.log("Set state: " + element.children[x] + ", " + state)
+                           element.children[x].value = state
+                       }
+                       set_state(element.children[x], state)
+                   }
+               }
+
+               var renumber_form = function(element, n) {
+                   for (x in element.children) {
+                       id = element.children[x].id
+                       var patt = new RegExp("^id_form-[0-9]+-");
+                       if (id && patt.test(id)) {
+                           element.children[x].id = id.replace(patt, "id_form-" + n + "-")
+                       }
+                       name = element.children[x].name
+                       var patt = new RegExp("^form-[0-9]+-");
+                       if (name && patt.test(name)) {
+                           element.children[x].name = name.replace(patt, "form-" + n + "-")
+                       }
+                       renumber_form(element.children[x], n)
+                   }
+               }
+
+              set_state(last_row, n_forms)
+
+               var new_row = rows[rows.length - 2].cloneNode(true)
+               renumber_form(new_row, n_forms)
+               console.log(parseInt(n_forms))
+               console.log(parseInt(n_forms) + 1)
+               new_row.children[0].textContent = "DS" + parseInt(n_forms)
+               child.appendChild(new_row)
+
+               new_row = rows[rows.length - 2].cloneNode(true)
+               renumber_form(new_row, n_forms)
+               child.appendChild(new_row)
+
+               rows[rows.length - 2].hidden = false
+               rows[rows.length - 1].hidden = false
+           }
+        }
+      
+        // Repeat for fragility
+        e = document.getElementById("id_fragility")
+          for (i in e.children) {
+            child = e.children[i]
+            if (child.id == "id_form-TOTAL_FORMS") {
+                n_forms = child.value
+                console.log(child.id, child.value)
+                child.value = parseInt(n_forms) + 1
+            }
+          }     
+          for (i in e.children) {
+             child = e.children[i]
+      
+            if (child.id == "id_fragility_table") {
+               rows = child.rows
+               last_row = rows[rows.length -2]
+
+               var dump_ids = function(element) {
+                   for (x in element.children) {
+                       if (element.children[x].id) {
+                           console.log(element.children[x].id)
+                       }
+                       dump_ids(element.children[x])
+                   }
+               }
+               var set_state = function(element, state) {
+                   for (x in element.children) {
+                       id = element.children[x].id
+                       var patt = new RegExp("^id_form-[0-9]+-state");
+                       if (id && patt.test(id)) {
+                           console.log("Set state: " + element.children[x] + ", " + state)
+                           element.children[x].value = state
+                       }
+                       set_state(element.children[x], state)
+                   }
+               }
+
+               var renumber_form = function(element, n) {
+                   for (x in element.children) {
+                       id = element.children[x].id
+                       var patt = new RegExp("^id_form-[0-9]+-");
+                       if (id && patt.test(id)) {
+                           element.children[x].id = id.replace(patt, "id_form-" + n + "-")
+                       }
+                       name = element.children[x].name
+                       var patt = new RegExp("^form-[0-9]+-");
+                       if (name && patt.test(name)) {
+                           element.children[x].name = name.replace(patt, "form-" + n + "-")
+                       }
+                       renumber_form(element.children[x], n)
+                   }
+               }
+
+              set_state(last_row, n_forms)
+
+               var new_row = rows[rows.length - 2].cloneNode(true)
+               renumber_form(new_row, n_forms)
+               console.log(parseInt(n_forms))
+               console.log(parseInt(n_forms) + 1)
+               new_row.children[0].textContent = "DS" + parseInt(n_forms)
+               child.appendChild(new_row)
+
+               new_row = rows[rows.length - 2].cloneNode(true)
+               renumber_form(new_row, n_forms)
+               child.appendChild(new_row)
+
+               rows[rows.length - 2].hidden = false
+               rows[rows.length - 1].hidden = false
+           }
+        }
+      }
+      
+      var strip_extras = function() {
+          console.log("SUBMIT")
+          var e = document.getElementById("id_costs")
+          for (i in e.children) {
+            child = e.children[i]
+            if (child.id == "id_form-TOTAL_FORMS") {
+                n_forms = child.value
+                child.value = parseInt(n_forms) - 1
+            }
+          }
+          var e = document.getElementById("id_fragility")
+          for (i in e.children) {
+            child = e.children[i]
+            if (child.id == "id_form-TOTAL_FORMS") {
+                n_forms = child.value
+                child.value = parseInt(n_forms) - 1
+            }
+          }
+      }
+    </script>
     {{ form.media }}
 {% endblock %}
 
@@ -11,32 +204,35 @@
 {% block title %}WebSLAT: Component {{ component.ident }}{% endblock %}
 {% block content_title %}WebSLAT: Component {{ component.ident }}{% endblock %}
 {% block content %}
-    {% if not component_form.is_valid or not cost_form.is_valid or not fragility_form.is_valid %}
-        {{ component_form.is_valid }}
-    {{ cost_form.is_valid }}
-    {{ fragility_form.is_valid }}
-        <p><b>Errors:</b></p>
-        {{ component_form.errors }}
-        {% for e in cost_form.errors %}
-            {% if e %}
-                <p><i>{{ e }}</i></p>
-            {% endif %}
-        {% endfor %}
-        {% for e in fragility_form.errors %}
-            {% if e %}
-                <p><i>{{ e }}</i></p>
-            {% endif %}
-        {% endfor %}
-        <hr/>
-    {% endif %}
+    {% comment %}
+        {% if not component_form.is_valid or not cost_form.is_valid or not fragility_form.is_valid %}
+            {{ component_form.is_valid }}
+        {{ cost_form.is_valid }}
+        {{ fragility_form.is_valid }}
+            <p><b>Errors:</b></p>
+            {{ component_form.errors }}
+            {% for e in cost_form.errors %}
+                {% if e %}
+                    <p><i>{{ e }}</i></p>
+                {% endif %}
+            {% endfor %}
+            {% for e in fragility_form.errors %}
+                {% if e %}
+                    <p><i>{{ e }}</i></p>
+                {% endif %}
+            {% endfor %}
+            <hr/>
+        {% endif %}
+    {% endcomment %}
 {% if component_form.instance.key %}
-    <form action="{% url 'slat:edit_component' component_form.instance.key %}" method="post">
+    <form enctype="multipart/form-data" action="{% url 'slat:edit_component' component_form.instance.key %}"
 {% else %}
-    <form action="{% url 'slat:edit_component' %}" method="post">
-{% endif %}
+    <form enctype="multipart/form-data" action="{% url 'slat:edit_component' %}" 
+      {% endif %}
+          onsubmit="return strip_extras()" method="post">
     {% csrf_token %}
 {{ component_form.key }}
-<table>
+<table id="id_component_table">
   <tr><th>{{ component_form.ident.label }}</th><td>{{ component_form.ident }}</td>
     {% if component_form.errors.ident %}
     <td class="error">{{ component_form.errors.ident }}</td>
@@ -69,8 +265,11 @@
   </tr>
 </table>
 <hr/>
- {{ cost_form.management_form }}
-<table border="1">
+<input id="id-ds-add" type="button" style="border-width:thin; border-color:black" value="Add a damage state" title="Click to add a damage state." onclick="add_damage_state()"/>
+<hr/>
+<div id="id_costs">
+{{ cost_form.management_form }}
+<table border="1" id="id_cost_table">
   <tr><th style="border-bottom-style:hidden"></th>
     <th colspan="2" align="center" style="border-bottom-style:hidden; border-left-width:medium"">Lower</th>
     <th colspan="2" align="center" style="border-bottom-style:hidden; border-left-width:medium"">Upper</th>
@@ -82,73 +281,104 @@
     <th align="center" style="border-left-width:medium">Dispersion</th>
   </tr>
 {% for cf in cost_form %}
-  {{ cf.rowid }}{{ cf.state }}{{ cf.component }}
-  <tr><td>{{ k }}</td></tr>
-  <tr style="background-color:{% cycle 'lightgray' 'white' as stripe %}"><td>DS{{ cf.state.value }}</td>
+  <tr style="background-color:{% cycle 'lightgray' 'white' as stripe %}"
+      {% if forloop.last %}
+         hidden
+      {% endif %}
+      >
+      {{ cf.rowid }}{{ cf.state }}{{ cf.component }}
+    <td>
+      DS{{ cf.state.value }}
+    </td>
     <td style="border-right-style:hidden; border-left-width:medium">{{ cf.lower_limit }}</td><td>{{ cf.max_cost }}</td>
     <td style="border-right-style:hidden; border-left-width:medium">{{ cf.upper_limit }}</td><td>{{ cf.min_cost }}</td>
     <td style="border-left-width:medium">{{ cf.dispersion }}</td>
     </tr>
-  <tr style="background-color:{{ stripe }}">
-    {% with forloop.counter|cut:" " as index %}
-        {% with cost_form.errors|slice:index|last as errors %}
-            {% if errors %}
-                <td></td> 
-                  {% if errors.lower_limit %}
-                      <td class="error">{{ errors.lower_limit }}</td>
-                  {% else %}
-                      <td></td>
-                  {% endif %}
-                  {% if errors.max_cost %}
-                      <td class="error">{{ errors.max_cost }}</td>
-                  {% else %}
-                      <td></td>
-                  {% endif %}
-                  {% if errors.upper_limit %}
-                      <td class="error">{{ errors.upper_limit }}</td>
-                  {% else %}
-                      <td></td>
-                  {% endif %}
-                  {% if errors.min_cost %}
-                      <td class="error">{{ errors.min_cost }}</td>
-                  {% else %}
-                      <td></td>
-                  {% endif %}
-                  {% if errors.dispersion %}
-                      <td class="error">{{ errors.dispersion }}</td>
-                  {% else %}
-                      <td></td>
-                  {% endif %}
+  {% with forloop.counter|cut:" " as index %}
+      {% with cost_form.errors|slice:index|last as errors %}
+          <tr style="background-color:{{ stripe }}"       
+              {% if forloop.last or not errors%}
+                  hidden
               {% endif %}
-        {% endwith %}
+          >
+          <td></td> 
+          {% if errors.lower_limit %}
+              <td class="error">{{ errors.lower_limit }}</td>
+          {% else %}
+              <td></td>
+          {% endif %}
+          {% if errors.max_cost %}
+    <td class="error">{{ errors.max_cost }}</td>
+    {% else %}
+    <td></td>
+    {% endif %}
+    {% if errors.upper_limit %}
+    <td class="error">{{ errors.upper_limit }}</td>
+    {% else %}
+    <td></td>
+    {% endif %}
+    {% if errors.min_cost %}
+    <td class="error">{{ errors.min_cost }}</td>
+    {% else %}
+    <td></td>
+    {% endif %}
+    {% if errors.dispersion %}
+    <td class="error">{{ errors.dispersion }}</td>
+    {% else %}
+    <td></td>
+    {% endif %}
+    {% endwith %}
     {% endwith %}
     </td>
   </tr>
 {% endfor %}
 </table>
-{% comment %}
-{{ cost_form.as_table }}
-{% endcomment %}
+</div>
 <hr/>
-<table>
- {{ fragility_form.management_form }}
+<div id="id_fragility">
+{{ fragility_form.management_form }}
+<table id="id_fragility_table">
   <tr><th>State</th><th>Description</th><th>Repairs</th><th>Median EDP</th><th>Dispersion</th><th>Image</th></tr>
   {% for i in fragility_form %}
-     {{ i.rowid }}{{ i.state }}
-     <tr style="background-color:{% cycle 'lightgray' 'white' as stripe %}"><td>DS{{ i.state.value }}{{ i.state }}</td>
+     <tr style="background-color:{% cycle 'lightgray' 'white' as stripe %}"
+         {% if forloop.last %}
+             hidden
+         {% endif %}
+      > 
+       {{ i.state }}{{ i.rowid }}
+       <td>DS{{ i.state.value }}</td>
        <td>{{ i.description }}</td>
        <td>{{ i.repairs }}</td>
        <td>{{ i.median }}</td>
        <td>{{ i.beta }}</td>
        <td>
-         {% if i.image %}
-         <img src="{% static "slat/images/" %}{{ i.instance.component.ident }}/{{ i.image.value }}"/>
-         {% endif %}
+         <table><tr><td>
+         {{ i.image }}
+         {% with forloop.counter|cut:" " as index %}
+             <img id="id_form-{{ index|add:"-1" }}-image-preview" src="{% static "slat/images/" %}{{ i.instance.component.ident }}/{{ i.image.value }}"
+                  {% if not i.image.value %}
+                  hidden
+                  {% endif %}
+                  />
+             </td>
+             <td>
+             <input id="id_form-{{ index|add:"-1" }}-image-delete-button"
+                    type="button" style="border-width:thin; border-color:black" 
+                    value="Delete Image" title="Click to delete this image." 
+                    onclick="delete_image({{ index }})"
+                    {% if not i.image.value %}
+                        hidden="false"
+                    {% endif %}
+                    />
+           </div>
+         <input type="file" name="image-{{ index }}" id="id_path-{{ index }}" onchange="replace_image(this, {{ index }})"/>
+         </td></tr></table>
+         {% endwith %}
        </td></tr>
     {% with forloop.counter|cut:" " as index %}
         {% with fragility_form.errors|slice:index|last as errors %}
-            {% if errors %}
-                <tr style="background-color:{{ stripe }}">
+                <tr style="background-color:{{ stripe }}"
+                    {% if forloop.last or not errors %}>
                     <td></td> 
                       {% if errors.description %}
                           <td class="error">{{ errors.description }}</td>
@@ -172,11 +402,12 @@
                       {% endif %}
                           <td></td>
                   </tr>
-              {% endif %}
+    {% endif %}
         {% endwith %}
     {% endwith %}
   {% endfor %}
 </table>
+</div>
 <br/>
 <hr/>
 {% if component_form.instance.key %}
