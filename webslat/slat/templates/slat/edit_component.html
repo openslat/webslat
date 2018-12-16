@@ -17,10 +17,10 @@
       
       var replace_image = function(self, index) {
           var e = document.getElementById("id_form-" + (index - 1) + "-image")
-          console.log("replace " + e.value + " with " + self.files[0].name)
+          //console.log("replace " + e.value + " with " + self.files[0].name)
           e.value = self.files[0].name
 
-          console.log(self.files[0])
+          //console.log(self.files[0])
           var img = document.getElementById("id_form-" + (index - 1) + "-image-preview")
           img.hidden = false
           img.src = window.URL.createObjectURL(self.files[0]);
@@ -39,7 +39,7 @@
             child = e.children[i]
             if (child.id == "id_form-TOTAL_FORMS") {
                 n_forms = child.value
-                console.log(child.id, child.value)
+                //console.log(child.id, child.value)
                 child.value = parseInt(n_forms) + 1
             }
           }
@@ -54,7 +54,7 @@
                var dump_ids = function(element) {
                    for (x in element.children) {
                        if (element.children[x].id) {
-                           console.log(element.children[x].id)
+                           //console.log(element.children[x].id)
                        }
                        dump_ids(element.children[x])
                    }
@@ -64,7 +64,7 @@
                        id = element.children[x].id
                        var patt = new RegExp("^id_form-[0-9]+-state");
                        if (id && patt.test(id)) {
-                           console.log("Set state: " + element.children[x] + ", " + state)
+                           //console.log("Set state: " + element.children[x] + ", " + state)
                            element.children[x].value = state
                        }
                        set_state(element.children[x], state)
@@ -76,12 +76,12 @@
                        id = element.children[x].id
                        var patt = new RegExp("^id_form-[0-9]+-");
                        if (id && patt.test(id)) {
-                           element.children[x].id = id.replace(patt, "id_form-" + n + "-")
+                           element.children[x].id = id.replace(patt, "id_form-" + (n - 1) + "-")
                        }
                        name = element.children[x].name
                        var patt = new RegExp("^form-[0-9]+-");
                        if (name && patt.test(name)) {
-                           element.children[x].name = name.replace(patt, "form-" + n + "-")
+                           element.children[x].name = name.replace(patt, "form-" + (n - 1)+ "-")
                        }
                        renumber_form(element.children[x], n)
                    }
@@ -91,17 +91,13 @@
 
                var new_row = rows[rows.length - 2].cloneNode(true)
                renumber_form(new_row, n_forms)
-               console.log(parseInt(n_forms))
-               console.log(parseInt(n_forms) + 1)
                new_row.children[0].textContent = "DS" + parseInt(n_forms)
+               new_row.hidden = false
                child.appendChild(new_row)
 
                new_row = rows[rows.length - 2].cloneNode(true)
                renumber_form(new_row, n_forms)
                child.appendChild(new_row)
-
-               rows[rows.length - 2].hidden = false
-               rows[rows.length - 1].hidden = false
            }
         }
       
@@ -111,7 +107,7 @@
             child = e.children[i]
             if (child.id == "id_form-TOTAL_FORMS") {
                 n_forms = child.value
-                console.log(child.id, child.value)
+                //console.log(child.id, child.value)
                 child.value = parseInt(n_forms) + 1
             }
           }     
@@ -125,7 +121,7 @@
                var dump_ids = function(element) {
                    for (x in element.children) {
                        if (element.children[x].id) {
-                           console.log(element.children[x].id)
+                           //console.log(element.children[x].id)
                        }
                        dump_ids(element.children[x])
                    }
@@ -135,7 +131,7 @@
                        id = element.children[x].id
                        var patt = new RegExp("^id_form-[0-9]+-state");
                        if (id && patt.test(id)) {
-                           console.log("Set state: " + element.children[x] + ", " + state)
+                           //console.log("Set state: " + element.children[x] + ", " + state)
                            element.children[x].value = state
                        }
                        set_state(element.children[x], state)
@@ -147,12 +143,12 @@
                        id = element.children[x].id
                        var patt = new RegExp("^id_form-[0-9]+-");
                        if (id && patt.test(id)) {
-                           element.children[x].id = id.replace(patt, "id_form-" + n + "-")
+                           element.children[x].id = id.replace(patt, "id_form-" + (n - 1) + "-")
                        }
                        name = element.children[x].name
                        var patt = new RegExp("^form-[0-9]+-");
                        if (name && patt.test(name)) {
-                           element.children[x].name = name.replace(patt, "form-" + n + "-")
+                           element.children[x].name = name.replace(patt, "form-" + (n - 1) + "-")
                        }
                        renumber_form(element.children[x], n)
                    }
@@ -162,23 +158,20 @@
 
                var new_row = rows[rows.length - 2].cloneNode(true)
                renumber_form(new_row, n_forms)
-               console.log(parseInt(n_forms))
-               console.log(parseInt(n_forms) + 1)
+               //console.log(parseInt(n_forms))
+               //console.log(parseInt(n_forms) + 1)
                new_row.children[0].textContent = "DS" + parseInt(n_forms)
+               new_row.hidden = false
                child.appendChild(new_row)
 
                new_row = rows[rows.length - 2].cloneNode(true)
                renumber_form(new_row, n_forms)
                child.appendChild(new_row)
-
-               rows[rows.length - 2].hidden = false
-               rows[rows.length - 1].hidden = false
            }
         }
       }
       
       var strip_extras = function() {
-          console.log("SUBMIT")
           var e = document.getElementById("id_costs")
           for (i in e.children) {
             child = e.children[i]
