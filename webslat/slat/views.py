@@ -557,8 +557,6 @@ def project(request, project_id=None):
                 project.AssignRole(request.user, ProjectUserPermissions.ROLE_FULL)
                 return HttpResponseRedirect(reverse('slat:hazard_choose', args=(project.id,))) 
             elif project_type == "ETABS":
-                eprint(request.FILES)
-                raise ValueError("NOT IMPLEMENTED")
                 form3 = ProjectFormPart3(request.POST, request.FILES)
                 if (form3.is_valid()):
                 
