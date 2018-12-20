@@ -7,6 +7,7 @@
 # Feel free to rename the models, but don't rename db_table values or field names.
 from __future__ import unicode_literals
 from django.forms import ValidationError, formset_factory
+from django.forms.utils import ErrorList
 import sys
 import numpy as np
 
@@ -50,15 +51,26 @@ class CostTab(models.Model):
         db_table = 'cost_tab'
 
     def __str__(self):
-        result =  "CostTab: {:4} {:4} {:10} {:4} {:5.3f} {:4} {:5.3f} {:5.3f}".format(
-            self.rowid or "<none>",
-            self.state or "<none>",
-            self.component.ident or "<none>", 
-            self.lower_limit or np.nan, 
-            self.max_cost or np.nan,
-            self.upper_limit or np.nan,
-            self.min_cost or np.nan,
-            self.dispersion or np.nan)
+        try:
+            result =  "CostTab: {:4} {:4} {:10} {:4} {:5.3f} {:4} {:5.3f} {:5.3f}".format(
+                self.rowid or "<none>",
+                self.state or "<none>",
+                self.component.ident or "<none>", 
+                self.lower_limit or np.nan, 
+                self.max_cost or np.nan,
+                self.upper_limit or np.nan,
+                self.min_cost or np.nan,
+                self.dispersion or np.nan)
+        except:
+            result =  "CostTab: {:4} {:4} {:10} {:4} {:5.3f} {:4} {:5.3f} {:5.3f}".format(
+                self.rowid or "<none>",
+                self.state or "<none>",
+                "<none>", 
+                self.lower_limit or np.nan, 
+                self.max_cost or np.nan,
+                self.upper_limit or np.nan,
+                self.min_cost or np.nan,
+                self.dispersion or np.nan)
         return result
 
 
@@ -100,10 +112,16 @@ class FragilityTab(models.Model):
         db_table = 'fragility_tab'
 
     def __str__(self):
-        return "FragilityTab: {:4} {:4} {:10}".format(
-            self.rowid or "<none>",
-            self.state or "<none>",
-            self.component.ident or "<none>")
+        try:
+            return "FragilityTab: {:4} {:4} {:10}".format(
+                self.rowid or "<none>",
+                self.state or "<none>",
+                self.component.ident or "<none>")
+        except:
+            return "FragilityTab: {:4} {:4} {:10}".format(
+                self.rowid or "<none>",
+                self.state or "<none>",
+                "<none>")
 
 class UnitsTab(models.Model):
     key = models.IntegerField(blank=True, null=False, primary_key=True)
@@ -206,6 +224,17 @@ class Cost_Form(ModelForm):
                  'component': HiddenInput,
                  'rowid': HiddenInput}
 
+    # Full set of options form BaseModelForm class:
+    def __init__(self, data=None, files=None, auto_id='id_%s', prefix=None,
+                 initial=None, error_class=ErrorList, label_suffix=None,
+                 empty_permitted=False, instance=None, use_required_attribute=None,
+                 renderer=None):
+        super(ModelForm, self).__init__(data, files, auto_id, prefix, initial,
+                                        error_class, label_suffix,
+                                        empty_permitted, instance,
+                                        use_required_attribute, renderer)
+        self.fields['component'].required= False
+
     def clean(self):
         """Basic validation"""
         # Use the parent's handling of required fields, etc.
@@ -237,12 +266,24 @@ class Fragility_Form(ModelForm):
     class Meta:
         model = FragilityTab
         fields = '__all__'
+        
 
         widgets={'state': HiddenInput,
                  'component': HiddenInput,
                  'rowid': HiddenInput,
                  'image': HiddenInput}
 
+    # Full set of options form BaseModelForm class:
+    def __init__(self, data=None, files=None, auto_id='id_%s', prefix=None,
+                 initial=None, error_class=ErrorList, label_suffix=None,
+                 empty_permitted=False, instance=None, use_required_attribute=None,
+                 renderer=None):
+        super(ModelForm, self).__init__(data, files, auto_id, prefix, initial,
+                                        error_class, label_suffix,
+                                        empty_permitted, instance,
+                                        use_required_attribute, renderer)
+        self.fields['component'].required= False
+        
     def clean(self):
         """Basic validation"""
         # Use the parent's handling of required fields, etc.
