@@ -10,6 +10,7 @@ from django.forms import ValidationError, formset_factory
 from django.forms.utils import ErrorList
 import sys
 import numpy as np
+import re
 
 from django.db import models
 from django.forms import ModelForm, TextInput, NumberInput, HiddenInput
@@ -205,12 +206,17 @@ class Component_Form(ModelForm):
         cleaned_data = self.cleaned_data
 
         errors = {}
-        # Make sure that the identifier hasn't been changed to one that's
-        # already in use:
-        if self.instance.ident != cleaned_data['ident']:
-            if len(ComponentsTab.objects.filter(ident=cleaned_data['ident'])) > 0:
-                if ComponentsTab.objects.get(ident=cleaned_data['ident']) != self:
-                   errors['ident'] = 'Identifier must be unique'
+        # Make sure the identifier is valid. It must consist of only the
+        # characters:  A-Za-z0-9.-
+        if re.match("^[A-Za-z0-9.-]+$", cleaned_data['ident']):
+            # Make sure that the identifier hasn't been changed to one that's
+            # already in use:
+            if self.instance.ident != cleaned_data['ident']:
+                if len(ComponentsTab.objects.filter(ident=cleaned_data['ident'])) > 0:
+                    if ComponentsTab.objects.get(ident=cleaned_data['ident']) != self:
+                        errors['ident'] = 'Identifier must be unique'
+        else:
+            errors['ident'] = 'Identifier must consist of only letters, digits, ".", and "-".'
 
         if len(errors) > 0:
             raise ValidationError(errors)

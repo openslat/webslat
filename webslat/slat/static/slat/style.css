@@ -45,7 +45,7 @@ th {
    background: lightgray;
 }
 
-td.error {
+.error {
    background: red;
    color: white;
 }

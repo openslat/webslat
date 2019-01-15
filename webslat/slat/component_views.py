@@ -27,7 +27,7 @@ def component(request, component_id):
     return render(request, 'slat/component.html', context)
 
 class CostFormSet(BaseModelFormSet):
-     def cleanx(self):
+     def clean(self):
          """Make sure the forms are consistent"""
          eprint("> CostFormSet::clean()")
          if any(self.errors):
@@ -35,39 +35,31 @@ class CostFormSet(BaseModelFormSet):
              eprint("< CostFormSet::clean() failing")
              return
 
+         if len(self.forms) == 0:
+             raise ValidationError('Must have at least one cost entry.')
+         
          for i in range(0, len(self.forms) -1):
              eprint(i)
          eprint("< CostFormSet::clean() success")
 
 class FragilityFormSet(BaseModelFormSet):
-     def is_validx(self):
-         eprint("> is_valid()")
-         eprint(self.can_delete)
-         if not self.is_bound:
-             return False
-         
-         for f in self.forms[:-1]:
-             eprint(self._should_delete_form(f))
-
-         return True
-         
-     def cleanx(self):
+     def clean(self):
          """Checks that no two articles have the same title."""
          eprint("> FragilityFormSet::clean()")
-         valid = True
-         for i, f in enumerate(self.forms[:-1]):
-             eprint("form #{}: {}".format(i, f.is_valid()))
-             if not f.is_valid():
-                 valid = False
-                 break
-                    
-         if not valid:
+
+         if len(self.forms) == 0:
+             raise ValidationError('Must have at least one fragility entry.')
+         
+         if any(self.errors):
              # Don't bother validating the formset unless each form is valid on its own
              eprint("< FragilityFormSet::clean() failing")
              return
+                    
          eprint("< FragilityFormSet::clean() success")
          
 def edit_component(request, component_id=None):
+    eprint("> edit_component({})".format(component_id))
+    eprint(request)
     #Cost_Form_Set = formset_factory(Cost_Form, CostFormSet, extra=1)
     Cost_Form_Set = modelformset_factory(CostTab, Cost_Form, formset=CostFormSet, extra=1)
     #Fragility_Form_Set = modelformset_factory(FragilityTab, Fragility_Form, extra=1)
@@ -106,8 +98,10 @@ def edit_component(request, component_id=None):
             #    eprint("State: {}".format(form.instance.state))
             #eprint("-----------")
     else:
+        if request.POST.get('back'):
+            return HttpResponseRedirect(reverse('slat:components'))
+        
         if request.POST.get('cancel'):
-            eprint("CANCEL!")
             if component_id:
                 return HttpResponseRedirect(
                     reverse(
@@ -115,7 +109,7 @@ def edit_component(request, component_id=None):
                         args=(component_id,)))
             else:
                 return HttpResponseRedirect(
-                    reverse('slat:edit_component'))
+                    reverse('slat:components'))
 
         # POST request; process data
         if component_id:
@@ -150,6 +144,8 @@ def edit_component(request, component_id=None):
             if not cf.is_valid() or not cost_form_set.is_valid() or not fragility_form_set.is_valid():
                 eprint("IS VALID: {} {} {}".format(cf.is_valid(), cost_form_set.is_valid(), fragility_form_set.is_valid()))
 
+                eprint("INVALID")
+
                 cost_form_set.forms.append(cost_form_set.empty_form)
                 fragility_form_set.forms.append(fragility_form_set.empty_form)
                 n = len(cost_form_set.forms)
@@ -172,6 +168,10 @@ def edit_component(request, component_id=None):
                     fragility_form_set.forms[n - 1]['component'].initial = c
 
 
+                eprint("-------------")
+                eprint(cf)
+                eprint("-------------")
+                
                 context = { 'component_form': cf,
                             'cost_form': cost_form_set,
                             'fragility_form': fragility_form_set}
@@ -285,6 +285,10 @@ def edit_component(request, component_id=None):
                 fragility_form_set.forms[n - 1]['beta'].initial = 0
                 fragility_form_set.forms[n - 1]['image'].initial = None
 
+                context = { 'component_form': cf,
+                            'cost_form': cost_form_set,
+                            'fragility_form': fragility_form_set}
+                return render(request, 'slat/edit_component.html', context)
             else:
                 # All valid--save:
                 cf.save()

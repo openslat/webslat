@@ -261,7 +261,15 @@
 <input id="id-ds-add" type="button" style="border-width:thin; border-color:black" value="Add a damage state" title="Click to add a damage state." onclick="add_damage_state()"/>
 <hr/>
 <div id="id_costs">
+<h3 title="Help text">Cost Data</h3>
 {{ cost_form.management_form }}
+{% if cost_form.non_form_errors %}
+    <ul>
+        {% for e in cost_form.non_form_errors %}
+            <li class="error">{{ e }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
 <table border="1" id="id_cost_table">
   <tr><th style="border-bottom-style:hidden"></th>
     <th colspan="2" align="center" style="border-bottom-style:hidden; border-left-width:medium"">Lower</th>
@@ -329,7 +337,15 @@
 </div>
 <hr/>
 <div id="id_fragility">
+<h3>Fragility Data</h3>
 {{ fragility_form.management_form }}
+{% if fragility_form.non_form_errors %}
+    <ul>
+        {% for e in fragility_form.non_form_errors %}
+            <li class="error">{{ e }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
 <table id="id_fragility_table">
   <tr><th>State</th><th>Description</th><th>Repairs</th><th>Median EDP</th><th>Dispersion</th><th>Image</th></tr>
   {% for i in fragility_form %}
@@ -409,6 +425,15 @@
     <input type="submit" value="Create Component" class="normal"/>
 {% endif %}
 </form>
+    {% if component_form.instance.key %}
+        <form enctype="multipart/form-data" action="{% url 'slat:edit_component' component_form.instance.key %}"
+    {% else %}
+        <form enctype="multipart/form-data" action="{% url 'slat:edit_component' %}" 
+    {% endif %}
+    onsubmit="return strip_extras()" method="post">
+    {% csrf_token %}
+
     <input type="submit" name="cancel" value="Cancel" />
-    <input type="submit" value="Back to Component List" />
+    <input type="submit" name="back" value="Back to Component List" />
+</form>
 {% endblock %}
