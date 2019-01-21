@@ -48,7 +48,8 @@
              child = e.children[i]
       
             if (child.id == "id_cost_table") {
-               rows = child.rows
+               tbody = child.children[0]
+               rows = tbody.rows
                last_row = rows[rows.length -2]
 
                var dump_ids = function(element) {
@@ -89,15 +90,15 @@
 
               set_state(last_row, n_forms)
 
-               var new_row = rows[rows.length - 2].cloneNode(true)
-               renumber_form(new_row, n_forms)
-               new_row.children[0].textContent = "DS" + parseInt(n_forms)
-               new_row.hidden = false
-               child.appendChild(new_row)
+               var new_data_row = rows[rows.length - 2].cloneNode(true)
+               renumber_form(new_data_row, n_forms)
+               new_data_row.cells[0].textContent = "DS" + parseInt(n_forms)
+               new_data_row.hidden = false
+               tbody.insertBefore(new_data_row, tbody.rows[tbody.rows.length-2])
 
-               new_row = rows[rows.length - 2].cloneNode(true)
-               renumber_form(new_row, n_forms)
-               child.appendChild(new_row)
+               new_error_row = rows[rows.length - 2].cloneNode(true)
+               renumber_form(new_error_row, n_forms)
+               tbody.insertBefore(new_error_row, tbody.rows[tbody.rows.length-2])
            }
         }
       
@@ -115,7 +116,8 @@
              child = e.children[i]
       
             if (child.id == "id_fragility_table") {
-               rows = child.rows
+               tbody = child.children[0]
+               rows = tbody.rows
                last_row = rows[rows.length -2]
 
                var dump_ids = function(element) {
@@ -156,17 +158,17 @@
 
               set_state(last_row, n_forms)
 
-               var new_row = rows[rows.length - 2].cloneNode(true)
-               renumber_form(new_row, n_forms)
+               var new_data_row = rows[rows.length - 2].cloneNode(true)
+               renumber_form(new_data_row, n_forms)
                //console.log(parseInt(n_forms))
                //console.log(parseInt(n_forms) + 1)
-               new_row.children[0].textContent = "DS" + parseInt(n_forms)
-               new_row.hidden = false
-               child.appendChild(new_row)
+               new_data_row.cells[0].textContent = "DS" + parseInt(n_forms)
+               new_data_row.hidden = false
+               tbody.insertBefore(new_data_row, tbody.rows[tbody.rows.length-2])
 
-               new_row = rows[rows.length - 2].cloneNode(true)
-               renumber_form(new_row, n_forms)
-               child.appendChild(new_row)
+               new_error_row = rows[rows.length - 2].cloneNode(true)
+               renumber_form(new_error_row, n_forms)
+               tbody.insertBefore(new_error_row, tbody.rows[tbody.rows.length-2])
            }
         }
       }
@@ -387,7 +389,10 @@
     {% with forloop.counter|cut:" " as index %}
         {% with fragility_form.errors|slice:index|last as errors %}
                 <tr style="background-color:{{ stripe }}"
-                    {% if forloop.last or not errors %}>
+                    {% if forloop.last or not errors %}
+                        hidden
+                    {% endif %}
+                >
                     <td></td> 
                       {% if errors.description %}
                           <td class="error">{{ errors.description }}</td>
@@ -411,7 +416,6 @@
                       {% endif %}
                           <td></td>
                   </tr>
-    {% endif %}
         {% endwith %}
     {% endwith %}
   {% endfor %}
