@@ -33,165 +33,58 @@
           e.hidden = false
       }
 
-      var add_damage_state = function() {
-          var e = document.getElementById("id_costs")
-          for (i in e.children) {
-            child = e.children[i]
-            if (child.id == "id_form-TOTAL_FORMS") {
-                n_forms = child.value
-                //console.log(child.id, child.value)
-                child.value = parseInt(n_forms) + 1
+    var prefixes = ["cost", "fragility"]
+
+    function add_damage_state() {
+        for (p in prefixes) {
+            prefix = prefixes[p]
+
+            var total_forms_element = document.getElementById(
+                "id_" + prefix + "_form-TOTAL_FORMS")
+            n_forms = parseInt(total_forms_element.value)
+            total_forms_element.value = n_forms + 1
+
+            var table = document.getElementById("id_" + prefix + "_table")
+            var tbody = table.children[0]
+            var rows = tbody.rows
+            var n_rows = rows.length
+
+            var new_data_row = rows[n_rows - 2].cloneNode(true)
+            new_data_row.cells[0].textContent = "DS" + (n_forms + 1)
+            var tags = ['input', 'textarea']
+            for (t in tags) {
+                tag = tags[t]
+                inputs = new_data_row.getElementsByTagName(tag)
+                for (i=0; i < inputs.length; i++) {
+                    input = inputs[i]
+                    input.name = input.name.replace(/-[0-9]+-/, '-' + n_forms + '-')
+                    input.id = input.id.replace(/-[0-9]+-/, '-' + n_forms + '-')
+                    if (RegExp('-state$').test(input.id)) {
+                        input.value = n_forms + 1
+                    }
+                }
             }
-          }
-      
-          for (i in e.children) {
-             child = e.children[i]
-      
-            if (child.id == "id_cost_table") {
-               tbody = child.children[0]
-               rows = tbody.rows
-               last_row = rows[rows.length -2]
+            var new_error_row = rows[n_rows - 1].cloneNode(true)
 
-               var dump_ids = function(element) {
-                   for (x in element.children) {
-                       if (element.children[x].id) {
-                           //console.log(element.children[x].id)
-                       }
-                       dump_ids(element.children[x])
-                   }
-               }
-               var set_state = function(element, state) {
-                   for (x in element.children) {
-                       id = element.children[x].id
-                       var patt = new RegExp("^id_form-[0-9]+-state");
-                       if (id && patt.test(id)) {
-                           //console.log("Set state: " + element.children[x] + ", " + state)
-                           element.children[x].value = state
-                       }
-                       set_state(element.children[x], state)
-                   }
-               }
-
-               var renumber_form = function(element, n) {
-                   for (x in element.children) {
-                       id = element.children[x].id
-                       var patt = new RegExp("^id_form-[0-9]+-");
-                       if (id && patt.test(id)) {
-                           element.children[x].id = id.replace(patt, "id_form-" + (n - 1) + "-")
-                       }
-                       name = element.children[x].name
-                       var patt = new RegExp("^form-[0-9]+-");
-                       if (name && patt.test(name)) {
-                           element.children[x].name = name.replace(patt, "form-" + (n - 1)+ "-")
-                       }
-                       renumber_form(element.children[x], n)
-                   }
-               }
-
-              set_state(last_row, n_forms)
-
-               var new_data_row = rows[rows.length - 2].cloneNode(true)
-               renumber_form(new_data_row, n_forms)
-               new_data_row.cells[0].textContent = "DS" + parseInt(n_forms)
-               new_data_row.hidden = false
-               tbody.insertBefore(new_data_row, tbody.rows[tbody.rows.length-2])
-
-               new_error_row = rows[rows.length - 2].cloneNode(true)
-               renumber_form(new_error_row, n_forms)
-               tbody.insertBefore(new_error_row, tbody.rows[tbody.rows.length-2])
-           }
+            tbody.rows[n_rows - 2].hidden = false
+            tbody.appendChild(new_data_row)
+            tbody.appendChild(new_error_row)
         }
-      
-        // Repeat for fragility
-        e = document.getElementById("id_fragility")
-          for (i in e.children) {
-            child = e.children[i]
-            if (child.id == "id_form-TOTAL_FORMS") {
-                n_forms = child.value
-                //console.log(child.id, child.value)
-                child.value = parseInt(n_forms) + 1
-            }
-          }     
-          for (i in e.children) {
-             child = e.children[i]
-      
-            if (child.id == "id_fragility_table") {
-               tbody = child.children[0]
-               rows = tbody.rows
-               last_row = rows[rows.length -2]
+    }
 
-               var dump_ids = function(element) {
-                   for (x in element.children) {
-                       if (element.children[x].id) {
-                           //console.log(element.children[x].id)
-                       }
-                       dump_ids(element.children[x])
-                   }
-               }
-               var set_state = function(element, state) {
-                   for (x in element.children) {
-                       id = element.children[x].id
-                       var patt = new RegExp("^id_form-[0-9]+-state");
-                       if (id && patt.test(id)) {
-                           //console.log("Set state: " + element.children[x] + ", " + state)
-                           element.children[x].value = state
-                       }
-                       set_state(element.children[x], state)
-                   }
-               }
+    var strip_extras = function() {
+        for (p in prefixes) {
+            prefix = prefixes[p]
+            var total_forms_element = document.getElementById(
+                "id_" + prefix + "_form-TOTAL_FORMS")
 
-               var renumber_form = function(element, n) {
-                   for (x in element.children) {
-                       id = element.children[x].id
-                       var patt = new RegExp("^id_form-[0-9]+-");
-                       if (id && patt.test(id)) {
-                           element.children[x].id = id.replace(patt, "id_form-" + (n - 1) + "-")
-                       }
-                       name = element.children[x].name
-                       var patt = new RegExp("^form-[0-9]+-");
-                       if (name && patt.test(name)) {
-                           element.children[x].name = name.replace(patt, "form-" + (n - 1) + "-")
-                       }
-                       renumber_form(element.children[x], n)
-                   }
-               }
-
-              set_state(last_row, n_forms)
-
-               var new_data_row = rows[rows.length - 2].cloneNode(true)
-               renumber_form(new_data_row, n_forms)
-               //console.log(parseInt(n_forms))
-               //console.log(parseInt(n_forms) + 1)
-               new_data_row.cells[0].textContent = "DS" + parseInt(n_forms)
-               new_data_row.hidden = false
-               tbody.insertBefore(new_data_row, tbody.rows[tbody.rows.length-2])
-
-               new_error_row = rows[rows.length - 2].cloneNode(true)
-               renumber_form(new_error_row, n_forms)
-               tbody.insertBefore(new_error_row, tbody.rows[tbody.rows.length-2])
-           }
+            n_forms = parseInt(total_forms_element.value)
+            total_forms_element.value = n_forms - 1
         }
-      }
-      
-      var strip_extras = function() {
-          var e = document.getElementById("id_costs")
-          for (i in e.children) {
-            child = e.children[i]
-            if (child.id == "id_form-TOTAL_FORMS") {
-                n_forms = child.value
-                child.value = parseInt(n_forms) - 1
-            }
-          }
-          var e = document.getElementById("id_fragility")
-          for (i in e.children) {
-            child = e.children[i]
-            if (child.id == "id_form-TOTAL_FORMS") {
-                n_forms = child.value
-                child.value = parseInt(n_forms) - 1
-            }
-          }
-      }
+        return(true);
+    }
     </script>
+
     {{ form.media }}
 {% endblock %}
 
@@ -226,6 +119,7 @@
       {% endif %}
           onsubmit="return strip_extras()" method="post">
     {% csrf_token %}
+   <input type="button" onclick="strip_extras()" name="test" value="test" />
 {{ component_form.key }}
 <table id="id_component_table">
   <tr><th>{{ component_form.ident.label }}</th><td>{{ component_form.ident }}</td>
@@ -356,7 +250,8 @@
              hidden
          {% endif %}
       > 
-       {{ i.state }}{{ i.rowid }}
+       {{ i.state }}{{ i.rowid }}{{ i.component }}
+
        <td>DS{{ i.state.value }}</td>
        <td>{{ i.description }}</td>
        <td>{{ i.repairs }}</td>
@@ -430,11 +325,12 @@
 {% endif %}
 </form>
     {% if component_form.instance.key %}
-        <form enctype="multipart/form-data" action="{% url 'slat:edit_component' component_form.instance.key %}"
+        <form action="{% url 'slat:edit_component' component_form.instance.key %}"
     {% else %}
         <form enctype="multipart/form-data" action="{% url 'slat:edit_component' %}" 
     {% endif %}
-    onsubmit="return strip_extras()" method="post">
+              onsubmit="return strip_extras()"
+              method="post">
     {% csrf_token %}
 
     <input type="submit" name="cancel" value="Cancel" />

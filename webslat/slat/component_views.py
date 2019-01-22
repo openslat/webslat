@@ -27,6 +27,20 @@ def component(request, component_id):
     return render(request, 'slat/component.html', context)
 
 class CostFormSet(BaseModelFormSet):
+     def __init__(self, data=None, files=None, auto_id='id_%s', prefix=None,
+                 queryset=None, *, initial=None, **kwargs):
+
+         if not prefix:
+             prefix = "cost_form"
+
+         self.queryset = queryset
+         self.initial_extra = initial
+         super(CostFormSet, self).__init__(**{'data': data, 'files': files, 
+                                              'auto_id': auto_id, 
+                                              'prefix': prefix,
+                                              'queryset': queryset,
+                                              'initial': initial, **kwargs})
+
      def clean(self):
          """Make sure the forms are consistent"""
          eprint("> CostFormSet::clean()")
@@ -43,6 +57,19 @@ class CostFormSet(BaseModelFormSet):
          eprint("< CostFormSet::clean() success")
 
 class FragilityFormSet(BaseModelFormSet):
+     def __init__(self, data=None, files=None, auto_id='id_%s', prefix=None,
+                 queryset=None, *, initial=None, **kwargs):
+
+         if not prefix:
+             prefix = "fragility_form"
+
+         self.queryset = queryset
+         self.initial_extra = initial
+         super(FragilityFormSet, self).__init__(**{'data': data, 'files': files, 
+                                                   'auto_id': auto_id, 
+                                                   'prefix': prefix,
+                                                   'queryset': queryset,
+                                                   'initial': initial, **kwargs})
      def clean(self):
          """Checks that no two articles have the same title."""
          eprint("> FragilityFormSet::clean()")
@@ -60,10 +87,10 @@ class FragilityFormSet(BaseModelFormSet):
 def edit_component(request, component_id=None):
     eprint("> edit_component({})".format(component_id))
     eprint(request)
-    #Cost_Form_Set = formset_factory(Cost_Form, CostFormSet, extra=1)
-    Cost_Form_Set = modelformset_factory(CostTab, Cost_Form, formset=CostFormSet, extra=1)
-    #Fragility_Form_Set = modelformset_factory(FragilityTab, Fragility_Form, extra=1)
-    Fragility_Form_Set = modelformset_factory(FragilityTab, Fragility_Form, formset=FragilityFormSet, extra=1)
+    Cost_Form_Set = modelformset_factory(CostTab, Cost_Form, 
+                                         formset=CostFormSet, extra=1)
+    Fragility_Form_Set = modelformset_factory(FragilityTab, Fragility_Form, 
+                                              formset=FragilityFormSet, extra=1)
 
     if request.method == 'GET':
         if component_id:
@@ -98,6 +125,12 @@ def edit_component(request, component_id=None):
             #    eprint("State: {}".format(form.instance.state))
             #eprint("-----------")
     else:
+        # eprint()
+        # eprint("POST DATA")
+        # for key in request.POST:
+        #     eprint("    {}: {}".format(key, request.POST[key]))
+        # eprint()
+        
         if request.POST.get('back'):
             return HttpResponseRedirect(reverse('slat:components'))
         
@@ -113,11 +146,6 @@ def edit_component(request, component_id=None):
 
         # POST request; process data
         if component_id:
-            print("Change component")
-            #for r in request.POST:
-            #    eprint("{}: {}".format(r, request.POST[r]))
-            #eprint("POST: {}".format(request.POST))
-                
             c = ComponentsTab.objects.get(key=component_id)
             f = FragilityTab.objects.filter(component = c)
             costs = CostTab.objects.filter(component = c)
@@ -126,20 +154,14 @@ def edit_component(request, component_id=None):
             cost_form_set = Cost_Form_Set(
                 request.POST,
                 queryset=CostTab.objects.filter(component = c).order_by('state'))
-            eprint("# cost forms: {}".format(len(cost_form_set)))
             for cost_form in cost_form_set:
                 cost_form.instance.component = c
-                eprint(cost_form.is_valid())
-                eprint(cost_form.cleaned_data)
-                #for f in cost_form.fields:
-                #    eprint("{:10}: {}".format(f, cost_form.fields[f]))
 
             fragility_form_set = Fragility_Form_Set(
                 request.POST,
                 queryset=FragilityTab.objects.filter(component = c).order_by('state'))
             for fragility_form in fragility_form_set:
                 fragility_form.instance.component = c
-                eprint(fragility_form.instance)
 
             if not cf.is_valid() or not cost_form_set.is_valid() or not fragility_form_set.is_valid():
                 eprint("IS VALID: {} {} {}".format(cf.is_valid(), cost_form_set.is_valid(), fragility_form_set.is_valid()))
@@ -252,19 +274,23 @@ def edit_component(request, component_id=None):
                     eprint("NO FRAGILITY CHANGES")
 
         else:
-            print("Create component")
             cf = Component_Form()
             # Validate the inputs:
             cf = Component_Form(request.POST)
             cost_form_set = Cost_Form_Set(request.POST)
             eprint("# cost forms: {}".format(len(cost_form_set)))
             for cost_form in cost_form_set:
-                eprint(cost_form.is_valid())
-                eprint(cost_form.cleaned_data)
+                if cost_form.is_valid():
+                    eprint(cost_form.cleaned_data)
+                else:
+                    eprint("(cost_form is invalid)")
 
             fragility_form_set = Fragility_Form_Set(request.POST)
             for fragility_form in fragility_form_set:
-                eprint(fragility_form.instance)
+                if fragility_form.is_valid():
+                    eprint(fragility_form.cleaned_data)
+                else:
+                    eprint("(fragility_form is invalid)")
 
             if not cf.is_valid() or not cost_form_set.is_valid() or not fragility_form_set.is_valid():
                 eprint("IS VALID: {} {} {}".format(cf.is_valid(), cost_form_set.is_valid(), fragility_form_set.is_valid()))
