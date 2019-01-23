@@ -57,8 +57,8 @@
                 inputs = new_data_row.getElementsByTagName(tag)
                 for (i=0; i < inputs.length; i++) {
                     input = inputs[i]
-                    input.name = input.name.replace(/-[0-9]+-/, '-' + n_forms + '-')
-                    input.id = input.id.replace(/-[0-9]+-/, '-' + n_forms + '-')
+                    input.name = input.name.replace(/-[_A-Za-z0-9]+-/, '-' + n_forms + '-')
+                    input.id = input.id.replace(/-[A-Za-z0-9]+-/, '-' + n_forms + '-')
                     if (RegExp('-state$').test(input.id)) {
                         input.value = n_forms + 1
                     }
