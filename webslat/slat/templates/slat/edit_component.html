@@ -33,55 +33,212 @@
           e.hidden = false
       }
 
-    var prefixes = ["cost", "fragility"]
-
     function add_damage_state() {
-        for (p in prefixes) {
-            prefix = prefixes[p]
+      // Add a line for costs
+      var total_forms_element = document.getElementById(
+      "id_cost_form-TOTAL_FORMS")
+      n_forms = parseInt(total_forms_element.value) + 1
+      total_forms_element.value = n_forms
+      
+      var table = document.getElementById("id_cost_table")
+      var tbody = table.children[0]
+      var rows = tbody.rows
+      var n_rows = rows.length
 
-            var total_forms_element = document.getElementById(
-                "id_" + prefix + "_form-TOTAL_FORMS")
-            n_forms = parseInt(total_forms_element.value)
-            total_forms_element.value = n_forms + 1
+      new_data_row = document.createElement('tr')
+      new_data_row.setAttribute('style', 'background-color:lightgray')
+      input = document.createElement('input')
+      input.setAttribute('type', 'hidden')
+      input.setAttribute('name', 'cost_form-' + (n_forms - 1) + '-rowid')
+      input.setAttribute('id', 'id_cost_form-' + (n_forms - 1) + '-rowid')
+      new_data_row.appendChild(input)
+      input = document.createElement('input')
+      input.setAttribute('type', 'hidden')
+      input.setAttribute('name', 'cost_form-' + (n_forms - 1) + '-state')
+      input.setAttribute('id', 'id_cost_form-' + (n_forms - 1) + '-state')
+      input.setAttribute('value', n_forms)
+      new_data_row.appendChild(input)
+      input = document.createElement('input')
+      input.setAttribute('type', 'hidden')
+      input.setAttribute('name', 'cost_form-' + (n_forms - 1) + '-component')
+      input.setAttribute('id', 'id_cost_form-' + (n_forms - 1) + '-component')
+      new_data_row.appendChild(input)
+      
+      td = document.createElement('td')
+      td.textContent = "DS" + n_forms
+      new_data_row.appendChild(td)
+      
+      td = document.createElement('td')
+      td.setAttribute('style', "border-right-style:hidden; border-left-width:medium")
+      input = document.createElement('input')
+      input.setAttribute('type', 'number')
+      input.setAttribute('name', 'cost_form-' + (n_forms - 1) + '-lower_limit')
+      input.setAttribute('id', 'id_cost_form-' + (n_forms - 1) + '-lower_limit')
+      input.setAttribute('value', '0')
+      td.appendChild(input)
+      new_data_row.appendChild(td)
+      
+      td = document.createElement('td')
+      input = document.createElement('input')
+      input.setAttribute('type', 'number')
+      input.setAttribute('name', 'cost_form-' + (n_forms - 1) + '-max_cost')
+      input.setAttribute('id', 'id_cost_form-' + (n_forms - 1) + '-max_cost')
+      input.setAttribute('step', 'any')
+      input.setAttribute('value', '0')
+      td.appendChild(input)
+      new_data_row.appendChild(td)
+      
+      td = document.createElement('td')
+      td.setAttribute('style', "border-right-style:hidden; border-left-width:medium")
+      input = document.createElement('input')
+      input.setAttribute('type', 'number')
+      input.setAttribute('name', 'cost_form-' + (n_forms - 1) + '-upper_limit')
+      input.setAttribute('id', 'id_cost_form-' + (n_forms - 1) + '-upper_limit')
+      input.setAttribute('value', '0')
+      td.appendChild(input)
+      new_data_row.appendChild(td)
+      
+      td = document.createElement('td')
+      input = document.createElement('input')
+      input.setAttribute('type', 'number')
+      input.setAttribute('name', 'cost_form-' + (n_forms - 1) + '-min_cost')
+      input.setAttribute('id', 'id_cost_form-' + (n_forms - 1) + '-min_cost')
+      input.setAttribute('step', 'any')
+      input.setAttribute('value', '0')
+      td.appendChild(input)
+      new_data_row.appendChild(td)
+      
+      td = document.createElement('td')
+      td.setAttribute('style', "border-left-width:medium")
+      input = document.createElement('input')
+      input.setAttribute('type', 'number')
+      input.setAttribute('name', 'cost_form-' + (n_forms - 1) + '-dispersion')
+      input.setAttribute('id', 'id_cost_form-' + (n_forms - 1) + '-dispersion')
+      input.setAttribute('step', 'any')
+      input.setAttribute('value', '0')
+      td.appendChild(input)
+      new_data_row.appendChild(td)
+      
+      tbody.appendChild(new_data_row)
+      
+      new_error_row = document.createElement('tr')
+      new_error_row.setAttribute('style', 'background-color:lightgray')
+      new_error_row.setAttribute('hidden', '')
+      for (i = 0; i < 6; i++) {
+          td = document.createElement('td')
+          new_error_row.appendChild(td)
+      }      
+      tbody.appendChild(new_error_row)
+         
+      // Do the same for fragility       
+      var total_forms_element = document.getElementById("id_fragility_form-TOTAL_FORMS")
+      n_forms = parseInt(total_forms_element.value) + 1
+      total_forms_element.value = n_forms
+      
+      var table = document.getElementById("id_fragility_table")
+      var tbody = table.children[0]
+      var rows = tbody.rows
+      var n_rows = rows.length
+                     
+      new_data_row = document.createElement('tr')
+      new_data_row.setAttribute('style', 'background-color:lightgray')
+      input = document.createElement('input')
+      input.setAttribute('type', 'hidden')
+      input.setAttribute('name', 'fragility_form-' + (n_forms - 1) + '-rowid')
+      input.setAttribute('id', 'id_fragility_form-' + (n_forms - 1) + '-rowid')
+      new_data_row.appendChild(input)
+      input = document.createElement('input')
+      input.setAttribute('type', 'hidden')
+      input.setAttribute('name', 'fragility_form-' + (n_forms - 1) + '-state')
+      input.setAttribute('id', 'id_fragility_form-' + (n_forms - 1) + '-state')
+      input.setAttribute('value', n_forms)
+      new_data_row.appendChild(input)
+      input = document.createElement('input')
+      input.setAttribute('type', 'hidden')
+      input.setAttribute('name', 'fragility_form-' + (n_forms - 1) + '-component')
+      input.setAttribute('id', 'id_fragility_form-' + (n_forms - 1) + '-component')
+      new_data_row.appendChild(input)
 
-            var table = document.getElementById("id_" + prefix + "_table")
-            var tbody = table.children[0]
-            var rows = tbody.rows
-            var n_rows = rows.length
+      td = document.createElement('td')
+      td.textContent = "DS" + n_forms
+      new_data_row.appendChild(td)
+      
+      td = document.createElement('td')
+      input = document.createElement('textarea')
+      input.setAttribute('cols', '40')
+      input.setAttribute('rows', '10')
+      input.setAttribute('name', 'fragility_form-' + (n_forms - 1) + '-description')
+      input.setAttribute('id', 'id_fragility_form-' + (n_forms - 1) + '-description')
+      td.appendChild(input)
+      new_data_row.appendChild(td)
 
-            var new_data_row = rows[n_rows - 2].cloneNode(true)
-            new_data_row.cells[0].textContent = "DS" + (n_forms + 1)
-            var tags = ['input', 'textarea']
-            for (t in tags) {
-                tag = tags[t]
-                inputs = new_data_row.getElementsByTagName(tag)
-                for (i=0; i < inputs.length; i++) {
-                    input = inputs[i]
-                    input.name = input.name.replace(/-[_A-Za-z0-9]+-/, '-' + n_forms + '-')
-                    input.id = input.id.replace(/-[A-Za-z0-9]+-/, '-' + n_forms + '-')
-                    if (RegExp('-state$').test(input.id)) {
-                        input.value = n_forms + 1
-                    }
-                }
-            }
-            var new_error_row = rows[n_rows - 1].cloneNode(true)
+      td = document.createElement('td')
+      input = document.createElement('textarea')
+      input.setAttribute('cols', '40')
+      input.setAttribute('rows', '10')
+      input.setAttribute('name', 'fragility_form-' + (n_forms - 1) + '-repairs')
+      input.setAttribute('id', 'id_fragility_form-' + (n_forms - 1) + '-repairs')
+      td.appendChild(input)
+      new_data_row.appendChild(td)
 
-            tbody.rows[n_rows - 2].hidden = false
-            tbody.appendChild(new_data_row)
-            tbody.appendChild(new_error_row)
-        }
-    }
+      td = document.createElement('td')
+      input = document.createElement('input')
+      input.setAttribute('type', 'number')
+      input.setAttribute('name', 'fragility_form-' + (n_forms - 1) + '-median')
+      input.setAttribute('id', 'id_fragility_form-' + (n_forms - 1) + '-median')
+      input.setAttribute('step', 'any')
+      input.setAttribute('value', '0')
+      td.appendChild(input)
+      new_data_row.appendChild(td)
 
-    var strip_extras = function() {
-        for (p in prefixes) {
-            prefix = prefixes[p]
-            var total_forms_element = document.getElementById(
-                "id_" + prefix + "_form-TOTAL_FORMS")
+      td = document.createElement('td')
+      input = document.createElement('input')
+      input.setAttribute('type', 'number')
+      input.setAttribute('name', 'fragility_form-' + (n_forms - 1) + '-beta')
+      input.setAttribute('id', 'id_fragility_form-' + (n_forms - 1) + '-beta')
+      input.setAttribute('step', 'any')
+      input.setAttribute('value', '0')
+      td.appendChild(input)
+      new_data_row.appendChild(td)
 
-            n_forms = parseInt(total_forms_element.value)
-            total_forms_element.value = n_forms - 1
-        }
-        return(true);
+      td = document.createElement('td')
+      image_table = document.createElement('table')
+      image_table_body = document.createElement('tbody')
+      image_tr = document.createElement('tr')
+      image_td = document.createElement('td')
+      input = document.createElement('input')
+      input.setAttribute('type', 'hidden')
+      input.setAttribute('name', 'fragility_form-' + (n_forms - 1) + '-image')
+      input.setAttribute('id', 'id_fragility_form-' + (n_forms - 1) + '-image')
+      image_td.appendChild(input)
+      image = document.createElement('image')
+      image.setAttribute('id', 'id_form-' + (n_forms - 1) + '-image-preview')
+      image.setAttribute('src', '/static/slat/images//None')
+      image.setAttribute('hidden', '')
+      image_td.appendChild(image)
+      image_tr.appendChild(image_td)
+      image_td = document.createElement('td')
+      input = document.createElement('input')
+      input.setAttribute('id', 'id_form-' + (n_forms - 1) + '-image-delete-button')
+      input.setAttribute('type', 'button')                
+      input.setAttribute('style', 'border-width:thin; border-color:black')
+      input.setAttribute('value', 'Delete Image')
+      input.setAttribute('hidden', '')
+      input.setAttribute('title' , 'Click to delete this image.')
+                      input.setAttribute('onclick', 'delete_image(1)')
+      image_td.appendChild(input)
+      input = document.createElement('input')
+      input.setAttribute('id', 'id_path-' + (n_forms - 1))
+      input.setAttribute('type', 'file')                
+      input.setAttribute('name', 'image-' + (n_forms - 1))
+      input.setAttribute('onchange', 'replace_image(this, ' + (n_forms - 1) + ')')
+      image_td.appendChild(input)
+      image_tr.appendChild(image_td)
+      image_table_body.appendChild(image_tr)
+      image_table.appendChild(image_table_body)
+      td.appendChild(image_table)
+      new_data_row.appendChild(td)
+      tbody.appendChild(new_data_row)
     }
     </script>
 
@@ -117,9 +274,8 @@
 {% else %}
     <form enctype="multipart/form-data" action="{% url 'slat:edit_component' %}" 
       {% endif %}
-          onsubmit="return strip_extras()" method="post">
+          method="post">
     {% csrf_token %}
-   <input type="button" onclick="strip_extras()" name="test" value="test" />
 {{ component_form.key }}
 <table id="id_component_table">
   <tr><th>{{ component_form.ident.label }}</th><td>{{ component_form.ident }}</td>
@@ -179,9 +335,11 @@
   </tr>
 {% for cf in cost_form %}
   <tr style="background-color:{% cycle 'lightgray' 'white' as stripe %}"
+      {% comment %}
       {% if forloop.last %}
          hidden
       {% endif %}
+      {% endcomment %}
       >
       {{ cf.rowid }}{{ cf.state }}{{ cf.component }}
     <td>
@@ -194,7 +352,7 @@
   {% with forloop.counter|cut:" " as index %}
       {% with cost_form.errors|slice:index|last as errors %}
           <tr style="background-color:{{ stripe }}"       
-              {% if forloop.last or not errors%}
+              {% if not errors%}
                   hidden
               {% endif %}
           >
@@ -246,9 +404,11 @@
   <tr><th>State</th><th>Description</th><th>Repairs</th><th>Median EDP</th><th>Dispersion</th><th>Image</th></tr>
   {% for i in fragility_form %}
      <tr style="background-color:{% cycle 'lightgray' 'white' as stripe %}"
+         {% comment %}
          {% if forloop.last %}
              hidden
          {% endif %}
+         {% endcomment %}
       > 
        {{ i.state }}{{ i.rowid }}{{ i.component }}
 
@@ -276,7 +436,6 @@
                         hidden="false"
                     {% endif %}
                     />
-           </div>
          <input type="file" name="image-{{ index }}" id="id_path-{{ index }}" onchange="replace_image(this, {{ index }})"/>
          </td></tr></table>
          {% endwith %}
@@ -284,7 +443,7 @@
     {% with forloop.counter|cut:" " as index %}
         {% with fragility_form.errors|slice:index|last as errors %}
                 <tr style="background-color:{{ stripe }}"
-                    {% if forloop.last or not errors %}
+                    {% if not errors %}
                         hidden
                     {% endif %}
                 >

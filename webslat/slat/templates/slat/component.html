@@ -65,6 +65,8 @@
 </table>
 <br/>
 <br/>
+<a href="{% url 'slat:edit_component' component.key %}" class="link_button">Edit Component</a>
+
 <form action="{% url 'slat:components' %}" method="get">
 {% csrf_token %}
 <input type="submit" value="Back to Component List" />
