@@ -291,23 +291,6 @@ def edit_component(request, component_id=None):
 
             if not cf.is_valid() or not cost_form_set.is_valid() or not fragility_form_set.is_valid():
                 eprint("IS VALID: {} {} {}".format(cf.is_valid(), cost_form_set.is_valid(), fragility_form_set.is_valid()))
-
-                cost_form_set.forms.append(cost_form_set.empty_form)
-                fragility_form_set.forms.append(fragility_form_set.empty_form)
-                n = len(cost_form_set.forms)
-                cost_form_set.forms[n - 1]['state'].initial = n
-                cost_form_set.forms[n - 1]['min_cost'].initial = 0
-                cost_form_set.forms[n - 1]['max_cost'].initial = 0
-                cost_form_set.forms[n - 1]['lower_limit'].initial = 0
-                cost_form_set.forms[n - 1]['upper_limit'].initial = 0
-                cost_form_set.forms[n - 1]['dispersion'].initial = 0
-                fragility_form_set.forms[n - 1]['state'].initial = n
-                fragility_form_set.forms[n - 1]['description'].initial = ""
-                fragility_form_set.forms[n - 1]['repairs'].initial = ""
-                fragility_form_set.forms[n - 1]['median'].initial = 0
-                fragility_form_set.forms[n - 1]['beta'].initial = 0
-                fragility_form_set.forms[n - 1]['image'].initial = None
-
                 context = { 'component_form': cf,
                             'cost_form': cost_form_set,
                             'fragility_form': fragility_form_set}
@@ -354,8 +337,6 @@ def edit_component(request, component_id=None):
         fragility_form_set.forms[n - 1]['component'].initial = c
     
 
-    eprint("----- DEFAULT RETURN -----")
-    eprint(cost_form_set.forms[0])
     context = { 'component_form': cf,
                 'cost_form': cost_form_set,
                 'fragility_form': fragility_form_set}
