@@ -121,11 +121,6 @@ def edit_component(request, component_id=None):
             cf = Component_Form()
             cost_form_set = Cost_Form_Set(queryset=CostTab.objects.none())
             fragility_form_set = Fragility_Form_Set(queryset=FragilityTab.objects.none())
-            #eprint("cost_form_set: {}".format(dir(cost_form_set)))
-            #eprint("cost_form_set.forms: {}".format(cost_form_set.forms))
-            #for form in cost_form_set.forms:
-            #    eprint("State: {}".format(form.instance.state))
-            #eprint("-----------")
     else:
         eprint()
         eprint("POST DATA")
@@ -140,14 +135,7 @@ def edit_component(request, component_id=None):
             return HttpResponseRedirect(reverse('slat:components'))
         
         if request.POST.get('cancel'):
-            if component_id:
-                return HttpResponseRedirect(
-                    reverse(
-                        'slat:edit_component', 
-                        args=(component_id,)))
-            else:
-                return HttpResponseRedirect(
-                    reverse('slat:components'))
+            return HttpResponseRedirect(reverse('slat:components'))
 
         # POST request; process data
         if component_id:
@@ -160,19 +148,11 @@ def edit_component(request, component_id=None):
             cost_form_set = Cost_Form_Set(
                 request.POST,
                 queryset=CostTab.objects.filter(component = c).order_by('state'))
-            #for cost_form in cost_form_set:
-            #    cost_form.instance.component = c
 
             fragility_form_set = Fragility_Form_Set(
                 request.POST,
                 queryset=FragilityTab.objects.filter(component = c).order_by('state'))
 
-            #for fragility_form in fragility_form_set:
-            #    fragility_form.instance.component = c
- 
-            eprint("# fragility_forms: {}".format(len(fragility_form_set.forms)))
-            eprint("fragility_form_set.is_valid(): {}".format(fragility_form_set.is_valid())) 
-        
             if not cf.is_valid() or not cost_form_set.is_valid() or not fragility_form_set.is_valid():
                 eprint("IS VALID: {} {} {}".format(cf.is_valid(), cost_form_set.is_valid(), fragility_form_set.is_valid()))
                 eprint("INVALID")
@@ -270,7 +250,9 @@ def edit_component(request, component_id=None):
                     eprint("FRAGILITY CHANGED")
                 else:
                     eprint("NO FRAGILITY CHANGES")
-
+            eprint("c: {}".format(c))
+            eprint("c.ident: {}".format(c.ident))
+            return HttpResponseRedirect(reverse('slat:component', args=(c.ident,)))
         else:
             cf = Component_Form()
             # Validate the inputs:
@@ -308,35 +290,9 @@ def edit_component(request, component_id=None):
                     fragility_form.instance.component = instance
                     fragility_form.save()
                 
-        if component_id:
-            return HttpResponseRedirect(
-                reverse(
-                    'slat:edit_component', 
-                    args=(component_id,)))
-        else:
-            return HttpResponseRedirect(
-                reverse('slat:edit_component'))
+        return HttpResponseRedirect(reverse('slat:component', 
+                                            args=(instance.ident,)))
     
-    n = len(cost_form_set.forms)
-    # cost_form_set.forms[n - 1]['state'].initial = n
-    # cost_form_set.forms[n - 1]['min_cost'].initial = 0
-    # cost_form_set.forms[n - 1]['max_cost'].initial = 0
-    # cost_form_set.forms[n - 1]['lower_limit'].initial = 0
-    # cost_form_set.forms[n - 1]['upper_limit'].initial = 0
-    # cost_form_set.forms[n - 1]['dispersion'].initial = 0
-    # fragility_form_set.forms[n - 1]['state'].initial = n
-    # fragility_form_set.forms[n - 1]['description'].initial = ""
-    # fragility_form_set.forms[n - 1]['repairs'].initial = ""
-    # fragility_form_set.forms[n - 1]['median'].initial = 0
-    # fragility_form_set.forms[n - 1]['beta'].initial = 0
-    # fragility_form_set.forms[n - 1]['image'].initial = None
-
-    if component_id:
-        c = ComponentsTab.objects.get(pk=component_id)
-        cost_form_set.forms[n - 1]['component'].initial = c
-        fragility_form_set.forms[n - 1]['component'].initial = c
-    
-
     context = { 'component_form': cf,
                 'cost_form': cost_form_set,
                 'fragility_form': fragility_form_set}
