@@ -93,6 +93,10 @@ def run():
                             "Anothe demo project")
         project.save()
 
+    if len(Project.objects.filter(title_text="Sam Spade's Red Book Project")) == 0:
+        project = make_example_2(samspade)
+        project.save()
+
     marlowe = User.objects.get(username='marlowe')
     if len(Project.objects.filter(title_text="Phil Marlowe's First Project")) == 0:
         project = make_demo(marlowe, 

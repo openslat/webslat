@@ -348,8 +348,8 @@ def make_example_2(user):
 
     for comp in components:
         component = ComponentsTab.objects.get(ident=comp['id'])
-        for l in comp['levels']:
-            level = Level.objects.get(project=project, level=l)
+        if len(comp['levels']) == 1:
+            level = Level.objects.get(project=project, level=comp['levels'][0])
             
             if re.compile(".*Accel").match(component.demand.name):
                 demand_type='A'
@@ -357,7 +357,7 @@ def make_example_2(user):
                 demand_type='D'
             else:
                 raise ValueError("UNRECOGNIZED DEMAND TYPE FOR COMPONENT: {}".format(component.demand.name))
-            
+
             demand = EDP_Grouping.objects.get(project=project,
                                               level=level,
                                               type=demand_type)
@@ -366,7 +366,21 @@ def make_example_2(user):
                                     quantity_y=comp['quantity'][1],
                                     quantity_u=comp['quantity'][2])
             group.save()
-    
+        else:
+            pattern = Component_Group_Pattern(
+                project=project,
+                component=component,
+                quantity_x=comp['quantity'][0],
+                quantity_y=comp['quantity'][1],
+                quantity_u=comp['quantity'][2],
+                cost_adj=1.0,
+                comment='Created as a pattern group.')
+            pattern.save()
+
+            for l in comp['levels']:
+                level = Level.objects.get(project=project, level=l)
+                pattern.CreateFromPattern(level)
+
     return project
 
 class ProjectCreateTypeForm(Form):

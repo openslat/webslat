@@ -303,11 +303,6 @@
     <td class="error">{{ component_form.errors.demand }}</td>
     {% endif %}
   </tr>
-  <tr><th>{{ component_form.structural.label }}</th><td>{{ component_form.structural }}</td>
-    {% if component_form.errors.structural %}
-    <td class="error">{{ component_form.errors.structural }}</td>
-    {% endif %}
-  </tr>
 </table>
 <hr/>
 <input id="id-ds-add" type="button" style="border-width:thin; border-color:black" value="Add a damage state" title="Click to add a damage state." onclick="add_damage_state()"/>
