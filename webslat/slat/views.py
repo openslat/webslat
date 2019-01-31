@@ -641,6 +641,68 @@ def project(request, project_id=None):
         raise(ValueError("Unknown method or project_id"))
    
 @login_required
+def copy_components(request, dest_project_id, src_project_id=None):
+    dest_project = get_object_or_404(Project, pk=dest_project_id)
+    if not src_project_id:
+        # Present choices
+        project_list = []
+        for project in Project.objects.all():
+            if project.CanRead(request.user) and not project == dest_project:
+                project_list.append(project)
+        context = {'dest_project': dest_project,
+                   'project_list': project_list}
+
+        return render(request, 'slat/copy_components.html', context)
+    else:
+        # Import component groups
+        src_project = get_object_or_404(Project, pk=src_project_id)
+        eprint("COPY COMPONENTS FROM {} to {}".format(src_project.title_text,
+                                                      dest_project.title_text))
+        # Find components/patterns that we need to copy:
+        pattern_map = {}
+        for pattern in Component_Group_Pattern.objects.filter(project=src_project):
+            new_pattern = Component_Group_Pattern(
+                project = dest_project,
+                component = pattern.component,
+                quantity_x = pattern.quantity_x,
+                quantity_y = pattern.quantity_y,
+                quantity_u = pattern.quantity_u,
+                cost_adj = pattern.cost_adj,
+                comment = pattern.comment)
+            new_pattern.save()
+            pattern_map[pattern.id] = new_pattern.id
+        eprint("Pattern Map: {}".format(pattern_map))
+        
+        for cg in Component_Group.objects.filter(demand__project=src_project).order_by("component"):
+            if cg.demand.level.level > dest_project.num_levels():
+                continue
+            
+            pattern = cg.pattern and Component_Group_Pattern.objects.get(id = pattern_map[cg.pattern.id])
+            level = Level.objects.get(project=dest_project, level=cg.demand.level.level)
+            demand_type = cg.demand.type
+            eprint("Project: {}".format(dest_project))
+            eprint("Demand Type: {}".format(demand_type))
+            eprint("Level: {}".format(level))
+            eprint("Src Level: {}".format(cg.demand.level))
+            demand = EDP_Grouping.objects.get(
+                project=dest_project,
+                level=level,
+                type=demand_type)
+
+            new_group = Component_Group(
+                component= cg.component,
+                cost_adj = cg.cost_adj,
+                quantity_x=cg.quantity_x,
+                quantity_y= cg.quantity_y,
+                quantity_u= cg.quantity_u,
+                comment= cg.comment,
+                pattern = pattern,
+                demand=demand)
+            new_group.save()
+            
+        return HttpResponseRedirect(reverse('slat:project', args=(dest_project_id,)))
+    
+@login_required
 def hazard(request, project_id):
     # If the project doesn't exist, generate a 404:
     project = get_object_or_404(Project, pk=project_id)
@@ -2629,3 +2691,4 @@ def queue_task(sender, instance, **kwargs):
 def queue_delete_task(sender, instance, **kwargs):
     project = instance.demand.project
     HandleChange.delay(object_class=str(type(project)), object_id=project.id)
+

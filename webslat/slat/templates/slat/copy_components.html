@@ -1,0 +1,31 @@
+{% extends "base_site.html" %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
+{{ form.media }}
+{{ form1.media }}
+
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} slat {% endblock %}
+{% block title %}Copy Components to Project{% endblock %}
+{% block content_title %}Copy Components to Project{% endblock %}
+{% block content %}
+<p>Copy components to the project '{{ dest_project.title_text }}'.</p>
+<p><b>Projects:</b></p>
+{% if project_list %}
+    <p><i>You have access to these projects:</i></p>
+    <ul>
+    {% for project in project_list %}
+        <li><a href="{% url 'slat:copy_components' dest_project.id project.id %}">{{ project.title_text }}</a> 
+          {% if dest_project.num_levels <  project.num_levels %}
+              <i>(Note that components above level {{ dest_project.num_levels }}
+                will be ignored.)</i>
+          {% endif %}
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No projects are available.</p>
+{% endif %}
+<a href="{% url 'slat:index' %}">Return to Project List</a>
+{% endblock %}
