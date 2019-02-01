@@ -44,13 +44,19 @@ import logging
 from django.template import Context, Template
 from django.db.models.signals import pre_delete
 import pickle
+from  webslat.settings import SINGLE_USER_MODE
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
-
+from django.contrib.auth import REDIRECT_FIELD_NAME
+if SINGLE_USER_MODE:
+    def login_required(function=None):
+        return function
+    
 @login_required
 def index(request):
+    eprint(dir(request.user))
     project_list = []
     for project in Project.objects.all():
         if project.CanRead(request.user):
@@ -58,10 +64,11 @@ def index(request):
                                  'title_text': project.title_text})
 
     group_list = []
-    for group in Group.objects.all():
-        if group.IsMember(request.user):
-            #group_list.append({'name': group.name})
-            group_list.append(group)
+    if request.user != AnonymousUser():
+        for group in Group.objects.all():
+            if group.IsMember(request.user):
+                #group_list.append({'name': group.name})
+                group_list.append(group)
 
                 
     context = { 'project_list': project_list, 'group_list': group_list}
@@ -199,10 +206,10 @@ def make_demo(user, title, description):
 
     return project
 
-def make_example_2(user):
+def make_example_2(user, title="Example #2"):
     project = Project()
-    setattr(project, 'title_text', "Example #2")
-    setattr(project, 'description_text', "This is based on the second example in Brendan Bradley's paper. ")
+    setattr(project, 'title_text', title)
+    setattr(project, 'description_text', "This is based on the second example in Brendon Bradley's paper. ")
     setattr(project, 'rarity', 1/500)
     setattr(project, 'mean_im_collapse', 1.2)
     setattr(project, 'sd_ln_im_collapse', 0.47)

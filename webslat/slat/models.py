@@ -19,6 +19,7 @@ from django.dispatch import receiver
 import numpy as np
 import re
 import pickle
+from django.contrib.auth.models import AnonymousUser
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -105,6 +106,9 @@ class Project(models.Model):
     sd_ln_cost_demolition = models.FloatField(null=True, blank=True)
 
     def AssignRole(self, user, role):
+        if user == AnonymousUser():
+            return
+        
         if role == ProjectUserPermissions.ROLE_NONE:
             try: 
                 permissions = ProjectUserPermissions.objects.get(project=self, user=user)
@@ -122,6 +126,8 @@ class Project(models.Model):
                 permissions.save()
 
     def GetRole(self, user):
+        if user == AnonymousUser():
+            return ProjectUserPermissions.ROLE_FULL
         try: 
             permissions = ProjectUserPermissions.objects.get(project=self, user=user)
             return permissions.role
@@ -129,6 +135,9 @@ class Project(models.Model):
             return ProjectUserPermissions.ROLE_NONE
 
     def CanRead(self, user):
+        if user == AnonymousUser():
+            return ProjectUserPermissions.ROLE_FULL
+        
         role = self.GetRole(user)
         if role != ProjectUserPermissions.ROLE_NONE:
             return True
@@ -139,6 +148,9 @@ class Project(models.Model):
         return False
 
     def CanWrite(self, user):
+        if user == AnonymousUser():
+            return ProjectUserPermissions.ROLE_FULL
+
         role = self.GetRole(user)
         if role != ProjectUserPermissions.ROLE_NONE:
             return True

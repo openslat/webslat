@@ -8,10 +8,14 @@
 {% block content_title %}Your WebsSLAT projects{% endblock %}
 
 {% block content %}
-<p>You are logged in as <b><i>{{ request.user.username }}</i></b>.</p>
+    {% if not user.is_anonymous %}
+    <p>You are logged in as <b><i>{{ request.user.username }}</i></b>.</p>
+    {% endif %}
 <p><b>Projects:</b></p>
 {% if project_list %}
+    {% if not user.is_anonymous %}
     <p><i>You have access to these projects:</i></p>
+    {% endif %}
     <ul>
     {% for project in project_list %}
         <li><a href="{% url 'slat:project' project.id %}">{{ project.title_text }}</a> 
@@ -25,19 +29,20 @@
 &nbsp;
 <a href="{% url 'slat:project' %}" class="link_button">Create a New Project</a>
     
-<p><b>Groups</b></p>
-{% if group_list %}
-    <p><i>You are a member of these groups:</i></p>
-    <ul>
-      {% for group in group_list %}
-          <li><a href="{% url 'slat:group' group.id %}">{{ group.name }}</a> </li>
-      {% endfor %}
-      </ul>
-{% else %}
-    <p><i>You are not a member of any groups.</i></p>
+{% if not user.is_anonymous %}
+    <p><b>Groups</b></p>
+    {% if group_list %}
+        <p><i>You are a member of these groups:</i></p>
+        <ul>
+          {% for group in group_list %}
+              <li><a href="{% url 'slat:group' group.id %}">{{ group.name }}</a> </li>
+          {% endfor %}
+          </ul>
+    {% else %}
+        <p><i>You are not a member of any groups.</i></p>
+    {% endif %}
+    <a href="{% url 'slat:group' %}" class="link_button">Create a New Group</a>
 {% endif %}
-<a href="{% url 'slat:group' %}" class="link_button">Create a New Group</a>
-
     
 
 {% endblock %}
