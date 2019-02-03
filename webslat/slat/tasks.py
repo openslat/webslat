@@ -18,6 +18,7 @@ import seaborn as sns
 from math import *
 from django.utils.safestring import mark_safe
 from .project_charts import *
+from  webslat.settings import SINGLE_USER_MODE
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -357,10 +358,11 @@ def ImportETABS(user_id, preprocess_data_id):
                     x['IM'], x['Story']
                 )]['Accel_Y'])
             EDP_Point(demand=edp_y, im=im, median_x=accel, sd_ln_x=dispersion).save()
-            
-    project.AssignRole(
-        User.objects.get(id=user_id),
-        ProjectUserPermissions.ROLE_FULL)
+
+    if not SINGLE_USER_MODE:
+        project.AssignRole(
+            User.objects.get(id=user_id),
+            ProjectUserPermissions.ROLE_FULL)
     messages.append("Done")
     current_task.update_state(
         meta={ 'message': "\n".join(messages)})
