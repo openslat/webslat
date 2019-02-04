@@ -189,7 +189,9 @@ def ETABS_preprocess(title, description, strength,
     xl_workbook = pd.ExcelFile(io.BytesIO(file_data))
     sheet  = xl_workbook.parse("Modal Participating Mass Ratios", skiprows=(1))
     preprocess_data.period_units = sheet['Period'][0]
-    
+    if preprocess_data.period_units != 'sec':
+        preprocess_data.period_units_message = "WebSLAT doesn't recognise this units string. If these values are not in seconds, your results will be incorrect."
+
     mpms = munge_data_frame(sheet)
 
     cases = set(mpms['Case'])
@@ -215,6 +217,9 @@ def ETABS_preprocess(title, description, strength,
                               skiprows=1)
     height_unit = sheet['Z'][0]
     preprocess_data.height_units = height_unit
+    if preprocess_data.height_units != 'm':
+        preprocess_data.height_units_message = "WebSLAT doesn't recognise this units string. If these values are not in metres, your results will be incorrect."
+        
     dcomd = munge_data_frame(sheet)
     height_df = dcomd.loc[lambda x: 
                           x['Load Case/Combo'] == 'Dead'].\
@@ -238,6 +243,9 @@ def ETABS_preprocess(title, description, strength,
 
     preprocess_data.accel_units_x = sheet['UX'][0]
     preprocess_data.accel_units_y = sheet['UY'][0]
+    if preprocess_data.accel_units_x != 'mm/sec²' or \
+       preprocess_data.accel_units_y != 'mm/sec²':
+        preprocess_data.accel_units_message = "WebSLAT doesn't recognise these units strings. If these values are not in mm/sec², your results will be incorrect."
     sa = munge_data_frame(sheet)
     accel_choices = list(set(sa['Load Case/Combo']))
     accel_choices.sort()

@@ -80,7 +80,11 @@ function Refresh_Period() {
 <tr><th>Frame Type Y: </th><td>{{ confirm_form.preprocess_data.frame_type_y }}</td></tr>
 </table>
 <hr/>
-<p><b>Period Units: </b>{{ preprocess_data.period_units }}</p>
+<p><b>Period Units: </b>{{ preprocess_data.period_units }}
+  {% if preprocess_data.period_units_message %}
+  (<b><i style="color:red">{{ preprocess_data.period_units_message }}</i></b>)
+  {% endif %}
+</p>
 </p>
 <form action="{% url 'slat:etabs_confirm' preprocess_data.id %}" method="post">
     {% csrf_token %}
@@ -123,6 +127,9 @@ function Refresh_Period() {
     </td></tr></table>
 <hr/>
     <p><b>Height Unit: </b>{{ confirm_form.preprocess_data.height_units }}</p>
+    {% if preprocess_data.height_units_message %}
+        (<b><i style="color:red">{{ preprocess_data.height_units_message }}</i></b>)
+    {% endif %}
     <table><tr><th>Story</th><th>Height</th></tr>
     {% for level in confirm_form.preprocess_data.get_heights %}
       <tr><td>{{ level.Story }}</td><td>{{ level.Height}}</td></tr>
@@ -137,6 +144,9 @@ function Refresh_Period() {
     <p><b>Acceleration Units:</b></p>
     <p><b>X</b>: {{ confirm_form.preprocess_data.accel_units_x }}</p>
     <p><b>Y</b>: {{ confirm_form.preprocess_data.accel_units_y }}</p>
+    {% if preprocess_data.accel_units_message %}
+        (<b><i style="color:red">{{ preprocess_data.accel_units_message }}</i></b>)
+    {% endif %}
     <p> Choose the 'Load Case/Combo' corresponding to the 'Modal Response Spectrum Analysis' load 
       case for acceleration :</p>
     <b>X:</b>{{ confirm_form.x_accel_case }}
