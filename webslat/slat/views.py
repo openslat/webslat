@@ -2128,6 +2128,8 @@ class ComponentAutocomplete(autocomplete.Select2QuerySetView):
         #if not self.request.user.is_authenticated():
         #    return Country.objects.none()
 
+        q = self.request.GET.get('q')
+
         qs = ComponentsTab.objects.all()
 
         category = self.forwarded.get('category', None)
@@ -2139,6 +2141,9 @@ class ComponentAutocomplete(autocomplete.Select2QuerySetView):
         if floor_num and int(floor_num)==0:
             acceleration = DemandsTab.objects.filter(name__icontains='Accel')[0]
             qs = qs.filter(demand=acceleration)
+
+        if q:
+            qs = qs.filter(ident__iregex=q)
             
         return qs
 
