@@ -45,6 +45,7 @@ from django.template import Context, Template
 from django.db.models.signals import pre_delete
 import pickle
 from  webslat.settings import SINGLE_USER_MODE
+from django.db.models import Q
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -2143,7 +2144,7 @@ class ComponentAutocomplete(autocomplete.Select2QuerySetView):
             qs = qs.filter(demand=acceleration)
 
         if q:
-            qs = qs.filter(ident__iregex=q)
+            qs = qs.filter(Q(ident__iregex=q) | Q(name__iregex=q))
             
         return qs
 
