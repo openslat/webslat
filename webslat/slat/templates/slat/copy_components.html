@@ -1,8 +1,6 @@
 {% extends "base_site.html" %}
 {% load i18n static %}
 {% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'slat/style.css' %}?{ now "U" %}" />
-{{ form.media }}
-{{ form1.media }}
 
 {% endblock %}
 
@@ -13,17 +11,26 @@
 <p>Copy components to the project '{{ dest_project.title_text }}'.</p>
 <p><b>Projects:</b></p>
 {% if project_list %}
-    <p><i>You have access to these projects:</i></p>
-    <ul>
-    {% for project in project_list %}
-        <li><a href="{% url 'slat:copy_components' dest_project.id project.id %}">{{ project.title_text }}</a> 
+    <form action="{% url 'slat:copy_components' dest_project.id %}" method="post">
+      {% csrf_token %}
+      <input type="checkbox" name="clean" value="keep")>Remove existing components
+      <i>(Tick this box if you want to remove any components that are already part of this project)</i> <br>
+      
+      <p><i>Click on the project whose components you wish to copy:</i></p>
+      <ul>
+        {% for project in project_list %}
+        <li>
+          <p><input type="radio" name="source" value="{{ project.id }}" required>{{ project.title_text }}</p>
           {% if dest_project.num_levels <  project.num_levels %}
-              <i>(Note that components above level {{ dest_project.num_levels }}
-                will be ignored.)</i>
-          {% endif %}
+                                           <i>(Note that components above level {{ dest_project.num_levels }}
+                                             will be ignored.)</i>
+                                           {% endif %}
         </li>
-    {% endfor %}
-    </ul>
+        {% endfor %}
+      </ul>
+      <input type="submit" value="Submit" />
+      </form>
+      <a href="{% url 'slat:compgroups' dest_project.id %}" class="link_button">Cancel</a>
 {% else %}
     <p>No projects are available.</p>
 {% endif %}

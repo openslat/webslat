@@ -46,6 +46,7 @@ from django.db.models.signals import pre_delete
 import pickle
 from  webslat.settings import SINGLE_USER_MODE
 from django.db.models import Q
+from django.db import transaction
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -647,25 +648,21 @@ def project(request, project_id=None):
     else:
         # This should never happen!
         raise(ValueError("Unknown method or project_id"))
-   
-@login_required
-def copy_components(request, dest_project_id, src_project_id=None):
-    dest_project = get_object_or_404(Project, pk=dest_project_id)
-    if not src_project_id:
-        # Present choices
-        project_list = []
-        for project in Project.objects.all():
-            if project.CanRead(request.user) and not project == dest_project:
-                project_list.append(project)
-        context = {'dest_project': dest_project,
-                   'project_list': project_list}
 
-        return render(request, 'slat/copy_components.html', context)
-    else:
+@transaction.atomic    
+@login_required
+def copy_components(request, dest_project_id):
+    dest_project = get_object_or_404(Project, pk=dest_project_id)
+    if request.POST:
+        if request.POST.get('clean'):
+            # Remove all component groups and patterns associated with this project:
+            Component_Group.objects.filter(demand__project=dest_project).delete()
+            Component_Group_Pattern.objects.filter(project=dest_project).delete()
+
         # Import component groups
+        src_project_id = request.POST['source']
         src_project = get_object_or_404(Project, pk=src_project_id)
-        eprint("COPY COMPONENTS FROM {} to {}".format(src_project.title_text,
-                                                      dest_project.title_text))
+
         # Find components/patterns that we need to copy:
         pattern_map = {}
         for pattern in Component_Group_Pattern.objects.filter(project=src_project):
@@ -679,19 +676,14 @@ def copy_components(request, dest_project_id, src_project_id=None):
                 comment = pattern.comment)
             new_pattern.save()
             pattern_map[pattern.id] = new_pattern.id
-        eprint("Pattern Map: {}".format(pattern_map))
-        
+
         for cg in Component_Group.objects.filter(demand__project=src_project).order_by("component"):
             if cg.demand.level.level > dest_project.num_levels():
                 continue
-            
+
             pattern = cg.pattern and Component_Group_Pattern.objects.get(id = pattern_map[cg.pattern.id])
             level = Level.objects.get(project=dest_project, level=cg.demand.level.level)
             demand_type = cg.demand.type
-            eprint("Project: {}".format(dest_project))
-            eprint("Demand Type: {}".format(demand_type))
-            eprint("Level: {}".format(level))
-            eprint("Src Level: {}".format(cg.demand.level))
             demand = EDP_Grouping.objects.get(
                 project=dest_project,
                 level=level,
@@ -709,6 +701,16 @@ def copy_components(request, dest_project_id, src_project_id=None):
             new_group.save()
             
         return HttpResponseRedirect(reverse('slat:project', args=(dest_project_id,)))
+    else:
+        # Present choices
+        project_list = []
+        for project in Project.objects.all():
+            if project.CanRead(request.user) and not project == dest_project:
+                project_list.append(project)
+                context = {'dest_project': dest_project,
+                           'project_list': project_list}
+                
+        return render(request, 'slat/copy_components.html', context)
     
 @login_required
 def hazard(request, project_id):

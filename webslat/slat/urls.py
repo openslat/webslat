@@ -19,7 +19,6 @@ urlpatterns = [
     url(r'^$', views.index, name='index'),
     url(r'^project/(?P<project_id>[0-9]+)$', views.project, name='project'),
     url(r'^copy_components/(?P<dest_project_id>[0-9]+)$', views.copy_components, name='copy_components'),
-    url(r'^copy_components/(?P<dest_project_id>[0-9]+)/(?P<src_project_id>[0-9]+)$', views.copy_components, name='copy_components'),
     url(r'^project/(?P<project_id>[0-9]+)/add_user$', views.project_add_user, name='project_add_user'),
     url(r'^project/(?P<project_id>[0-9]+)/remove_user$', views.project_remove_user, name='project_remove_user'),
     url(r'^project/(?P<project_id>[0-9]+)/add_group$', views.project_add_group, name='project_add_group'),
