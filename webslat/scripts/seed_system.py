@@ -5,7 +5,9 @@ from slat.component_models import ComponentsTab
 from slat.views import make_demo, make_example_2
 from  webslat.settings import SINGLE_USER_MODE
 from django.contrib.auth.models import AnonymousUser
+from django.db import transaction
 
+@transaction.atomic
 def run():
     # Create a superuser:
     try:

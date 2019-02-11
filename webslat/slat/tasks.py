@@ -19,10 +19,13 @@ from math import *
 from django.utils.safestring import mark_safe
 from .project_charts import *
 from  webslat.settings import SINGLE_USER_MODE
+from django.db import transaction
+
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
+    
 @task
 def ImportETABS(user_id, preprocess_data_id):
     logger = ImportETABS.get_logger()
@@ -87,19 +90,20 @@ def ImportETABS(user_id, preprocess_data_id):
                                     "\nCreating hazard curve"})
 
     # Create the hazard curve, using the selected period:
-    nzs = NZ_Standard_Curve(location=Location.objects.get(location=location),
-                            soil_class = soil_class,
-                            period = fundamental_period)
-    nzs.save()
-    hazard = IM(flavour = IM_Types.objects.get(pk=IM_TYPE_NZS), nzs = nzs)
-    hazard.save()
-    project.IM = hazard
-    project.save()
+    with transaction.atomic():
+        nzs = NZ_Standard_Curve(location=Location.objects.get(location=location),
+                                soil_class = soil_class,
+                                period = fundamental_period)
+        nzs.save()
+        hazard = IM(flavour = IM_Types.objects.get(pk=IM_TYPE_NZS), nzs = nzs)
+        hazard.save()
+        project.IM = hazard
+        project.save()
 
-    messages.append("Created hazard curve for {}, soil class {}".format(
-        location, soil_class))
-    current_task.update_state(meta={ 'message': "\n".join(messages) + 
-                                    "\nDetermining design hazard."})
+        messages.append("Created hazard curve for {}, soil class {}".format(
+            location, soil_class))
+        current_task.update_state(meta={ 'message': "\n".join(messages) + 
+                                         "\nDetermining design hazard."})
     # Figure out the design IM:
     guess = hazard.model().plot_max()
     design_im = fsolve(lambda x: 
@@ -122,13 +126,14 @@ def ImportETABS(user_id, preprocess_data_id):
                                     "\nCreating levels."})
 
     # Create levels for the project:
-    level = Level(project=project, level=0, label="Ground Floor")
-    level.save()
-    l = 1;
-    for story in height_df["Story"]:
-        level = Level(project=project, level=l, label=story)
+    with transaction.atomic():
+        level = Level(project=project, level=0, label="Ground Floor")
         level.save()
-        l = l + 1
+        l = 1;
+        for story in height_df["Story"]:
+            level = Level(project=project, level=l, label=story)
+            level.save()
+            l = l + 1
 
     # Get the drift at each story from the ~Story Drifts~ tab:
     sheet = munge_data_frame(xl_workbook.parse(
@@ -267,34 +272,36 @@ def ImportETABS(user_id, preprocess_data_id):
               "\nCreating EDP: Ground level acceleration."})
     
     # Ground level acceleration is calculated using NZS 1170, using a period of 0:
-    level = Level.objects.get(level=0, project=project)
-    ground_accel_x = EDP(flavour=EDP_Flavours.objects.get(pk=EDP_FLAVOUR_USERDEF),
-                         interpolation_method=Interpolation_Method.objects.get(method_text="Linear"))
-    ground_accel_x.save()
-    ground_accel_y = EDP(flavour=EDP_Flavours.objects.get(pk=EDP_FLAVOUR_USERDEF),
-                         interpolation_method=Interpolation_Method.objects.get(method_text="Linear"))
-    ground_accel_y.save()
-    EDP_Grouping(project=project, 
-                 level=Level.objects.get(level=0, project=project),
-                 type='A',
-                 demand_x=ground_accel_x,
-                 demand_y=ground_accel_y).save()
+    with transaction.atomic():
+        level = Level.objects.get(level=0, project=project)
+        ground_accel_x = EDP(flavour=EDP_Flavours.objects.get(pk=EDP_FLAVOUR_USERDEF),
+                             interpolation_method=Interpolation_Method.objects.get(method_text="Linear"))
+        ground_accel_x.save()
+        ground_accel_y = EDP(flavour=EDP_Flavours.objects.get(pk=EDP_FLAVOUR_USERDEF),
+                             interpolation_method=Interpolation_Method.objects.get(method_text="Linear"))
+        ground_accel_y.save()
+        EDP_Grouping(project=project, 
+                     level=Level.objects.get(level=0, project=project),
+                     type='A',
+                     demand_x=ground_accel_x,
+                     demand_y=ground_accel_y).save()
     
     location_data = Location.objects.get(location=location)
-    for r in R_defaults:
-        im = C(soil_class,
-               fundamental_period, 
-               r, 
-               location_data.z,
-               location_data.min_distance)
-        accel = C(soil_class,
-                  0.0, 
-                  r, 
-                  location_data.z,
-                  location_data.min_distance)
-        dispersion = float(get_dispersion(fundamental_period, im / design_im)[0])
-        EDP_Point(demand=ground_accel_x, im=im, median_x=accel, sd_ln_x=dispersion).save()
-        EDP_Point(demand=ground_accel_y, im=im, median_x=accel, sd_ln_x=dispersion).save()
+    with transaction.atomic():
+        for r in R_defaults:
+            im = C(soil_class,
+                   fundamental_period, 
+                   r, 
+                   location_data.z,
+                   location_data.min_distance)
+            accel = C(soil_class,
+                      0.0, 
+                      r, 
+                      location_data.z,
+                      location_data.min_distance)
+            dispersion = float(get_dispersion(fundamental_period, im / design_im)[0])
+            EDP_Point(demand=ground_accel_x, im=im, median_x=accel, sd_ln_x=dispersion).save()
+            EDP_Point(demand=ground_accel_y, im=im, median_x=accel, sd_ln_x=dispersion).save()
 
     # Add drift and accelerations for above-ground levels:    
     for l in range(1, num_floors+1):                               
@@ -302,62 +309,64 @@ def ImportETABS(user_id, preprocess_data_id):
         current_task.update_state(
             meta={ 'message': "\n".join(messages) + 
                   "\nCreating EDP: {} drift.".format(level.label)})
-        edp_x = EDP(flavour=EDP_Flavours.objects.get(pk=EDP_FLAVOUR_USERDEF),
-                    interpolation_method=Interpolation_Method.objects.get(method_text="Linear"))
-        edp_x.save()
-        edp_y = EDP(flavour=EDP_Flavours.objects.get(pk=EDP_FLAVOUR_USERDEF),
-                    interpolation_method=Interpolation_Method.objects.get(method_text="Linear"))
-        edp_y.save()
-        EDP_Grouping(project=project, 
-                     level=Level.objects.get(level=l, project=project),
-                     type='D',
-                     demand_x=edp_x,
-                     demand_y=edp_y).save()
+        with transaction.atomic():
+            edp_x = EDP(flavour=EDP_Flavours.objects.get(pk=EDP_FLAVOUR_USERDEF),
+                        interpolation_method=Interpolation_Method.objects.get(method_text="Linear"))
+            edp_x.save()
+            edp_y = EDP(flavour=EDP_Flavours.objects.get(pk=EDP_FLAVOUR_USERDEF),
+                        interpolation_method=Interpolation_Method.objects.get(method_text="Linear"))
+            edp_y.save()
+            EDP_Grouping(project=project, 
+                         level=Level.objects.get(level=l, project=project),
+                         type='D',
+                         demand_x=edp_x,
+                         demand_y=edp_y).save()
 
-        for im in im_range:
-            drift = float(curves.loc[
-                lambda x: map(
-                    lambda a, b: a==im and b==level.label,
-                    x['IM'], x['Story']
-                )]['Drift_X'])
-            dispersion = dispersions.loc[lambda x: x['IM']==im]['βsd']
-            EDP_Point(demand=edp_x, im=im, median_x=drift, sd_ln_x=dispersion).save()
-            drift = float(curves.loc[
-                lambda x: map(
-                    lambda a, b: a==im and b==level.label,
-                    x['IM'], x['Story']
-                )]['Drift_Y'])
-            EDP_Point(demand=edp_y, im=im, median_x=drift, sd_ln_x=dispersion).save()
-            
-        edp_x = EDP(flavour=EDP_Flavours.objects.get(pk=EDP_FLAVOUR_USERDEF),
-                    interpolation_method=Interpolation_Method.objects.get(method_text="Linear"))
-        edp_x.save()
-        edp_y = EDP(flavour=EDP_Flavours.objects.get(pk=EDP_FLAVOUR_USERDEF),
-                    interpolation_method=Interpolation_Method.objects.get(method_text="Linear"))
-        edp_y.save()
-        EDP_Grouping(project=project, 
-                     level=Level.objects.get(level=l, project=project),
-                     type='A',
-                     demand_x=edp_x,
-                     demand_y=edp_y).save()
+            for im in im_range:
+                drift = float(curves.loc[
+                    lambda x: map(
+                        lambda a, b: a==im and b==level.label,
+                        x['IM'], x['Story']
+                    )]['Drift_X'])
+                dispersion = dispersions.loc[lambda x: x['IM']==im]['βsd']
+                EDP_Point(demand=edp_x, im=im, median_x=drift, sd_ln_x=dispersion).save()
+                drift = float(curves.loc[
+                    lambda x: map(
+                        lambda a, b: a==im and b==level.label,
+                        x['IM'], x['Story']
+                    )]['Drift_Y'])
+                EDP_Point(demand=edp_y, im=im, median_x=drift, sd_ln_x=dispersion).save()
+
+            edp_x = EDP(flavour=EDP_Flavours.objects.get(pk=EDP_FLAVOUR_USERDEF),
+                        interpolation_method=Interpolation_Method.objects.get(method_text="Linear"))
+            edp_x.save()
+            edp_y = EDP(flavour=EDP_Flavours.objects.get(pk=EDP_FLAVOUR_USERDEF),
+                        interpolation_method=Interpolation_Method.objects.get(method_text="Linear"))
+            edp_y.save()
+            EDP_Grouping(project=project, 
+                         level=Level.objects.get(level=l, project=project),
+                         type='A',
+                         demand_x=edp_x,
+                         demand_y=edp_y).save()
         current_task.update_state(
             meta={ 'message': "\n".join(messages) + 
                   "\nCreating EDP: {} acceleration.".format(level.label)})
-        for im in im_range:
-            accel = float(curves.loc[
-                lambda x: map(
-                    lambda a, b: a==im and b==level.label,
-                    x['IM'], x['Story']
-                )]['Accel_X'])
-            dispersion = dispersions.loc[lambda x: x['IM']==im]['βfa']
-            EDP_Point(demand=edp_x, im=im, median_x=accel, sd_ln_x=dispersion).save()
-            
-            accel = float(curves.loc[
-                lambda x: map(
-                    lambda a, b: a==im and b==level.label,
-                    x['IM'], x['Story']
-                )]['Accel_Y'])
-            EDP_Point(demand=edp_y, im=im, median_x=accel, sd_ln_x=dispersion).save()
+        with transaction.atomic():
+            for im in im_range:
+                accel = float(curves.loc[
+                    lambda x: map(
+                        lambda a, b: a==im and b==level.label,
+                        x['IM'], x['Story']
+                    )]['Accel_X'])
+                dispersion = dispersions.loc[lambda x: x['IM']==im]['βfa']
+                EDP_Point(demand=edp_x, im=im, median_x=accel, sd_ln_x=dispersion).save()
+
+                accel = float(curves.loc[
+                    lambda x: map(
+                        lambda a, b: a==im and b==level.label,
+                        x['IM'], x['Story']
+                    )]['Accel_Y'])
+                EDP_Point(demand=edp_y, im=im, median_x=accel, sd_ln_x=dispersion).save()
 
     if not SINGLE_USER_MODE:
         project.AssignRole(

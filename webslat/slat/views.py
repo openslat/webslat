@@ -76,6 +76,7 @@ def index(request):
     context = { 'project_list': project_list, 'group_list': group_list}
     return render(request, 'slat/index.html', context)
 
+@transaction.atomic
 def make_demo(user, title, description):
     project = Project()
     setattr(project, 'title_text', title)
@@ -208,6 +209,7 @@ def make_demo(user, title, description):
 
     return project
 
+@transaction.atomic
 def make_example_2(user, title="Example #2"):
     project = Project()
     setattr(project, 'title_text', title)
