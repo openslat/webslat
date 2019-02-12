@@ -269,6 +269,9 @@ class Level(models.Model):
     project = models.ForeignKey(Project, on_delete=CASCADE, blank=False, null=False)
     level = models.IntegerField(blank=False, null=False)
     label = models.CharField(max_length=50, blank=False, null=False)
+    
+    def is_top_level(self):
+        return self.level == self.project.num_levels()
 
     def __str__(self):
         return "Level #{}: {}".format(self.level, self.label)

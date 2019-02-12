@@ -311,25 +311,27 @@ def ImportETABS(user_id, preprocess_data_id):
                       median_x=point['accel'],
                       sd_ln_x=point['sd_ln']).save()
 
-    # Add drift and accelerations for above-ground levels:    
+    # Add drift and accelerations from ETABS data:    
     for l in range(1, num_floors+1): 
         # Drift calculations
-        level = Level.objects.get(level=l, project=project)
         current_task.update_state(
             meta={ 'message': "\n".join(messages) + 
-                  "\nCreating EDP: {} drift.".format(level.label)})
+                  "\nCreating EDP: {} drift.".format(
+                      Level.objects.get(
+                          level=l-1, 
+                          project=project).label)})
 
-
+        src_label = Level.objects.get(level=l, project=project).label
         drift_points = []
         for im in im_range:
             drift_x = float(curves.loc[
                 lambda x: map(
-                    lambda a, b: a==im and b==level.label,
+                    lambda a, b: a==im and b==src_label,
                     x['IM'], x['Story']
                 )]['Drift_X'])
             drift_y = float(curves.loc[
                 lambda x: map(
-                    lambda a, b: a==im and b==level.label,
+                    lambda a, b: a==im and b==src_label,
                     x['IM'], x['Story']
                 )]['Drift_Y'])
             dispersion = dispersions.loc[lambda x: x['IM']==im]['βsd']
@@ -345,7 +347,7 @@ def ImportETABS(user_id, preprocess_data_id):
                         Interpolation_Method.objects.get(method_text="Linear"))
             edp_y.save()
             EDP_Grouping(project=project, 
-                         level=Level.objects.get(level=l, project=project),
+                         level=Level.objects.get(level=l-1, project=project),
                          type='D',
                          demand_x=edp_x,
                          demand_y=edp_y).save()
@@ -365,17 +367,18 @@ def ImportETABS(user_id, preprocess_data_id):
         current_task.update_state(
             meta={ 'message': "\n".join(messages) + 
                   "\nCreating EDP: {} acceleration.".format(level.label)})
+
         accel_points = []
         for im in im_range:
             accel_x = float(curves.loc[
                 lambda x: map(
-                    lambda a, b: a==im and b==level.label,
+                    lambda a, b: a==im and b==src_label,
                     x['IM'], x['Story']
                 )]['Accel_X'])
             
             accel_y = float(curves.loc[
                 lambda x: map(
-                    lambda a, b: a==im and b==level.label,
+                    lambda a, b: a==im and b==src_label,
                     x['IM'], x['Story']
                 )]['Accel_Y'])
             dispersion = dispersions.loc[lambda x: x['IM']==im]['βfa']
@@ -384,7 +387,7 @@ def ImportETABS(user_id, preprocess_data_id):
                                  'x': accel_x,
                                  'y': accel_y,
                                  'dispersion': dispersion})
-            
+
         with transaction.atomic():
             edp_x = EDP(flavour=EDP_Flavours.objects.get(pk=EDP_FLAVOUR_USERDEF),
                         interpolation_method=Interpolation_Method.objects.get(method_text="Linear"))
@@ -397,6 +400,7 @@ def ImportETABS(user_id, preprocess_data_id):
                          type='A',
                          demand_x=edp_x,
                          demand_y=edp_y).save()
+            
             for point in accel_points:
                 EDP_Point(demand=edp_x,
                           im=point['im'],
@@ -425,6 +429,7 @@ def ImportETABS(user_id, preprocess_data_id):
 
 @task
 def Project_Basic_Stats(project_id):
+    logger = Project_Basic_Stats.get_logger()
     project = Project.objects.get(pk=project_id)
     values = {'slat_id_status': 'Calculating annual cost.'}
     current_task.update_state(meta=values)

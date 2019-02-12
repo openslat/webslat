@@ -58,7 +58,6 @@ if SINGLE_USER_MODE:
     
 @login_required
 def index(request):
-    eprint(dir(request.user))
     project_list = []
     for project in Project.objects.all():
         if project.CanRead(request.user):
@@ -111,12 +110,12 @@ def make_demo(user, title, description):
 
     # Create EDPs:
     demand_params = [
-        {'level': 5, 'accel': {'a': 5.39, 'b': 1.5}, 'drift': {'a': 0.0202, 'b': 0.5}},
-        {'level': 4, 'accel': {'a': 4.18, 'b': 1.5}, 'drift': {'a': 0.0380, 'b': 0.5}},
-        {'level': 3, 'accel': {'a': 4.10, 'b': 1.5}, 'drift': {'a': 0.0506, 'b': 0.5}},
-        {'level': 2, 'accel': {'a': 4.25, 'b': 1.5}, 'drift': {'a': 0.0633, 'b': 0.5}},
-        {'level': 1, 'accel': {'a': 4.15, 'b': 1.5}, 'drift': {'a': 0.0557, 'b': 0.5}},
-        {'level': 0, 'accel': {'a': 4.05, 'b': 1.5}}]
+        {'level': 5, 'accel': {'a': 5.39, 'b': 1.5}},
+        {'level': 4, 'accel': {'a': 4.18, 'b': 1.5}, 'drift': {'a': 0.0202, 'b': 0.5}},
+        {'level': 3, 'accel': {'a': 4.10, 'b': 1.5}, 'drift': {'a': 0.0380, 'b': 0.5}},
+        {'level': 2, 'accel': {'a': 4.25, 'b': 1.5}, 'drift': {'a': 0.0506, 'b': 0.5}},
+        {'level': 1, 'accel': {'a': 4.15, 'b': 1.5}, 'drift': {'a': 0.0633, 'b': 0.5}},
+        {'level': 0, 'accel': {'a': 4.05, 'b': 1.5}, 'drift': {'a': 0.0557, 'b': 0.5}}]
     for demand in demand_params:
         accels = {}
         drifts = {}
@@ -164,12 +163,12 @@ def make_demo(user, title, description):
 
     # Add components:
     all_floors = range(num_floors + 1)
-    not_ground = range(1, num_floors+1)
+    not_roof = range(0, num_floors)
     roof = range(num_floors, num_floors+1)
     components = [{'levels': all_floors, 'id': '206', 'quantity': [6, 3, 0]},
-                  {'levels': not_ground, 'id': 'B1041.032a', 'quantity': [24, 8, 1]},
-                  {'levels': not_ground, 'id': 'B1044.023', 'quantity': [8, 0, 2]},
-                  {'levels': not_ground, 'id': 'C1011.001a', 'quantity': [0, 0, 32]},
+                  {'levels': not_roof, 'id': 'B1041.032a', 'quantity': [24, 8, 1]},
+                  {'levels': not_roof, 'id': 'B1044.023', 'quantity': [8, 0, 2]},
+                  {'levels': not_roof, 'id': 'C1011.001a', 'quantity': [0, 0, 32]},
                   {'levels': roof, 'id': '205', 'quantity': [0, 0, 10]},
                   {'levels': [1, 3, 5], 'id': '206', 'quantity': [1, 2, 5]}]
     for comp in components:
@@ -253,6 +252,7 @@ def make_example_2(user, title="Example #2"):
 
     hazard = IM()
     hazard.flavour = IM_Types.objects.get(pk=IM_TYPE_INTERP)
+
     hazard.interp_method = Interpolation_Method.objects.get(method_text="Log-Log")
     hazard.save()
     project.IM = hazard
@@ -265,17 +265,17 @@ def make_example_2(user, title="Example #2"):
     project.save()
 
     # Create EDPs:
-    demand_params = [{'level': 10, 'accel': "RB_EDP21.csv", 'drift': "RB_EDP20.csv"},
-                     {'level': 9, 'accel': "RB_EDP19.csv", 'drift': "RB_EDP18.csv"},
-                     {'level': 8, 'accel': "RB_EDP17.csv" , 'drift': "RB_EDP16.csv" },
-                     {'level': 7, 'accel': "RB_EDP15.csv" , 'drift': "RB_EDP14.csv" },
-                     {'level': 6, 'accel': "RB_EDP13.csv" , 'drift': "RB_EDP12.csv" },
-                     {'level': 5, 'accel': "RB_EDP11.csv" , 'drift': "RB_EDP10.csv" },
-                     {'level': 4, 'accel': "RB_EDP9.csv" , 'drift': "RB_EDP8.csv" },
-                     {'level': 3, 'accel': "RB_EDP7.csv" , 'drift': "RB_EDP6.csv" },
-                     {'level': 2, 'accel': "RB_EDP5.csv" , 'drift': "RB_EDP4.csv" },
-                     {'level': 1, 'accel': "RB_EDP3.csv" , 'drift': "RB_EDP2.csv" },
-                     {'level': 0, 'accel': "RB_EDP1.csv"}]
+    demand_params = [{'level': 10, 'accel': "RB_EDP21.csv"},
+                     {'level': 9, 'accel': "RB_EDP19.csv",  'drift': "RB_EDP20.csv"},
+                     {'level': 8, 'accel': "RB_EDP17.csv" ,'drift': "RB_EDP18.csv"},
+                     {'level': 7, 'accel': "RB_EDP15.csv" , 'drift': "RB_EDP16.csv" },
+                     {'level': 6, 'accel': "RB_EDP13.csv" , 'drift': "RB_EDP14.csv" },
+                     {'level': 5, 'accel': "RB_EDP11.csv" , 'drift': "RB_EDP12.csv" },
+                     {'level': 4, 'accel': "RB_EDP9.csv" ,  'drift': "RB_EDP10.csv" },
+                     {'level': 3, 'accel': "RB_EDP7.csv" , 'drift': "RB_EDP8.csv" },
+                     {'level': 2, 'accel': "RB_EDP5.csv" , 'drift': "RB_EDP6.csv" },
+                     {'level': 1, 'accel': "RB_EDP3.csv" , 'drift': "RB_EDP4.csv" },
+                     {'level': 0, 'accel': "RB_EDP1.csv", 'drift': "RB_EDP2.csv" }]
     for demand in demand_params:
         level = Level.objects.get(project=project, level=demand['level'])
         
@@ -286,6 +286,7 @@ def make_example_2(user, title="Example #2"):
                 elif demand_type == 'drift':
                     EDP_demand_type = 'D'
                 else:
+
                     raise ValueError("INVALID DEMAND TYPE")
                 
                 file = demand.get(demand_type)
@@ -340,21 +341,20 @@ def make_example_2(user, title="Example #2"):
                              demand_y = edps['Y']).save()
     # Add components:
     all_floors = range(num_floors + 1)
-    not_ground = range(1, num_floors+1)
     not_roof = range(num_floors)
     components = [{'levels': not_roof, 'id': '208', 'quantity': [53, 0, 5]},
                   {'levels': [0], 'id': '204', 'quantity': [2, 5, 0]},
                   {'levels': not_roof, 'id': '214', 'quantity': [10, 0, 0]},
-                  {'levels': not_ground, 'id': '203', 'quantity': [693, 0, 0]},
-                  {'levels': not_ground, 'id': '211', 'quantity': [23, 0, 0]},
+                  {'levels': not_roof, 'id': '203', 'quantity': [693, 0, 0]},
+                  {'levels': not_roof, 'id': '211', 'quantity': [23, 0, 0]},
                   {'levels': [1], 'id': '2', 'quantity': [20, 0, 0]},
-                  {'levels': range(2, num_floors+1), 'id': '2', 'quantity': [4, 0, 5]},
-                  {'levels': not_ground, 'id': '2', 'quantity': [18, 0, 0]},
-                  {'levels': not_ground, 'id': '3', 'quantity': [16, 5, 0]},
-                  {'levels': not_ground, 'id': '105', 'quantity': [721, 0, 5]},
-                  {'levels': not_ground, 'id': '107', 'quantity': [99, 0, 5]},
-                  {'levels': not_ground, 'id': '106', 'quantity': [721, 0, 5]},
-                  {'levels': not_ground, 'id': '108', 'quantity': [10, 0, 5]},
+                  {'levels': range(1, num_floors), 'id': '2', 'quantity': [4, 0, 5]},
+                  {'levels': not_roof, 'id': '2', 'quantity': [18, 0, 0]},
+                  {'levels': not_roof, 'id': '3', 'quantity': [16, 5, 0]},
+                  {'levels': not_roof, 'id': '105', 'quantity': [721, 0, 5]},
+                  {'levels': not_roof, 'id': '107', 'quantity': [99, 0, 5]},
+                  {'levels': not_roof, 'id': '106', 'quantity': [721, 0, 5]},
+                  {'levels': not_roof, 'id': '108', 'quantity': [10, 0, 5]},
                   {'levels': [num_floors], 'id': '205', 'quantity': [4, 0, 5]}]
 
     for comp in components:
@@ -566,7 +566,7 @@ def project(request, project_id=None):
                                            type = EDP_Grouping.EDP_TYPE_ACCEL)
                         edp.save()
 
-                        if l != 0:
+                        if l != levels:
                             edp_x = EDP()
                             edp_x.save()
                             edp_y = EDP()
@@ -2056,7 +2056,7 @@ def levels(request, project_id):
     for level in levels:
         accel_x = EDP_Grouping.objects.get(project=project, level=level, type='A').demand_x.flavour != None
         accel_y = EDP_Grouping.objects.get(project=project, level=level, type='A').demand_y.flavour != None
-        if level.level > 0:
+        if level.level < project.num_levels():
             drift_x = EDP_Grouping.objects.get(project=project, level=level, type='D').demand_x.flavour != None
             drift_y = EDP_Grouping.objects.get(project=project, level=level, type='D').demand_y.flavour != None
         else:
@@ -2064,7 +2064,7 @@ def levels(request, project_id):
             drift_y = False
             
         level_info.append({'label': level.label,
-                           'level': level.level,
+                           'level': level,
                            'id': level.id,
                            'accel_x': accel_x, 
                            'accel_y': accel_y, 

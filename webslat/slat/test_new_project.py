@@ -110,17 +110,12 @@ class NewProjectTestCase(TestCase):
         # level except the ground floor, which should only have acceleration):
         self.assertEqual(len(EDP_Grouping.objects.filter(project=project)), 11)
         demand_params = [
-            {'accel': {'a': 4.05, 'b': 1.5}}, # Level 0
-            {'accel': {'a': 4.15, 'b': 1.5},  # Level 1
-             'drift': {'a': 0.0557, 'b': 0.5}},
-            { 'accel': {'a': 4.25, 'b': 1.5}, # Level 2
-             'drift': {'a': 0.0633, 'b': 0.5}}, 
-            {'accel': {'a': 4.10, 'b': 1.5},  # Level 3
-             'drift': {'a': 0.0506, 'b': 0.5}},
-            {'accel': {'a': 4.18, 'b': 1.5},  # Level 4
-             'drift': {'a': 0.0380, 'b': 0.5}},
-            {'accel': {'a': 5.39, 'b': 1.5},  # Level 5
-             'drift': {'a': 0.0202, 'b': 0.5}}]
+            {'accel': {'a': 4.05, 'b': 1.5}, 'drift': {'a': 0.0557, 'b': 0.5}}, # Level 0
+            {'accel': {'a': 4.15, 'b': 1.5}, 'drift': {'a': 0.0633, 'b': 0.5}},  # Level 1
+            { 'accel': {'a': 4.25, 'b': 1.5}, 'drift': {'a': 0.0506, 'b': 0.5}},# Level 2
+            {'accel': {'a': 4.10, 'b': 1.5}, 'drift': {'a': 0.0380, 'b': 0.5}}, # Level 3
+            {'accel': {'a': 4.18, 'b': 1.5}, 'drift': {'a': 0.0202, 'b': 0.5}}, # Level 4
+            {'accel': {'a': 5.39, 'b': 1.5}}]  # Level 5
         
         for level in project.levels():
             g = EDP_Grouping.objects.get(project=project, level=level, type='A')
@@ -132,7 +127,7 @@ class NewProjectTestCase(TestCase):
                                  demand_params[level.level]["accel"]["b"])
                 self.assertEqual(demand.powercurve.sd_ln_x_a, 1.5)
                 self.assertEqual(demand.powercurve.sd_ln_x_b, 0.0)
-            if level.level > 0:
+            if level.level < project.num_levels():
                 g = EDP_Grouping.objects.get(project=project, level=level, type='D')
                 for demand in [g.demand_x, g.demand_y]:
                     self.assertEqual(demand.flavour, 

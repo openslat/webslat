@@ -34,14 +34,14 @@
         <a href="{% url 'slat:demand' project.id level.id 'acceleration' 'Y' %}">Y</a>
         {% if not level.accel_y %}</i>{% endif %}
         </td>
-      <td style="background:lightgray" >{% if level.level %}
+      <td style="background:lightgray" >{% if not level.level.is_top_level %}
         {% if not level.drift_x %}<i>{% endif %}
 	<a href="{% url 'slat:demand' project.id level.id 'drift' 'X' %}">X</a>
         {% if not level.drift_x %}</i>{% endif %}
 	{% else %}&nbsp;
 	{% endif %}
       </td>
-      <td style="background:lightgray" >{% if level.level %}
+      <td style="background:lightgray" >{% if not level.level.is_top_level %}
         {% if not level.drift_y %}<i>{% endif %}
 	<a href="{% url 'slat:demand' project.id level.id 'drift' 'Y' %}">Y</a>
         {% if not level.drift_y %}</i>{% endif %}

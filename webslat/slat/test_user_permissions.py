@@ -6,6 +6,7 @@ from http import HTTPStatus
 from pyquery import PyQuery
 from slat.views import make_demo
 import django.http
+from  webslat.settings import SINGLE_USER_MODE
 
 class PermissionTestCase(TestCase):
     def setUp(self):
@@ -298,7 +299,7 @@ class PermissionTestCase(TestCase):
             demands =  EDP_Grouping.objects.filter(project=project)
 
             if len(levels) > 0:
-                demand = demands.get(level=levels.get(level=0)).pk
+                demand = demands.get(level=levels.get(level=project.num_levels())).pk
             else:
                 demand = None
 
