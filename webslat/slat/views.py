@@ -651,57 +651,58 @@ def project(request, project_id=None):
         # This should never happen!
         raise(ValueError("Unknown method or project_id"))
 
-@transaction.atomic    
 @login_required
 def copy_components(request, dest_project_id):
     dest_project = get_object_or_404(Project, pk=dest_project_id)
     if request.POST:
         if request.POST.get('clean'):
-            # Remove all component groups and patterns associated with this project:
-            Component_Group.objects.filter(demand__project=dest_project).delete()
-            Component_Group_Pattern.objects.filter(project=dest_project).delete()
+            with transaction.atomic():
+                # Remove all component groups and patterns associated with this project:
+                Component_Group.objects.filter(demand__project=dest_project).delete()
+                Component_Group_Pattern.objects.filter(project=dest_project).delete()
 
         # Import component groups
         src_project_id = request.POST['source']
         src_project = get_object_or_404(Project, pk=src_project_id)
 
         # Find components/patterns that we need to copy:
-        pattern_map = {}
-        for pattern in Component_Group_Pattern.objects.filter(project=src_project):
-            new_pattern = Component_Group_Pattern(
-                project = dest_project,
-                component = pattern.component,
-                quantity_x = pattern.quantity_x,
-                quantity_y = pattern.quantity_y,
-                quantity_u = pattern.quantity_u,
-                cost_adj = pattern.cost_adj,
-                comment = pattern.comment)
-            new_pattern.save()
-            pattern_map[pattern.id] = new_pattern.id
+        with transaction.atomic():
+            pattern_map = {}
+            for pattern in Component_Group_Pattern.objects.filter(project=src_project):
+                new_pattern = Component_Group_Pattern(
+                    project = dest_project,
+                    component = pattern.component,
+                    quantity_x = pattern.quantity_x,
+                    quantity_y = pattern.quantity_y,
+                    quantity_u = pattern.quantity_u,
+                    cost_adj = pattern.cost_adj,
+                    comment = pattern.comment)
+                new_pattern.save()
+                pattern_map[pattern.id] = new_pattern.id
 
-        for cg in Component_Group.objects.filter(demand__project=src_project).order_by("component"):
-            if cg.demand.level.level > dest_project.num_levels():
-                continue
+            for cg in Component_Group.objects.filter(demand__project=src_project).order_by("component"):
+                if cg.demand.level.level > dest_project.num_levels():
+                    continue
 
-            pattern = cg.pattern and Component_Group_Pattern.objects.get(id = pattern_map[cg.pattern.id])
-            level = Level.objects.get(project=dest_project, level=cg.demand.level.level)
-            demand_type = cg.demand.type
-            demand = EDP_Grouping.objects.get(
-                project=dest_project,
-                level=level,
-                type=demand_type)
+                pattern = cg.pattern and Component_Group_Pattern.objects.get(id = pattern_map[cg.pattern.id])
+                level = Level.objects.get(project=dest_project, level=cg.demand.level.level)
+                demand_type = cg.demand.type
+                demand = EDP_Grouping.objects.get(
+                    project=dest_project,
+                    level=level,
+                    type=demand_type)
 
-            new_group = Component_Group(
-                component= cg.component,
-                cost_adj = cg.cost_adj,
-                quantity_x=cg.quantity_x,
-                quantity_y= cg.quantity_y,
-                quantity_u= cg.quantity_u,
-                comment= cg.comment,
-                pattern = pattern,
-                demand=demand)
-            new_group.save()
-            
+                new_group = Component_Group(
+                    component= cg.component,
+                    cost_adj = cg.cost_adj,
+                    quantity_x=cg.quantity_x,
+                    quantity_y= cg.quantity_y,
+                    quantity_u= cg.quantity_u,
+                    comment= cg.comment,
+                    pattern = pattern,
+                    demand=demand)
+                new_group.save()
+
         return HttpResponseRedirect(reverse('slat:project', args=(dest_project_id,)))
     else:
         # Present choices
@@ -2685,7 +2686,10 @@ def generic_poll_state(request):
         if 'task_id' in request.POST.keys() and request.POST['task_id']:
             task_id = request.POST['task_id']
             task = AsyncResult(task_id)
-            data = task.result or task.data
+            try:
+                data = task.result or task.data
+            except:
+                data = None
         else:
             data = 'No task_id in the request'
     else:

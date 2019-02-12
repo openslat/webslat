@@ -652,12 +652,19 @@ def HandleChange(object_class, object_id):
         object = EDP.objects.get(pk=object_id)
         object._make_model()
     elif object_class == "<class 'slat.models.Component_Group'>":
-        object = Component_Group.objects.get(pk=object_id)
-        object._make_model({'X': True, 'Y': True, 'U':True})
-        project = object.demand.project
-        project._make_model()
+        try:
+            object = Component_Group.objects.get(pk=object_id)
+            object._make_model({'X': True, 'Y': True, 'U':True})
+            project = object.demand.project
+            project._make_model()
+        except:
+            None
+            # Ignore this event; it happens when we delete components while
+            # copying them form another project.
     else:
         logger.info("**** I DON'T KNOW WHAT IT IS ****")
+
+    return None
 
 
 
