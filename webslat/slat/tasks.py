@@ -18,7 +18,7 @@ import seaborn as sns
 from math import *
 from django.utils.safestring import mark_safe
 from .project_charts import *
-from  webslat.settings import SINGLE_USER_MODE
+from django.conf import settings
 from django.db import transaction
 
 
@@ -414,7 +414,7 @@ def ImportETABS(user_id, preprocess_data_id):
                           sd_ln_x=point['dispersion']
                 ).save()
 
-    if not SINGLE_USER_MODE:
+    if not settings.SINGLE_USER_MODE:
         project.AssignRole(
             User.objects.get(id=user_id),
             ProjectUserPermissions.ROLE_FULL)

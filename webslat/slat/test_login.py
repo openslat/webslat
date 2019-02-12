@@ -4,9 +4,13 @@ from slat.models import Profile
 from http import HTTPStatus
 from pyquery import PyQuery
 import django.http
+from django.conf import settings
 
 class LoginTestCase(TestCase):
     def setUp(self):
+        if settings.SINGLE_USER_MODE:
+            return
+        
         # Create a single user for these tests
         new_user = User.objects.create_user(username='samspade',
                                             first_name='Samuel',
@@ -17,9 +21,12 @@ class LoginTestCase(TestCase):
         profile = Profile.objects.get(user=new_user)
         profile.organization = 'Spade and Archer'
         profile.save()
-
+    
     def test_login(self):
         """Sam Spade can log in"""
+        if settings.SINGLE_USER_MODE:
+            return
+        
         c = Client()
         response = c.get('/slat/')
         # Should redirect to the login page:

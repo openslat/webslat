@@ -44,7 +44,7 @@ import logging
 from django.template import Context, Template
 from django.db.models.signals import pre_delete
 import pickle
-from  webslat.settings import SINGLE_USER_MODE
+from django.conf import settings
 from django.db.models import Q
 from django.db import transaction
 
@@ -52,7 +52,7 @@ def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
 from django.contrib.auth import REDIRECT_FIELD_NAME
-if SINGLE_USER_MODE:
+if settings.SINGLE_USER_MODE:
     def login_required(function=None):
         return function
     

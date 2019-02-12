@@ -6,7 +6,6 @@ from http import HTTPStatus
 from pyquery import PyQuery
 from slat.views import make_demo
 import django.http
-from  webslat.settings import SINGLE_USER_MODE
 
 class PermissionTestCase(TestCase):
     def setUp(self):

@@ -3,7 +3,7 @@ from slat.models import Profile, Project, Level, EDP, \
     EDP_Grouping, Component_Group, Group
 from slat.component_models import ComponentsTab
 from slat.views import make_demo, make_example_2
-from  webslat.settings import SINGLE_USER_MODE
+from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.db import transaction
 
@@ -23,7 +23,7 @@ def run():
         profile.organization = 'UC Quake Centre'
         profile.save()
 
-    if SINGLE_USER_MODE:
+    if settings.SINGLE_USER_MODE:
         # Create projects:
         if len(Project.objects.filter(title_text="Demo Project")) == 0:
             project = make_demo(AnonymousUser(),  "Demo Project", "A demo project")
