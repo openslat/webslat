@@ -440,6 +440,21 @@ class ETABS_Confirm_Form(Form):
             self.fields['x_accel_case'] = ChoiceField(choices=accel_choices)
             self.fields['y_accel_case'] = ChoiceField(choices=accel_choices)
 @login_required
+def clean_project(request, project_id):
+    if request.method == 'GET':
+        # Fetch an existing project
+        project = get_object_or_404(Project, pk=project_id)
+        if not project.CanRead(request.user):
+            raise PermissionDenied
+
+        Clean_Project.delay(project_id).get()
+        return HttpResponseRedirect(reverse('slat:project', args=(project.id,))) 
+        
+    else:
+        # Shouldn't get here
+        raise PermissionDenied
+    
+@login_required
 def project(request, project_id=None):
     # Initialize everything we'll send to the template:
     form = None
@@ -494,10 +509,6 @@ def project(request, project_id=None):
                 
         can_add = project.GetRole(request.user) == ProjectUserPermissions.ROLE_FULL
         form = ProjectForm(instance=project, initial=model_to_dict(project))
-
-        #if project.model().AnnualCost().mean() > 0:
-            #chart = IMCostChart(project)
-            #pdf_chart = IMPDFChart(project)
 
         levels = project.num_levels()
         levels_form = None

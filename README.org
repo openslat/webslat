@@ -201,12 +201,8 @@ served via Apache.
    #+BEGIN_SRC bash -i :results output :eval ask
      source .profile
      cd SLAT/linux/bin
-     ./unit_tests
+     ./unit_tests 2>&1 
     #+END_SRC
-
-    #+RESULTS:
-    : Running 61 test cases...
-
 
 16. Run the C++ example2 binary:
    #+ATTR_LATEX: :options language=bash-remote

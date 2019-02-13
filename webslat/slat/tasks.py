@@ -20,7 +20,7 @@ from django.utils.safestring import mark_safe
 from .project_charts import *
 from django.conf import settings
 from django.db import transaction
-
+import pyslat
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -425,6 +425,18 @@ def ImportETABS(user_id, preprocess_data_id):
     preprocess_data.delete()
     return(reverse('slat:levels', args=(project.id,)))
 
+@task
+def Clean_Project(project_id):
+    logger = Clean_Project.get_logger()
+    project = Project.objects.get(pk=project_id)
+    # Note that this clears *all* caches, for *all* projects. 
+    # This is probably not what we want for a multi-user
+    # system.
+    #
+    # Best way to fix this (I think) would be to add the
+    # functionality in the C++ library, to clear the caches of
+    # all objects associated with a structure.
+    pyslat.ClearCaches()
     
 
 @task
