@@ -76,15 +76,9 @@ served via Apache.
    #+END_SRC
 
    #+RESULTS:
-   : # Host [127.0.0.1]:3022 found: line 21
-   : /home/mag109/.ssh/known_hosts updated.
-   : Original contents retained as /home/mag109/.ssh/known_hosts.old
-   : 
-   : Number of key(s) added: 1
-   : 
-   : Now try logging into the machine, with:   "ssh -o 'StrictHostKeyChecking no' -p '3022' 'webslat-user@127.0.0.1'"
-   : and check to make sure that only the key(s) you wanted were added.
-   : 
+   : # Host [127.0.0.1]:3022 found: line 8
+   : /home/mike/.ssh/known_hosts updated.
+   : Original contents retained as /home/mike/.ssh/known_hosts.old
 
 8. Configure =ssh= to use the correct port and user name by default:
    #+ATTR_LATEX: :options language=bash-local
@@ -113,9 +107,26 @@ served via Apache.
    #+RESULTS:
    : webslat-user
 
-
 10. Give ~webslat-user~ ~sudo~ privileges, without requiring a password. On the
     VM, as ~root~, run:
+
+    You can connect via ~ssh~, from within ~emacs~:
+    #+begin_src elisp :eval ask
+      (make-term "webslat-single" 
+		 "ssh" 
+		 nil 
+		 "-i" "/home/mike/.ssh/vm" 
+		 "-p" "3022" 
+		 "webslat-user@127.0.01")
+    #+end_src
+
+    Or run these commands at a shell prompt:
+    #+ATTR_LATEX: :options language=bash-remote
+    #+begin_src bash :eval never
+    ssh -i ~/.ssh/vm -p 3022 webslat-user@127.0.0.1
+    su
+    #+end_src
+
     #+ATTR_LATEX: :options language=bash-remote-root
     #+BEGIN_SRC bash
     apt-get install sudo
@@ -371,7 +382,7 @@ served via Apache.
     |------------+---------------+--------+--------------------------------|
     | holmes     | elementary    |        | Sherlock's Project             |
     |------------+---------------+--------+--------------------------------|
-25. Test the ~django~ server:
+27. Test the ~django~ server:
     As ~webslat-user~ on the VM, run:
    #+ATTR_LATEX: :options language=bash-remote
     #+BEGIN_SRC bash :results output
@@ -389,7 +400,7 @@ served via Apache.
     to confirm the server is working.
 
     Quit ~w3m~ and kill the server.
-26. User ~apache2~ to serve ~webslat~. First, run:
+28. User ~apache2~ to serve ~webslat~. First, run:
    #+ATTR_LATEX: :options language=bash-remote
    #+HEADER: :dir /ssh:webslat-vm:
    #+BEGIN_SRC bash :eval ask :results output
@@ -399,7 +410,7 @@ served via Apache.
 
    #+RESULTS:
 
-27. Make sure the ~apache2~ process can read the database file.
+29. Make sure the ~apache2~ process can read the database file.
     1. Assign appropriate permissions:
        #+ATTR_LATEX: :options language=bash-remote
        #+HEADER: :dir /ssh:webslat-vm:
@@ -422,7 +433,7 @@ served via Apache.
 
        #+RESULTS:
 
-28. Edit ~webslat/webslat/webslat/settings.py~
+30. Edit ~webslat/webslat/webslat/settings.py~
     1. Set =DEBUG= to =False=:
        #+HEADER: :dir /ssh:webslat-vm:
        #+BEGIN_SRC bash :results output :eval ask
@@ -432,7 +443,7 @@ served via Apache.
 
        #+RESULTS:
        
-    1. Set =ALLOWED_HOSTS=:
+    2. Set =ALLOWED_HOSTS=:
        #+HEADER: :dir /ssh:webslat-vm:
        #+BEGIN_SRC bash :results output :eval ask
          sed -ie "s/ALLOWED_HOSTS.*$/ALLOWED_HOSTS=['localhost', '127.0.0.1', '127.0.1.1']/" \
@@ -441,7 +452,7 @@ served via Apache.
 
        #+RESULTS:
 
-    2. Set =STATIC_ROOT=:
+    3. Set =STATIC_ROOT=:
        #+HEADER: :dir /ssh:webslat-vm:
        #+BEGIN_SRC bash :results output :eval ask
          sed -ie "s/STATIC_ROOT.*/STATIC_ROOT = os.path.join(BASE_DIR, 'static\/')/" \
@@ -450,7 +461,7 @@ served via Apache.
 
        #+RESULTS:
 
-29. Create the static files:
+31. Create the static files:
    #+ATTR_LATEX: :options language=bash-remote
    #+HEADER: :dir /ssh:webslat-vm:
    #+BEGIN_SRC bash :results output :eval ask
@@ -462,7 +473,7 @@ served via Apache.
 
     #+RESULTS:
 
-30. As ~root~ on the VM, edit ~/etc/apache2/sites-available/000-default.conf~, by
+32. As ~root~ on the VM, edit ~/etc/apache2/sites-available/000-default.conf~, by
     adding, inside the ~<VirtualHost...>~ tag:
     #+ATTR_LATEX: :options language=bash-remote
     #+HEADER: :dir /ssh:webslat-vm:
@@ -500,7 +511,7 @@ served via Apache.
     #+RESULTS:
     : Syntax OK
 
-31. Install ~libslat~ where ~apache2~ can find it. Run:
+33. Install ~libslat~ where ~apache2~ can find it. Run:
    #+ATTR_LATEX: :options language=bash-remote-root
    #+HEADER: :dir /ssh:webslat-vm:
    #+BEGIN_SRC bash :eval ask :results output
@@ -510,7 +521,7 @@ served via Apache.
 
     #+RESULTS:
 
-32. Restart the server:
+34. Restart the server:
    #+ATTR_LATEX: :options language=bash-remote
    #+HEADER: :dir /ssh:webslat-vm:
    #+BEGIN_SRC bash :eval ask :results output
@@ -519,7 +530,7 @@ served via Apache.
 
     #+RESULTS:
 
-33. Connect from the browser:
+35. Connect from the browser:
    #+ATTR_LATEX: :options language=bash-local
    #+BEGIN_SRC bash :eval ask :results output
      firefox http://localhost:3080
