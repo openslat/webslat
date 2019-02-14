@@ -158,11 +158,11 @@ EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'openslat@gmail.com'
-EMAIL_HOST_PASSWORD = 'OnIl?OgHibEnmyabcub9'
+EMAIL_HOST_PASSWORD = '<enter password>'
 
 TEST_RUNNER = 'djcelery.contrib.test_runner.CeleryTestSuiteRunner'
 CELERYD_CONCURRENCY = 1
 CELERY_REDIRECT_STDOUTS = True
 CELERY_REDIRECT_STDOUTS_LEVEL = 'DEBUG'
 
-SINGLE_USER_MODE = True
+SINGLE_USER_MODE = False

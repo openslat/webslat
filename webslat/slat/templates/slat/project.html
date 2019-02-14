@@ -9,7 +9,7 @@
 {% block bodyclass %}{{ block.super }} slat {% endblock %}
 {% block title %}WebSLAT Project 
 {% if form.instance.title_text %}
-    { form.instance.title_text }}
+    {{ form.instance.title_text }}
 {% else %}
  (new)
 {% endif %}
@@ -232,7 +232,7 @@ function Refresh( ) {
     <td><form action="{% url 'slat:clean_project' form.instance.id %}" method="get">
       {% csrf_token %}
       <input type="submit" value="Full Re-calc" class="normal"
-             title="Clear the calculation cache, forcing a full re-analysis."/>
+             title="Clear the calculation cache, forcing a full re-analysis."r/>
     </form></td>
     </tr></table>
 {% endif %}
