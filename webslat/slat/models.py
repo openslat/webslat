@@ -837,7 +837,9 @@ class ProjectFormPart3(Form):
     
     def __init__(self, request=None, 
                  initial={'return_period': '500',
-                          'strength': 1.0,
+                          'constant_R': 1.0,
+                          'constant_I': 1.0,
+                          'constant_Omega': 1.0,
                           'soil_class': 'C',
                           'location': 'Christchurch',
                           'frame_type_x': 'Moment',
@@ -847,7 +849,12 @@ class ProjectFormPart3(Form):
         self.fields['frame_type_y'].widget.attrs['title'] = 'The frame type of the structure.'
         self.fields['return_period'].label = 'Return period (years)'
         self.fields['return_period'].widget.attrs['title'] = 'The return period (years)'
-        self.fields['strength'].widget.attrs['title'] = 'The strength ratio at the design level of spectral acceleration.'
+        self.fields['constant_R'].widget.attrs['title'] = 'The Response Modification Coefficient, from ASCE/SEI 7-10.'
+        self.fields['constant_R'].label = 'Response Modification Coefficient (R)'
+        self.fields['constant_I'].widget.attrs['title'] = 'The Importance Factor, from ASCE/SEI 7-10.'
+        self.fields['constant_I'].label = 'Importance Factor (I)'
+        self.fields['constant_Omega'].widget.attrs['title'] = 'The Overstrength Factor, from ASCE/SEI 7-10.'
+        self.fields['constant_Omega'].label = mark_safe('Overstrength Factor (&#937;<sub>0</sub>)')
         self.fields['path'].widget.attrs['title'] = 'The Excel file exported from ETABS.'
         self.fields['soil_class'].widget.attrs['title'] = 'The soil class at the building site.'
         self.fields['location'].widget.attrs['title'] = 'The location of the building site.'
@@ -855,7 +862,9 @@ class ProjectFormPart3(Form):
     frame_type_x = ChoiceField(choices= FRAME_CHOICES)
     frame_type_y = ChoiceField(choices= FRAME_CHOICES)
     return_period = ChoiceField(choices=list(map(lambda x: [x, x], R_defaults)))
-    strength = FloatField()
+    constant_R = FloatField()
+    constant_I = FloatField()
+    constant_Omega = FloatField()
     path = FileField()
     soil_class = ChoiceField(choices=NZ_Standard_Curve.SOIL_CLASS_CHOICES)
     location_choices = []
@@ -1096,6 +1105,15 @@ class GroupForm(ModelForm):
 class ETABS_Preprocess(models.Model):
     title = models.CharField(max_length=50, null=True)
     description = models.CharField(max_length=200, null=True)
+
+    # Constants used for strength ratio. Take from ASCE/SEI 7-10
+    # R: Response Modification Coefficient
+    # Omega: Overstrength Factor
+    # I: Importance Factor
+    constant_R = models.FloatField(null=True)
+    constant_Omega = models.FloatField(null=True)
+    constant_I = models.FloatField(null=True)
+    
     strength = models.FloatField(null=True)
     location = models.CharField(max_length=50, null=True)
     soil_class = models.CharField(max_length=1,null=True)

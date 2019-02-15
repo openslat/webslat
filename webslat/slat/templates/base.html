@@ -70,7 +70,9 @@
       <!-- END Header -->
       {% block breadcrumbs %}
       <div class="breadcrumbs">
+        {% comment %}
 	{% if title %} &rsaquo; {{ title }}{% endif %}
+        {% endcomment %}
       </div>
       {% endblock %}
       {% endif %}

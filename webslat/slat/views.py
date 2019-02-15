@@ -598,7 +598,9 @@ def project(request, project_id=None):
                 
                     file_path = form3.cleaned_data['path'].name
                     file_data = request.FILES['path'].file.read()
-                    strength = form3.cleaned_data["strength"]
+                    constant_R = form3.cleaned_data["constant_R"]
+                    constant_I = form3.cleaned_data["constant_I"]
+                    constant_Omega = form3.cleaned_data["constant_Omega"]
                     contents = file_data
                     location = form3.cleaned_data["location"]
                     soil_class = form3.cleaned_data["soil_class"]
@@ -607,7 +609,8 @@ def project(request, project_id=None):
                     frame_type_y = form3.cleaned_data["frame_type_y"]
 
                     preprocess_id = ETABS_preprocess(
-                        title, description, strength, 
+                        title, description, 
+                        constant_R, constant_I, constant_Omega,
                         file_data, file_path,
                         location, soil_class, return_period,
                         frame_type_x, frame_type_y,

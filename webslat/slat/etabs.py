@@ -168,14 +168,17 @@ dispersion_factors = pd.DataFrame(
        [ 2.  ,  8.  ,  0.45,  0.35,  0.26,  0.5 ]]),
     columns=['T1', 'S', 'βaΔ', 'βaa', 'βav', 'βm'])
 
-def ETABS_preprocess(title, description, strength, 
+def ETABS_preprocess(title, description,
+                     constant_R, constant_I, constant_Omega,
                      file_data, file_path,
                      location, soil_class, return_period,
                      frame_type_x, frame_type_y, user_id):
     preprocess_data = ETABS_Preprocess()
     preprocess_data.title = title
     preprocess_data.description = description
-    preprocess_data.strength = strength
+    preprocess_data.constant_R = constant_R
+    preprocess_data.constant_I = constant_I
+    preprocess_data.constant_Omega = constant_Omega
     preprocess_data.location = location
     preprocess_data.soil_class = soil_class
     preprocess_data.return_period = return_period

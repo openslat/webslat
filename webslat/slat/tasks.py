@@ -33,7 +33,17 @@ def ImportETABS(user_id, preprocess_data_id):
     preprocess_data = ETABS_Preprocess.objects.get(id=preprocess_data_id)
     title = preprocess_data.title
     description = preprocess_data.description
-    strength = preprocess_data.strength
+    
+    # These should come from ASCE/SEI 7-10.
+    constant_R = preprocess_data.constant_R
+    constant_Omega = preprocess_data.constant_Omega
+    constant_I = preprocess_data.constant_I
+    #
+    # Use the above to calculate the strength ratio
+    # at the design acceleration:
+    base_strength_ratio = ((1.5 + constant_Omega) / 2 ) / (constant_R / constant_I)
+    logger.fatal("Base Strength Ratio: {}".format(base_strength_ratio))
+    
     location = preprocess_data.location
     soil_class = preprocess_data.soil_class
     return_period = preprocess_data.return_period
@@ -243,7 +253,7 @@ def ImportETABS(user_id, preprocess_data_id):
             #
             # If the strength ratio is at least 1.0, apply the 
             # correction factors:
-            s = max(scale * strength, 1.0)
+            s = max(scale * base_strength_ratio, 1.0)
             if (s >= 1.0):
                 # Apply non-linear correction factors
                 h = height_df.loc[lambda x: x['Story'] == story]["Height"][0]
