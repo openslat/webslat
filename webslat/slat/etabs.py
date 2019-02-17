@@ -220,7 +220,7 @@ def ETABS_preprocess(title, description,
                               skiprows=1)
     height_unit = sheet['Z'][0]
     preprocess_data.height_units = height_unit
-    if preprocess_data.height_units != 'm':
+    if preprocess_data.height_units != 'm' and preprocess_data.height_units != 'mm':
         preprocess_data.height_units_message = "WebSLAT doesn't recognise this units string. If these values are not in metres, your results will be incorrect."
         
     dcomd = munge_data_frame(sheet)

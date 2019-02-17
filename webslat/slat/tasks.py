@@ -124,6 +124,14 @@ def ImportETABS(user_id, preprocess_data_id):
                                     "\nReading data."})
     # Get the names and heights of the stories from the ~Diaphragm Center of Mass
     # Displa~ tab:
+    if preprocess_data.height_units == 'm':
+        height_multiplier = 1.0
+    elif preprocess_data.height_units == 'mm':
+        height_multiplier = 1.0/1000.0
+    else:
+        # Warning was issued on confirmation page; user opts to proceed anyway
+        height_multiplier = 1.0
+        
     sheet = munge_data_frame(xl_workbook.parse(
         "Diaphragm Center of Mass Displa",
         skiprows=1))
