@@ -439,6 +439,12 @@ class ETABS_Confirm_Form(Form):
             accel_choices = list(map(lambda x: [x, x], pickle.loads(preprocess_data.accel_choices)))
             self.fields['x_accel_case'] = ChoiceField(choices=accel_choices)
             self.fields['y_accel_case'] = ChoiceField(choices=accel_choices)
+
+            self.fields['yield_strength'] = FloatField(required=True)
+            self.fields['yield_strength'].label = 'Yield Strength'
+            self.fields['yield_strength'].widget.attrs['title'] = "Enter the yield strength, if you know it, or use the default."
+            self.fields['yield_strength'].widget.attrs['style'] = "text-align:right"
+            
 @login_required
 def clean_project(request, project_id):
     if request.method == 'GET':
@@ -2519,6 +2525,7 @@ def etabs_confirm(request, preprocess_id):
         preprocess_data.drift_case_y = request.POST.get('y_drift_case', 0)
         preprocess_data.accel_case_x = request.POST.get('x_accel_case', 0)
         preprocess_data.accel_case_y = request.POST.get('y_accel_case', 0)
+        preprocess_data.yield_strength = request.POST.get('yield_strength')
         preprocess_data.save()
 
         job = ImportETABS.delay(
@@ -2527,9 +2534,11 @@ def etabs_confirm(request, preprocess_id):
         return HttpResponseRedirect(
             reverse('slat:etabs_progress') + '?job=' + job.id)
     else:
+        confirm_form = ETABS_Confirm_Form(preprocess_id=preprocess_id)
+        confirm_form.fields['yield_strength'].initial = preprocess_data.yield_strength / 1000 # Convert to kN
         return render(request, 'slat/etabs_preprocess.html', 
                       {'preprocess_data': preprocess_data,
-                       'confirm_form': ETABS_Confirm_Form(preprocess_id=preprocess_id)})
+                       'confirm_form': confirm_form})
 
 
     

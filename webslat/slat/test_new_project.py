@@ -199,6 +199,9 @@ class NewProjectTestCase(TestCase):
                            'project_type': 'ETABS',
                            'frame_type_x': 'Moment',
                            'frame_type_y': 'Moment',
+                           'constant_R': 5.0,
+                           'constant_I': 1.0,
+                           'constant_Omega': 3.0,
                            'return_period': 50,
                            'strength': 4.0,
                            'path' : path,
@@ -242,8 +245,12 @@ class NewProjectTestCase(TestCase):
             self.assertEqual(r[0].text_content().strip(), summary_data[i][0])
             self.assertEqual(r[1].text_content().strip(), summary_data[i][1])
         
+        # Check the Weight section:
+        self.assertEqual(pq('p')[0].text_content().strip(), "Weight Units: kg")
+        self.assertEqual(pq('p')[1].text_content().strip(), "Total Weight: 6753.994 tonnes")
+        
         # Check the Period section:
-        self.assertEqual(pq('p')[0].text_content().strip(), "Period Units: sec")
+        self.assertEqual(pq('p')[3].text_content().strip(), "Period Units: sec")
         
         period_choices = [ "2.365", "2.051", "1.543",
                               "0.76", "0.665", "0.502",
@@ -273,7 +280,7 @@ class NewProjectTestCase(TestCase):
         self.assertEqual(i, 13)
         
         # Check the height section:
-        self.assertEqual(pq('p')[1].text_content().strip(), "Height Unit: m")
+        self.assertEqual(pq('p')[4].text_content().strip(), "Height Unit: m")
         height_data = [
             ["Story", "Height"],
             ["Story1", "4"],
@@ -319,8 +326,8 @@ class NewProjectTestCase(TestCase):
             self.assertEqual(child.attrib['value'], drift_choices[i])
 
         # Check the accelleration choices:
-        self.assertEqual(pq('p')[4].text_content().strip(), "X: mm/sec²")
-        self.assertEqual(pq('p')[5].text_content().strip(), "Y: mm/sec²")
+        self.assertEqual(pq('p')[7].text_content().strip(), "X: mm/sec²")
+        self.assertEqual(pq('p')[8].text_content().strip(), "Y: mm/sec²")
         
         accel_choices = [ "MRS EQX mu=4 Max",
                           "MRS EQY mu=4 Max"]

@@ -190,6 +190,30 @@ def ETABS_preprocess(title, description,
     start_time = time.time()
     project = Project()
     xl_workbook = pd.ExcelFile(io.BytesIO(file_data))
+    sheet  = xl_workbook.parse("Mass Summary by Diaphragm", skiprows=(1))
+    msby = munge_data_frame(sheet)
+    weight_units = sheet['Mass X'][0]
+    preprocess_data.weight_units = weight_units
+    if weight_units == 'kg':
+        weight_mutliplier = 1.0
+    elif weight_units == 'N-s²/mm':
+        weight_mutliplier = 1000.0
+    else:
+        preprocess_data.weight_units_message = "Units not recognised; assuming they are equivalent to kg"
+        weight_mutliplier = 1.0
+        
+    preprocess_data.weight = msby['Mass X'].sum() * weight_mutliplier
+    preprocess_data.min_yield_strength = (1.5 * preprocess_data.weight) / \
+                                         (preprocess_data.constant_R /
+                                          preprocess_data.constant_I)
+    preprocess_data.max_yield_strength = (preprocess_data.constant_Omega *
+                                          preprocess_data.weight) / \
+                                          (preprocess_data.constant_R / \
+                                           preprocess_data.constant_I)
+    preprocess_data.yield_strength = (preprocess_data.min_yield_strength + 
+                                      preprocess_data.max_yield_strength) / 2
+    
+    
     sheet  = xl_workbook.parse("Modal Participating Mass Ratios", skiprows=(1))
     preprocess_data.period_units = sheet['Period'][0]
     if preprocess_data.period_units != 'sec':

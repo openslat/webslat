@@ -41,8 +41,6 @@ def ImportETABS(user_id, preprocess_data_id):
     #
     # Use the above to calculate the strength ratio
     # at the design acceleration:
-    base_strength_ratio = ((1.5 + constant_Omega) / 2 ) / (constant_R / constant_I)
-    logger.fatal("Base Strength Ratio: {}".format(base_strength_ratio))
     
     location = preprocess_data.location
     soil_class = preprocess_data.soil_class
@@ -261,7 +259,7 @@ def ImportETABS(user_id, preprocess_data_id):
             #
             # If the strength ratio is at least 1.0, apply the 
             # correction factors:
-            s = max(scale * base_strength_ratio, 1.0)
+            s = max(im * preprocess_data.weight / preprocess_data.yield_strength, 1.0)
             if (s >= 1.0):
                 # Apply non-linear correction factors
                 h = height_df.loc[lambda x: x['Story'] == story]["Height"][0]

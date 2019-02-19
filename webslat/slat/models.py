@@ -1141,7 +1141,13 @@ class ETABS_Preprocess(models.Model):
     period_choices = models.BinaryField(null=True)
     drift_choices = models.BinaryField(null=True)
     accel_choices = models.BinaryField(null=True)
-
+    weight_units = models.CharField(max_length=10, null=True)
+    weight_units_message = models.CharField(max_length=30, null=True)
+    weight = models.FloatField(null=True)
+    min_yield_strength = models.FloatField(null=True)
+    max_yield_strength = models.FloatField(null=True)
+    yield_strength = models.FloatField(null=True)
+    
     def get_period_choices(self):
         return pickle.loads(self.period_choices)
         
