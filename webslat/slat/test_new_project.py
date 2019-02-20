@@ -294,7 +294,7 @@ class NewProjectTestCase(TestCase):
             ["Story9", "32.8"],
             ["Story10", "36.4"]]
         
-        t = pq('table')[3]
+        t = pq('table')[4]
         self.assertEqual(len(t), 11)
         for i in range(len(t)):
             r = t[i]
@@ -349,7 +349,8 @@ class NewProjectTestCase(TestCase):
                            'x_drift_case': 'ES EQX',
                            'Tx': '2.365',
                            'y_accel_case': 'MRS EQY mu=4 Max',
-                           'Period': 'TX'})
+                           'Period': 'TX',
+                           'yield_strength': '3000000'})
         self.assertTrue(re.match("/slat/etabs_progress\?job=", response.url))
 
         project = Project.objects.get(pk=1)
