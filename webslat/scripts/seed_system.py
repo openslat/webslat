@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from slat.models import Profile, Project, Level, EDP, \
     EDP_Grouping, Component_Group, Group
 from slat.component_models import ComponentsTab
-from slat.views import make_demo, make_example_2
+from slat.views import make_example_2
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.db import transaction
@@ -25,25 +25,6 @@ def run():
 
     if settings.SINGLE_USER_MODE:
         # Create projects:
-        if len(Project.objects.filter(title_text="Demo Project")) == 0:
-            project = make_demo(AnonymousUser(),  "Demo Project", "A demo project")
-            project.save()
-
-            # Add a component group with a cost adjustment and comment
-            roof = Level.objects.get(project=project, level=project.num_levels())
-            demand_group = EDP_Grouping.objects.get(project=project, 
-                                     level=roof, 
-                                     type=EDP_Grouping.EDP_TYPE_ACCEL)
-            component = ComponentsTab.objects.get(ident='206')
-            group = Component_Group(demand=demand_group, 
-                                    component=component,
-                                    quantity_x=1,
-                                    quantity_y=0,
-                                    quantity_u=0,
-                                    comment="THE Maltese Falcon",
-                                    cost_adj=100)
-            group.save()
-        
         if len(Project.objects.filter(title_text="Red Book Project")) == 0:
             project = make_example_2(AnonymousUser(), "Red Book Project")
             project.save()
@@ -96,28 +77,14 @@ def run():
         # Create some demo projects
         samspade = User.objects.get(username='samspade')
         if len(Project.objects.filter(title_text="Sam Spade's Demo Project")) == 0:
-            project = make_demo(samspade, 
+            project = make_example_2(samspade, 
                                 "Sam Spade's Demo Project", 
                                 "A demo project")
             project.save()
 
-            # Add a component group with a cost adjustment and comment
-            roof = Level.objects.get(project=project, level=project.num_levels())
-            demand_group = EDP_Grouping.objects.get(project=project, 
-                                     level=roof, 
-                                     type=EDP_Grouping.EDP_TYPE_ACCEL)
-            component = ComponentsTab.objects.get(ident='206')
-            group = Component_Group(demand=demand_group, 
-                                    component=component,
-                                    quantity_x=1,
-                                    quantity_y=0,
-                                    quantity_u=0,
-                                    comment="THE Maltese Falcon",
-                                    cost_adj=100)
-            group.save()
 
         if len(Project.objects.filter(title_text="Sam Spade's Other Demo Project")) == 0:
-            project = make_demo(samspade, 
+            project = make_example_2(samspade, 
                                 "Sam Spade's Other Demo Project",
                                 "Anothe demo project")
             project.save()
@@ -128,13 +95,13 @@ def run():
 
         marlowe = User.objects.get(username='marlowe')
         if len(Project.objects.filter(title_text="Phil Marlowe's First Project")) == 0:
-            project = make_demo(marlowe, 
+            project = make_example_2(marlowe, 
                                 "Phil Marlowe's First Project",
                                 "A demo project")
             project.save()
 
         if len(Project.objects.filter(title_text="Phil Marlowe's Second Project")) == 0:
-            project = make_demo(marlowe, 
+            project = make_example_2(marlowe, 
                                 "Phil Marlowe's Second Project",
                                 "A second demo project")
             project.save()

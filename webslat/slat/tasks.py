@@ -439,7 +439,7 @@ def ImportETABS(user_id, preprocess_data_id):
         meta={ 'message': "\n".join(messages)})
     
     preprocess_data.delete()
-    return(reverse('slat:levels', args=(project.id,)))
+    return(reverse('slat:project', args=(project.id,)))
 
 @task
 def Clean_Project(project_id):

@@ -119,7 +119,7 @@ function Refresh( ) {
     <table class="loose">
       <tr class="loose"><td class="loose"> <label for="id_title_text"> Title </label></td><td class="loose"> {{ form.title_text }}</td></tr>
       <tr class="loose"><td class="loose"><label for="id_description_text"> Description </label></td><td class="loose">{{ form.description_text }}</td></tr>
-      <tr class="loose"><td class="loose"><label for="id_rarity"> Frequency: </td><td class="loose"> 1 in {{form.rarity }} years.</td></tr>
+      <tr class="loose"><td class="loose"><label for="id_rarity"> Return Period: </td><td class="loose"> {{form.rarity }} years.</td></tr>
     </table>
     <p><b>Demolition and Collapse Parameters</b></p>
     <table class="loose" border="1">
@@ -176,7 +176,7 @@ function Refresh( ) {
     </div>
     <div id="case_empty" style="display:none">
       <table class="loose">
-        <tr class="loose"><td class="loose"><label for="id_rarity"> Frequency: </td><td class="loose"> 1 in {{form2.rarity }} years.</td></tr>
+        <tr class="loose"><td class="loose"><label for="id_rarity"> Return Period: </td><td class="loose"> {{form2.rarity }} years.</td></tr>
         <tr class="loose"><td class="loose"><label for="id_levels"> Levels </label></td><td class="loose">{{ form2.levels }}</td></tr>
       </table>
       <p><b>Demolition and Collapse Parameters</b></p>

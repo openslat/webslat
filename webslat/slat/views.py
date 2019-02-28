@@ -209,10 +209,10 @@ def make_demo(user, title, description):
     return project
 
 @transaction.atomic
-def make_example_2(user, title="Example #2"):
+def make_example_2(user, title="Example #2", description="This is based on the second example in Brendon Bradley's paper. "):
     project = Project()
     setattr(project, 'title_text', title)
-    setattr(project, 'description_text', "This is based on the second example in Brendon Bradley's paper. ")
+    setattr(project, 'description_text', description)
     setattr(project, 'rarity', 1/500)
     setattr(project, 'mean_im_collapse', 1.2)
     setattr(project, 'sd_ln_im_collapse', 0.47)
@@ -342,20 +342,20 @@ def make_example_2(user, title="Example #2"):
     # Add components:
     all_floors = range(num_floors + 1)
     not_roof = range(num_floors)
-    components = [{'levels': not_roof, 'id': '208', 'quantity': [53, 0, 5]},
-                  {'levels': [0], 'id': '204', 'quantity': [2, 5, 0]},
-                  {'levels': not_roof, 'id': '214', 'quantity': [10, 0, 0]},
-                  {'levels': not_roof, 'id': '203', 'quantity': [693, 0, 0]},
-                  {'levels': not_roof, 'id': '211', 'quantity': [23, 0, 0]},
+    components = [{'levels': not_roof, 'id': '208', 'quantity': [0, 0, 53]}, # Desktop Computers
+                  {'levels': [0], 'id': '204', 'quantity': [0, 0, 2]},
+                  {'levels': not_roof, 'id': '214', 'quantity': [0, 0, 10]},
+                  {'levels': not_roof, 'id': '203', 'quantity': [0, 0, 693]},
+                  {'levels': not_roof, 'id': '211', 'quantity': [23, 23, 0]},
                   {'levels': [1], 'id': '2', 'quantity': [20, 0, 0]},
-                  {'levels': range(1, num_floors), 'id': '2', 'quantity': [4, 0, 5]},
-                  {'levels': not_roof, 'id': '2', 'quantity': [18, 0, 0]},
-                  {'levels': not_roof, 'id': '3', 'quantity': [16, 5, 0]},
-                  {'levels': not_roof, 'id': '105', 'quantity': [721, 0, 5]},
-                  {'levels': not_roof, 'id': '107', 'quantity': [99, 0, 5]},
-                  {'levels': not_roof, 'id': '106', 'quantity': [721, 0, 5]},
-                  {'levels': not_roof, 'id': '108', 'quantity': [10, 0, 5]},
-                  {'levels': [num_floors], 'id': '205', 'quantity': [4, 0, 5]}]
+                  {'levels': range(1, num_floors), 'id': '2', 'quantity': [4, 4, 0]},
+                  {'levels': not_roof, 'id': '2', 'quantity': [18, 18, 0]},
+                  {'levels': not_roof, 'id': '3', 'quantity': [16, 16, 0]},
+                  {'levels': not_roof, 'id': '105', 'quantity': [721, 721, 0]},
+                  {'levels': not_roof, 'id': '107', 'quantity': [99, 99, 0]},
+                  {'levels': not_roof, 'id': '106', 'quantity': [99, 99, 0]},
+                  {'levels': not_roof, 'id': '108', 'quantity': [10, 10, 0]},
+                  {'levels': [num_floors], 'id': '205', 'quantity': [4, 4, 0]}]
 
     for comp in components:
         component = ComponentsTab.objects.get(ident=comp['id'])
