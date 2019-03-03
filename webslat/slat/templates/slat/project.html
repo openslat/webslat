@@ -36,11 +36,15 @@ function Refresh( ) {
     }
     if (d == "ETABS") {
         document.getElementById("case_etabs").style.display="block";
-        document.getElementById("id_strength").setAttribute("required", "")
+        document.getElementById("id_constant_R").setAttribute("required", "")
+        document.getElementById("id_constant_I").setAttribute("required", "")
+        document.getElementById("id_constant_Omega").setAttribute("required", "")
         document.getElementById("id_path").setAttribute("required", "")
     } else {
         document.getElementById("case_etabs").style.display="none";
-        document.getElementById("id_strength").removeAttribute("required")
+        document.getElementById("id_constant_R").removeAttribute("required")
+        document.getElementById("id_constant_I").removeAttribute("required")
+        document.getElementById("id_constant_Omega").removeAttribute("required")
         document.getElementById("id_path").removeAttribute("required")
     }
 }
@@ -132,35 +136,37 @@ function Refresh( ) {
     <input type="submit" value="Submit Changes" class="normal"/>
     {{ form.IM }}
     <br/>
-    <details>
-    <summary>Allowed Users</summary>
-    <ul>
-    {% for user in users %}
-        <li>{{ user.user.username }}</li>
-    {% endfor %}
-    </ul>
-    <br/>
-    {% if can_add %}
-      <a href="{% url 'slat:project_add_user' form.instance.id %}"  class="link_button">Add User</a>
-      {% if users|length > 1 %}
-      <a href="{% url 'slat:project_remove_user' form.instance.id %}"  class="link_button">Remove User</a>
+    {% if not user.is_anonymous %}
+        <details>
+            <summary>Allowed Users</summary>
+            <ul>
+            {% for user in users %}
+                <li>{{ user.user.username }}</li>
+            {% endfor %}
+            </ul>
+            <br/>
+            {% if can_add %}
+              <a href="{% url 'slat:project_add_user' form.instance.id %}"  class="link_button">Add User</a>
+              {% if users|length > 1 %}
+              <a href="{% url 'slat:project_remove_user' form.instance.id %}"  class="link_button">Remove User</a>
+              {% endif %}
+            {% endif %}
+            </details>
+            <br/>
+              <details>
+              <summary>Allowed Groups</summary>
+              <ul>
+              {% for group in groups %}
+                  <li>{{ group.name }}</li>
+              {% endfor %}
+              </ul>
+              <br/>
+              {% if can_add %}
+                <a href="{% url 'slat:project_add_group' form.instance.id %}"  class="link_button">Add Group</a>
+                <a href="{% url 'slat:project_remove_group' form.instance.id %}"  class="link_button">Remove Group</a>
+              {% endif %}
+          </details>
       {% endif %}
-    {% endif %}
-    </details>
-    <br/>
-      <details>
-      <summary>Allowed Groups</summary>
-      <ul>
-      {% for group in groups %}
-          <li>{{ group.name }}</li>
-      {% endfor %}
-      </ul>
-      <br/>
-      {% if can_add %}
-        <a href="{% url 'slat:project_add_group' form.instance.id %}"  class="link_button">Add Group</a>
-        <a href="{% url 'slat:project_remove_group' form.instance.id %}"  class="link_button">Remove Group</a>
-      {% endif %}
-      </details>
 {% else %}
   <p>Create a Project</P>
   <form enctype="multipart/form-data" action="{% url 'slat:project' %}" method="post">
@@ -245,9 +251,6 @@ function Refresh( ) {
           <hr/>
           <div style="position: relative;  width:50%" class="chart-container" style="position: relative; ">
             <canvas class="chart" id="slat_id_cost_chart"></canvas> 
-          </div>
-          <div style="position: relative;  width:50%" class="chart-container" style="position: relative; ">
-            <canvas class="chart" id="slat_id_pdf_chart">WAITING</canvas> 
           </div>
     {% endif %}
     {% if pdfchart %} 

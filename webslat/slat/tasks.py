@@ -470,12 +470,6 @@ def Project_Basic_Stats(project_id):
     before = time.time()
     values['slat_id_cost_chart'] = Command_String_from_Chart(IMCostChart(project))
     after = time.time()
-    values['slat_id_status'] = 'Plotting PDF'
-    current_task.update_state(meta=values)
-
-    before = after
-    values['slat_id_pdf_chart'] = Command_String_from_Chart(IMPDFChart(project))
-    after = time.time()
     
     values['slat_id_status'] = 'Done'
     current_task.update_state(meta=values)

@@ -539,6 +539,7 @@ def project(request, project_id=None):
             'project_type_form': project_type_form})
     
     elif request.method == 'POST' and not project_id:
+        eprint("POST, no project ID")
         # Create a new project from the form
         project = None
         form1 = ProjectFormPart1(request.POST)
@@ -547,10 +548,13 @@ def project(request, project_id=None):
         description = form1.cleaned_data["description"]
         project_type_form = ProjectCreateTypeForm(request.POST)
         if project_type_form.is_valid():
+            print("PROJECT TYPE FORM IS VALID")
             project_type = project_type_form.cleaned_data["project_type"]
             
             if project_type == "DEMO":
-                project = make_demo(request.user, title, description)
+                eprint("MAKING DEMO PROJECT")
+                project = make_example_2(request.user, title, description)
+                eprint("DONE MAKING DEMO PROJECT")
             elif project_type == "EMPTY":
                 form2 = ProjectFormPart2(request.POST)
                 if (form2.is_valid()):
