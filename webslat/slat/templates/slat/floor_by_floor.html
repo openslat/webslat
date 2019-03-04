@@ -59,6 +59,19 @@
                           }
                       }
                   }
+                  element = document.getElementById(f + "_full")
+                  if (element) {
+                      if (f == 'slat_id_chart') {
+                          ctx = element.getContext("2d")
+                          new Chart(ctx, result[f])
+                      } else {
+                          if (typeof result[f] === "number") {
+                              element.textContent = result[f].toFixed(2);
+                          } else {
+                              element.textContent = result[f];
+                          }
+                      }
+                  }
             }
             if (result.slat_id_status == 'Done') {
                 clearInterval(refreshIntervalId);
@@ -147,6 +160,41 @@
       </table>
    {% endfor %}
 <hr/>
+<details>
+  <summary title="All the data in one table, formatted to be easily copied to a spreadsheet.">
+    All-in-one table
+    </summary>
+  <table border="1">
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Level</th>
+      <th>Cost Adjustment</th>
+      <th>Quantity X</th>
+      <th>Quantity Y</th>
+      <th>Quantity U</th>
+      <th>Cost X</th>
+      <th>Cost Y</th>
+      <th>Cost U</th>
+      </tr>
+    {% for level in level_map %}
+        {% for c in level.components %}
+        <tr>
+          <td>{{ c.component.ident }}</td>
+          <td>{{ c.component.name }}</td>
+          <td>{{ level.label }}</td>
+          <td align="right">{{ c.cost_adj }}</td>
+          <td align="right">{{ c.quantity_x }}</td>
+          <td align="right">{{ c.quantity_y }}</td>
+          <td align="right">{{ c.quantity_u }}</td>
+          <td align="right" id="slat_comp_id_{{ c.id }}_x_full"}>---</td>
+          <td align="right" id="slat_comp_id_{{ c.id }}_y_full">---</td>
+          <td align="right" id="slat_comp_id_{{ c.id }}_u_full">---</td>
+        </tr>
+        {% endfor %}
+    {% endfor %}
+  </table>
+</details>
 <a href="{% url 'slat:project' project.id %}">Return to Project</a><br /><br/>
 <a href="{% url 'slat:index' %}">Return to Project List</a>
 

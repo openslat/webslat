@@ -186,7 +186,7 @@ served via Apache.
           git pull
       else
           git clone \
-              http://github.com/mikelygee/SLAT
+              http://github.com/openslat/SLAT
           cd SLAT/linux
       fi;
       make
@@ -299,7 +299,7 @@ served via Apache.
    #+ATTR_LATEX: :options language=bash-local
    #+HEADER: :dir /ssh:webslat-vm:
    #+BEGIN_SRC bash :results output :eval ask
-     git clone http://github.com/mikelygee/webslat
+     git clone http://github.com/openslat/webslat
     #+END_SRC
 
     #+RESULTS:
