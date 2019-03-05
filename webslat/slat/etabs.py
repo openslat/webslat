@@ -203,15 +203,15 @@ def ETABS_preprocess(title, description,
         weight_mutliplier = 1.0
         
     preprocess_data.weight = msby['Mass X'].sum() * weight_mutliplier
-    preprocess_data.min_yield_strength = (1.5 * preprocess_data.weight) / \
+    preprocess_data.min_yield_strength = round(1.5 * preprocess_data.weight) / \
                                          (preprocess_data.constant_R /
                                           preprocess_data.constant_I)
-    preprocess_data.max_yield_strength = (preprocess_data.constant_Omega *
+    preprocess_data.max_yield_strength = round(preprocess_data.constant_Omega *
                                           preprocess_data.weight) / \
                                           (preprocess_data.constant_R / \
                                            preprocess_data.constant_I)
-    preprocess_data.yield_strength = (preprocess_data.min_yield_strength + 
-                                      preprocess_data.max_yield_strength) / 2
+    preprocess_data.yield_strength = round((preprocess_data.min_yield_strength + 
+                                      preprocess_data.max_yield_strength) / 2)
     
     
     sheet  = xl_workbook.parse("Modal Participating Mass Ratios", skiprows=(1))

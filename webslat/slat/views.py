@@ -2534,7 +2534,7 @@ def etabs_confirm(request, preprocess_id):
             reverse('slat:etabs_progress') + '?job=' + job.id)
     else:
         confirm_form = ETABS_Confirm_Form(preprocess_id=preprocess_id)
-        confirm_form.fields['yield_strength'].initial = preprocess_data.yield_strength / 1000 # Convert to kN
+        confirm_form.fields['yield_strength'].initial = round(preprocess_data.yield_strength / 1000) # Convert to kN
         return render(request, 'slat/etabs_preprocess.html', 
                       {'preprocess_data': preprocess_data,
                        'confirm_form': confirm_form})

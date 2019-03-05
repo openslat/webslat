@@ -22,7 +22,7 @@
 <table border="1"><tr><td><b>Parameter</b></td><td><b>Value</b></td></tr>
   <tr><td>Location</td><td>{{ nzs.location }}</td></tr>
   <tr><td>Soil Class</td><td>{{ nzs.soil_class }}</td></tr>
-  <tr><td>Period</td><td>{{ nzs.period }}</td></tr>
+  <tr><td>Period</td><td>{{ nzs.period | floatformat:2 }}</td></tr>
 </table>
 <br/>
 <a href="{% url 'slat:im_nzs_edit' project_id %}" class="link_button">Edit</a>
