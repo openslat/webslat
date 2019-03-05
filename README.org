@@ -288,12 +288,14 @@ served via Apache.
           pandas \
           celery \
           django-celery \
-          redis==2.10.5 \
+          redis \
           django-mathfilters \
           django-registration \
           anyjson
      deactivate
     #+END_SRC
+
+    #+RESULTS:
 
 21. Copy the ~webslat~ files to the VM:
    #+ATTR_LATEX: :options language=bash-local
