@@ -43,7 +43,7 @@ class NewProjectTestCase(TestCase):
         response = c.get('/slat/project')
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertIsInstance(response, django.http.response.HttpResponse)
-        
+
         response = c.post('/slat/project', {'title': 'A demo project',
                                             'description': 'A project description.',
                                             'project_type': 'DEMO'})
@@ -63,18 +63,18 @@ class NewProjectTestCase(TestCase):
         self.assertEqual(pq('select').filter(lambda i: \
                                             pq('select')[i].name == 'rarity')\
                          [0].value, '0.002')
-        self.assertEqual(pq('input').filter(lambda i: \
+        self.assertEqual(float(pq('input').filter(lambda i: \
                                             pq('input')[i].name == 'mean_im_collapse')\
-                         [0].value, None)
-        self.assertEqual(pq('input').filter(lambda i: \
+                         [0].value), 1.2)
+        self.assertEqual(float(pq('input').filter(lambda i: \
                                             pq('input')[i].name == 'sd_ln_im_collapse')\
-                         [0].value, None)
-        self.assertEqual(pq('input').filter(lambda i: \
+                         [0].value), 0.47)
+        self.assertEqual(float(pq('input').filter(lambda i: \
                                             pq('input')[i].name == 'mean_cost_collapse')\
-                         [0].value, None)
-        self.assertEqual(pq('input').filter(lambda i: \
+                               [0].value), 14000000.)
+        self.assertEqual(float(pq('input').filter(lambda i: \
                                             pq('input')[i].name == 'sd_ln_cost_collapse')\
-                         [0].value, None)
+                         [0].value), 0.35)
 
         text = pq("#slat_id_mean_annual_cost").text()
         self.assertEqual(text, '(waiting)')
@@ -88,59 +88,30 @@ class NewProjectTestCase(TestCase):
         project = Project.objects.get(pk=self.demo_project_id)
         
         # Check number of levels
-        self.assertEqual(project.num_levels(), 5)
+        self.assertEqual(project.num_levels(), 10)
 
         # Check Level Names
         self.assertEqual(project.levels()[0].label, "Roof")
-        self.assertEqual(project.levels()[1].label, "Floor #5")
-        self.assertEqual(project.levels()[2].label, "Floor #4")
-        self.assertEqual(project.levels()[3].label, "Floor #3")
-        self.assertEqual(project.levels()[4].label, "Floor #2")
-        self.assertEqual(project.levels()[5].label, "Ground Floor")
+        self.assertEqual(project.levels()[1].label, "Floor #10")
+        self.assertEqual(project.levels()[2].label, "Floor #9")
+        self.assertEqual(project.levels()[3].label, "Floor #8")
+        self.assertEqual(project.levels()[4].label, "Floor #7")
+        self.assertEqual(project.levels()[5].label, "Floor #6")
+        self.assertEqual(project.levels()[6].label, "Floor #5")
+        self.assertEqual(project.levels()[7].label, "Floor #4")
+        self.assertEqual(project.levels()[8].label, "Floor #3")
+        self.assertEqual(project.levels()[9].label, "Floor #2")
+        self.assertEqual(project.levels()[10].label, "Ground Floor")
 
         # IM
-        self.assertEqual(project.IM.flavour, IM_Types.objects.get(name_text="NZ Standard"))
-        self.assertEqual(project.IM.nzs.soil_class, 
-                         NZ_Standard_Curve.SOIL_CLASS_C)
-        self.assertEqual(float(project.IM.nzs.period), 2.0)
-        self.assertEqual(project.IM.nzs.location,
-                         Location.objects.get(location="Christchurch"))
+        self.assertEqual(project.IM.flavour, IM_Types.objects.get(name_text="Interpolated"))
+
         # Demands
         # There should be 11 demand groups (acceleration and drift for each
         # level except the ground floor, which should only have acceleration):
-        self.assertEqual(len(EDP_Grouping.objects.filter(project=project)), 11)
-        demand_params = [
-            {'accel': {'a': 4.05, 'b': 1.5}, 'drift': {'a': 0.0557, 'b': 0.5}}, # Level 0
-            {'accel': {'a': 4.15, 'b': 1.5}, 'drift': {'a': 0.0633, 'b': 0.5}},  # Level 1
-            { 'accel': {'a': 4.25, 'b': 1.5}, 'drift': {'a': 0.0506, 'b': 0.5}},# Level 2
-            {'accel': {'a': 4.10, 'b': 1.5}, 'drift': {'a': 0.0380, 'b': 0.5}}, # Level 3
-            {'accel': {'a': 4.18, 'b': 1.5}, 'drift': {'a': 0.0202, 'b': 0.5}}, # Level 4
-            {'accel': {'a': 5.39, 'b': 1.5}}]  # Level 5
-        
-        for level in project.levels():
-            g = EDP_Grouping.objects.get(project=project, level=level, type='A')
-            for demand in [g.demand_x, g.demand_y]:
-                self.assertEqual(demand.flavour, EDP_Flavours.objects.get(id=EDP_FLAVOUR_POWERCURVE))
-                self.assertEqual(demand.powercurve.median_x_a,
-                                 demand_params[level.level]["accel"]["a"])
-                self.assertEqual(demand.powercurve.median_x_b,
-                                 demand_params[level.level]["accel"]["b"])
-                self.assertEqual(demand.powercurve.sd_ln_x_a, 1.5)
-                self.assertEqual(demand.powercurve.sd_ln_x_b, 0.0)
-            if level.level < project.num_levels():
-                g = EDP_Grouping.objects.get(project=project, level=level, type='D')
-                for demand in [g.demand_x, g.demand_y]:
-                    self.assertEqual(demand.flavour, 
-                                     EDP_Flavours.objects.get(id=EDP_FLAVOUR_POWERCURVE))
-                self.assertEqual(demand.powercurve.median_x_a,
-                                 demand_params[level.level]["drift"]["a"])
-                self.assertEqual(demand.powercurve.median_x_b,
-                                 demand_params[level.level]["drift"]["b"])
-                self.assertEqual(demand.powercurve.sd_ln_x_a, 1.5)
-                self.assertEqual(demand.powercurve.sd_ln_x_b, 0.0)
-
+        self.assertEqual(len(EDP_Grouping.objects.filter(project=project)), 21)
         # Components                
-        self.assertEqual(len(Component_Group.objects.filter(demand__project=project)), 25)
+        self.assertEqual(len(Component_Group.objects.filter(demand__project=project)), 112)
 
     def test_Empty(self):
         """Create an empty project and check the results."""
