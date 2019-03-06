@@ -76,9 +76,15 @@ served via Apache.
    #+END_SRC
 
    #+RESULTS:
-   : # Host [127.0.0.1]:3022 found: line 8
-   : /home/mike/.ssh/known_hosts updated.
-   : Original contents retained as /home/mike/.ssh/known_hosts.old
+   : # Host [127.0.0.1]:3022 found: line 21
+   : /home/mag109/.ssh/known_hosts updated.
+   : Original contents retained as /home/mag109/.ssh/known_hosts.old
+   : 
+   : Number of key(s) added: 1
+   : 
+   : Now try logging into the machine, with:   "ssh -o 'StrictHostKeyChecking no' -p '3022' 'webslat-user@127.0.0.1'"
+   : and check to make sure that only the key(s) you wanted were added.
+   : 
 
 8. Configure =ssh= to use the correct port and user name by default:
    #+ATTR_LATEX: :options language=bash-local
@@ -120,6 +126,9 @@ served via Apache.
 		 "webslat-user@127.0.01")
     #+end_src
 
+    #+RESULTS:
+    : #<buffer *webslat-single*>
+
     Or run these commands at a shell prompt:
     #+ATTR_LATEX: :options language=bash-remote
     #+begin_src bash :eval never
@@ -136,12 +145,14 @@ served via Apache.
 11. Test ~sudo~:
     #+ATTR_LATEX: :options language=bash-remote
     #+HEADER: :dir /ssh:webslat-vm:
-    #+BEGIN_SRC bash :eval ask :results output 
+    #+BEGIN_SRC bash :eval ask :results output
+    date
     whoami
     sudo whoami
     #+END_SRC
 
     #+RESULTS:
+    : Wed Mar  6 14:59:35 NZDT 2019
     : webslat-user
     : root
 
@@ -214,6 +225,11 @@ served via Apache.
      cd SLAT/linux/bin
      ./unit_tests 2>&1 
     #+END_SRC
+
+    #+RESULTS:
+    : Running 61 test cases...
+    : 
+    : *** No errors detected
 
 16. Run the C++ example2 binary:
    #+ATTR_LATEX: :options language=bash-remote
@@ -369,6 +385,8 @@ served via Apache.
       python3 manage.py runscript seed_system
     #+END_SRC
 
+    #+RESULTS:
+
     By default, ~WebSLAT~ is configured to run without requiring logins. If that
     has been changed, the script above will set up the following users and
     projects: 
@@ -509,10 +527,12 @@ served via Apache.
     #+ATTR_LATEX: :options language=bash-remote
     #+HEADER: :dir /ssh:webslat-vm:
     #+BEGIN_SRC bash :eval ask :results output
+      date
       sudo apache2ctl configtest 2>&1
     #+END_SRC
 
     #+RESULTS:
+    : Wed Mar  6 15:32:00 NZDT 2019
     : Syntax OK
 
 34. Install ~libslat~ where ~apache2~ can find it. Run:
