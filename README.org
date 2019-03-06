@@ -306,7 +306,7 @@ served via Apache.
 
     #+RESULTS:
 
-22. Create a temporary directory. This is where ~WebSLAT~ will store temporary
+23. Create a temporary directory. This is where ~WebSLAT~ will store temporary
     files, in particular for passing to the ~celery~ worker when importing
     ~ETABS~ data.
     #+ATTR_LATEX: :options language=bash-remote
@@ -319,7 +319,7 @@ served via Apache.
 
     #+RESULTS:
 
-23. Install the config file to allow ~supervisord~ to start ~celery~
+24. Install the config file to allow ~supervisord~ to start ~celery~
     automatically, then restart the ~supervisor~ service to ensure that ~celery~
     is running.
     #+ATTR_LATEX: :options language=bash-remote
@@ -334,7 +334,7 @@ served via Apache.
 
     #+RESULTS:
 
-24. Initialise the databse:
+25. Initialise the databse:
    As ~webslat-user~ on the VM, run:
    #+ATTR_LATEX: :options language=bash-remote
    #+HEADER: :dir /ssh:webslat-vm:
@@ -347,7 +347,7 @@ served via Apache.
 
    #+RESULTS:
 
-25. Run the test scripts:
+26. Run the test scripts:
    #+ATTR_LATEX: :options language=bash-remote
    #+HEADER: :dir /ssh:webslat-vm:
    #+BEGIN_SRC bash :results output :eval ask
@@ -359,7 +359,7 @@ served via Apache.
 
     #+RESULTS:
 
-26. Seed the databse:
+27. Seed the databse:
    #+ATTR_LATEX: :options language=bash-remote
    #+HEADER: :dir /ssh:webslat-vm:
    #+BEGIN_SRC bash :results output :eval ask
@@ -369,7 +369,9 @@ served via Apache.
       python3 manage.py runscript seed_system
     #+END_SRC
 
-    This will populate the database with several users and projects:
+    By default, ~WebSLAT~ is configured to run without requiring logins. If that
+    has been changed, the script above will set up the following users and
+    projects: 
     | User ID    | Password      | Admin? | Projects                       |
     |------------+---------------+--------+--------------------------------|
     | slat-admin | swordfish     | X      |                                |
@@ -384,7 +386,7 @@ served via Apache.
     |------------+---------------+--------+--------------------------------|
     | holmes     | elementary    |        | Sherlock's Project             |
     |------------+---------------+--------+--------------------------------|
-27. Test the ~django~ server:
+28. Test the ~django~ server:
     As ~webslat-user~ on the VM, run:
    #+ATTR_LATEX: :options language=bash-remote
     #+BEGIN_SRC bash :results output
@@ -402,7 +404,7 @@ served via Apache.
     to confirm the server is working.
 
     Quit ~w3m~ and kill the server.
-28. User ~apache2~ to serve ~webslat~. First, run:
+29. User ~apache2~ to serve ~webslat~. First, run:
    #+ATTR_LATEX: :options language=bash-remote
    #+HEADER: :dir /ssh:webslat-vm:
    #+BEGIN_SRC bash :eval ask :results output
@@ -412,7 +414,7 @@ served via Apache.
 
    #+RESULTS:
 
-29. Make sure the ~apache2~ process can read the database file.
+30. Make sure the ~apache2~ process can read the database file.
     1. Assign appropriate permissions:
        #+ATTR_LATEX: :options language=bash-remote
        #+HEADER: :dir /ssh:webslat-vm:
@@ -435,7 +437,7 @@ served via Apache.
 
        #+RESULTS:
 
-30. Edit ~webslat/webslat/webslat/settings.py~
+31. Edit ~webslat/webslat/webslat/settings.py~
     1. Set =DEBUG= to =False=:
        #+HEADER: :dir /ssh:webslat-vm:
        #+BEGIN_SRC bash :results output :eval ask
@@ -463,7 +465,7 @@ served via Apache.
 
        #+RESULTS:
 
-31. Create the static files:
+32. Create the static files:
    #+ATTR_LATEX: :options language=bash-remote
    #+HEADER: :dir /ssh:webslat-vm:
    #+BEGIN_SRC bash :results output :eval ask
@@ -475,7 +477,7 @@ served via Apache.
 
     #+RESULTS:
 
-32. As ~root~ on the VM, edit ~/etc/apache2/sites-available/000-default.conf~, by
+33. As ~root~ on the VM, edit ~/etc/apache2/sites-available/000-default.conf~, by
     adding, inside the ~<VirtualHost...>~ tag:
     #+ATTR_LATEX: :options language=bash-remote
     #+HEADER: :dir /ssh:webslat-vm:
@@ -513,7 +515,7 @@ served via Apache.
     #+RESULTS:
     : Syntax OK
 
-33. Install ~libslat~ where ~apache2~ can find it. Run:
+34. Install ~libslat~ where ~apache2~ can find it. Run:
    #+ATTR_LATEX: :options language=bash-remote-root
    #+HEADER: :dir /ssh:webslat-vm:
    #+BEGIN_SRC bash :eval ask :results output
@@ -523,7 +525,7 @@ served via Apache.
 
     #+RESULTS:
 
-34. Restart the server:
+35. Restart the server:
    #+ATTR_LATEX: :options language=bash-remote
    #+HEADER: :dir /ssh:webslat-vm:
    #+BEGIN_SRC bash :eval ask :results output
@@ -532,7 +534,7 @@ served via Apache.
 
     #+RESULTS:
 
-35. Connect from the browser:
+36. Connect from the browser:
    #+ATTR_LATEX: :options language=bash-local
    #+BEGIN_SRC bash :eval ask :results output
      firefox http://localhost:3080
