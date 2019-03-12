@@ -6,6 +6,10 @@
 #+COMMENT: #+LATEX_HEADER: \usepackage{unicode-math}
 #+PROPERTY: header-args :eval always
 
+This file was an attempt to document the page structure of WebSLAT, but has not
+been completed, let alone maintained. It is archived here in case someone wants
+to pick it up one day.
+
 * Equation                                                         :noexport:
   \clearpage
   $\lambda(DV)=\int{\int{\sum{G(DV|DS)|\Delta{}G(DS|EDP)||dG(EDP|IM)||d\lambda(IM)|}}}$

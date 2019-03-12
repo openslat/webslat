@@ -1,0 +1,111 @@
+#+Title:     Using WebSLAT
+#+AUTHOR:    Michael Gauland
+#+EMAIL:     michael.gauland@canterbury.ac.nz
+#+DATE:      {{{time(%Y-%m-%d %H:%M)}}}
+#+OPTIONS:   H:6 num:t toc:nil \n:nil @:t ::t |:t ^:{} -:t f:t *:t <:t
+#+LATEX_HEADER: \usepackage{unicode-math}
+#+LATEX_HEADER: \usepackage{pdflscape}
+#+LATEX_HEADER: \lstset{frame=shadowbox}
+#+LATEX_HEADER: \lstset{keywordstyle=\color{blue}\bfseries}
+#+LATEX_HEADER: \newfontfamily\listingsfont[Scale=.7]{DejaVu Sans Mono}
+#+LATEX_HEADER: \lstset{basicstyle=\listingsfont}
+#+LATEX_HEADER: \lstset{basicstyle=\small}
+#+LATEX_HEADER: \lstset{showspaces=true}
+#+LATEX_HEADER: \lstset{columns=fixed}
+#+LATEX_HEADER: \lstset{extendedchars=true}
+#+LATEX_HEADER: \lstset{frame=shadowbox}
+#+LATEX_HEADER: \definecolor{mygray}{gray}{0.8}
+#+LATEX_HEADER: \lstset{rulesepcolor=\color{mygray}}
+#+LATEX_HEADER: \lstdefinelanguage{bash-local}{basicstyle=\ttfamily\scriptsize,rulecolor=\color{green},rulesepcolor=\color{mygray},frameround=ffff,backgroundcolor=\color{cyan}}
+#+LATEX_HEADER: \lstdefinelanguage{bash-remote}{basicstyle=\ttfamily\scriptsize,rulecolor=\color{green},rulesepcolor=\color{mygray},frameround=ffff,backgroundcolor=\color{yellow}}
+#+LATEX_HEADER: \lstdefinelanguage{bash-remote-root}{basicstyle=\ttfamily\scriptsize,rulecolor=\color{green},rulesepcolor=\color{mygray},frameround=ffff,backgroundcolor=\color{orange}}
+#+LATEX_HEADER: \lstdefinelanguage{fundamental}{basicstyle=\ttfamily\scriptsize,rulesepcolor=\color{cyan},frameround=tttt,backgroundcolor=\color{white},breaklines=true}
+#+LATEX_HEADER: \def\lst@visiblespace{\lst@ttfamily{\char32}-}
+#+PROPERTY: header-args :eval never
+
+Once you've got ~WebSLAT~ running, either through a virtual machine or in your
+PC environment, this document provides some hints on interacting with it.
+
+* Connect to ~WebSLAT~:
+  Direct your web browser to the ~WebSLAT~ instance you're running. If you've
+  set up a virtual machine as describe in the ~README~ file, the url is:
+
+    #+begin_example
+    http://localhost:3080
+    #+end_example
+
+  If you're running it using the ~django~ '~manage.py~' script, you'll
+  (probably) need to use:
+
+    #+begin_example
+    http://localhost:8000
+    #+end_example
+* The Welcome Page
+  When you first connect, you'll be taken to the welcome page. This presents
+  some basic information about the project, and related links. Click '~Enter~'
+  to start using the site.
+
+  If your system has been configure to require a login, you'll need to provide
+  your credentials on the next screen, but this isn't the default.
+
+  You can get back to this page by clicking the '~OpenSLAT~' text at the top
+  left of any screen on the site.
+* The Projects List 
+  Once into the site, you're at the '~Projects~' page, which presents a list of
+  projects. By default, you'll have one project called '~Red Book Project~'.
+
+  This is an example project based on the Red Book building, and Professor
+  Brendon Bradley's work.
+
+  You can create your own project by clicking the '~Create a New Project.~'
+  button. See the demo script in the '~doc/rollout~' directory for a
+  walk-through on creating a project from ETABS data.
+
+* The Project Home Page
+  When you've clicked on a project in the list, you're taken to it's home page.
+
+  From here, you can edit the:
+  - Title
+  - Description
+  - Return Period (controls plot range)
+  - Demolation and Collapse parameters
+    
+  You've be presented with a plot of the Cost|IM relationship, and the following
+  buttons:
+  - Site Hazard :: view or edit the seismic hazard curve
+  - Engineering Demands :: view a table of the engineering demands. From there,
+       you can view any individual demand curve, of the components for a given
+       level.
+
+       You can also rename or re-order order the levels.
+
+       The '~Demand Curves~' button will show a plot of the demands for all
+       levels, grouped into four plots by demand type (acceleration or drift)
+       and direction (X or Y).
+  - Component Groups :: presents a table of the component groups in the project,
+       which you can edit or add to. 
+  - Analysis :: Provide further results
+  - Full Re-Calc :: Sometimes, the system doesn't produce results--I suspect
+                    because of an as-yet unidentified bug in the parallel
+                    processing. This button fill force a full re-analysis.
+* The Analysis page
+  Clicking '~Analysis~' from the project page provides:
+  - a chart of expected loss over time
+  - annual expected loss broken down by floor
+  - annual expected loss broken down by component type
+
+  From here, you can request a '~Detailed Analysis~' by clicking the
+  appropriately-named link at the bottom of the page.
+* The Detailed Analysis Page
+  This page shows the expected loss of each component, in each direction,
+  grouped by floor.
+
+  At the bottom of the page (collapsed by default), is an 'all-in-one' table,
+  which presents the same information in a form that can easily be copied into a
+  spreadsheet or database for further analysis or plotting.
+
+* Component List
+  By editing the url bar to go to ~http://localhost:3080/slat/components~ (or
+  ~8000~, or whatever port you're using), you'll get a list of all the
+  components in the database. You can view and edit the details of any
+  component, and create new ones from here.
